@@ -7,19 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Term {
-  id           String   @id @default(uuid()) @db.Uuid
-  code         String   @unique
-  academicYear String   @map("academic_year")
-  semester     Int
-  status       String   @default("DRAFT")
-  slotSizeMin  Int      @default(30) @map("slot_size_min")
-  dayStartMin  Int      @default(450) @map("day_start_min")
-  dayEndMin    Int      @default(1230) @map("day_end_min")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+// ============================================================================
+// 1. Authentication, Sessions & Audit Log (Phase 1A)
+// ============================================================================
 
-  @@map("terms")
+model User {
+  id                  String    @id @default(uuid()) @db.Uuid
+  username            String    @unique
+  email               String    @unique
+  role                String    @default("DEAN")
+  passwordHash        String    @map("password_hash")
+  totpSecretEncrypted String?   @map("totp_secret_encrypted")
+  totpEnrolled        Boolean   @default(false) @map("totp_enrolled")
+  recoveryCodesHashes Json      @default("[]") @map("recovery_codes_hashes")
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  tokenHash         String   @unique @map("token_hash")
+  stage             String   @default("ACTIVE") // ENROLL_TOTP | VERIFY_TOTP | ACTIVE
+  ipAddress         String?  @map("ip_address")
+  userAgent         String?  @map("user_agent")
+  lastActiveAt      DateTime @default(now()) @map("last_active_at")
+  idleExpiresAt     DateTime @map("idle_expires_at")
+  absoluteExpiresAt DateTime @map("absolute_expires_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([idleExpiresAt])
+  @@map("sessions")
 }
 
 model AuditLog {
@@ -38,3 +65,538 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// ============================================================================
+// 2. Master Data (Section 5 & Phase 1B)
+//    Note: Section-level counts only (D-21). No individual student tables exist.
+// ============================================================================
+
+model Program {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  coordinator String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  faculty  Faculty[]
+  subjects Subject[]
+  sections Section[]
+
+  @@map("programs")
+}
+
+model Term {
+  id           String   @id @default(uuid()) @db.Uuid
+  code         String   @unique
+  academicYear String   @map("academic_year")
+  semester     Int
+  status       String   @default("DRAFT") // DRAFT | READY | ACTIVE | ARCHIVED
+  slotSizeMin  Int      @default(30) @map("slot_size_min")
+  teachingDays Json     @default("[\"MONDAY\",\"TUESDAY\",\"WEDNESDAY\",\"THURSDAY\",\"FRIDAY\",\"SATURDAY\"]") @map("teaching_days")
+  dayStartMin  Int      @default(450) @map("day_start_min") // 7:30 AM = 450
+  dayEndMin    Int      @default(1230) @map("day_end_min") // 8:30 PM = 1230
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  offerings            Offering[]
+  fixedBlocks          FixedBlock[]
+  facultyAvailability  FacultyAvailability[]
+  facultyPreferences   FacultyPreference[]
+  roomAvailability     RoomAvailability[]
+  calendarRestrictions CalendarRestriction[]
+  constraints          Constraint[]
+  generationRuns       GenerationRun[]
+  schedules            Schedule[]
+  importBatches        ImportBatch[]
+  conversations        Conversation[]
+
+  @@unique([academicYear, semester])
+  @@map("terms")
+}
+
+model Faculty {
+  id             String   @id @default(uuid()) @db.Uuid
+  code           String   @unique
+  alias          String   @unique // Pseudonym used exclusively for the LLM Privacy Gateway
+  name           String
+  programId      String?  @map("program_id") @db.Uuid
+  employmentType String   @map("employment_type") // FULL_TIME_PERMANENT | FULL_TIME_NON_PERMANENT | PART_TIME | VISITING
+  specialization String
+  education      String
+  maxLoadUnits   Int      @default(21) @map("max_load_units")
+  maxLoadHours   Int      @default(24) @map("max_load_hours")
+  status         String   @default("ACTIVE") // ACTIVE | ON_LEAVE | INACTIVE
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  program              Program?               @relation(fields: [programId], references: [id], onDelete: SetNull)
+  availability         FacultyAvailability[]
+  qualifications       FacultyQualification[]
+  preferences          FacultyPreference[]
+  preassignedOfferings Offering[]
+  scheduleEntries      ScheduleEntry[]
+  learningEvents       LearningEvent[]
+
+  @@index([programId])
+  @@index([employmentType])
+  @@map("faculty")
+}
+
+model Subject {
+  id                  String   @id @default(uuid()) @db.Uuid
+  code                String   @unique
+  name                String
+  description         String   @default("")
+  programId           String?  @map("program_id") @db.Uuid
+  yearLevel           Int      @map("year_level")
+  category            String   // MAJOR | GENERAL_ENGINEERING | MATHEMATICS | SCIENCE | GENERAL_EDUCATION | PATHFIT
+  units               Int
+  contactHours        Int      @map("contact_hours")
+  lectureHours        Int      @default(3) @map("lecture_hours")
+  labHours            Int      @default(0) @map("lab_hours")
+  curriculumVersion   String   @default("2024") @map("curriculum_version")
+  isCurrentCurriculum Boolean  @default(true) @map("is_current_curriculum")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  program        Program?               @relation(fields: [programId], references: [id], onDelete: SetNull)
+  qualifications FacultyQualification[]
+  offerings      Offering[]
+  learningEvents LearningEvent[]
+
+  @@index([programId, yearLevel])
+  @@map("subjects")
+}
+
+model Section {
+  id           String   @id @default(uuid()) @db.Uuid
+  code         String   @unique
+  programId    String   @map("program_id") @db.Uuid
+  yearLevel    Int      @map("year_level")
+  studentCount Int      @map("student_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  program     Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  offerings   Offering[]
+  fixedBlocks FixedBlock[]
+
+  @@index([programId, yearLevel])
+  @@map("sections")
+}
+
+model FixedBlock {
+  id        String   @id @default(uuid()) @db.Uuid
+  sectionId String   @map("section_id") @db.Uuid
+  termId    String   @map("term_id") @db.Uuid
+  weekday   String
+  startMin  Int      @map("start_min")
+  endMin    Int      @map("end_min")
+  label     String
+  location  String   @default("External")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  term    Term    @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@index([termId, sectionId])
+  @@map("fixed_blocks")
+}
+
+model Room {
+  id           String   @id @default(uuid()) @db.Uuid
+  code         String   @unique
+  name         String
+  type         String   // LECTURE | LAB
+  capacity     Int
+  equipment    Json     @default("[]")
+  restrictions String   @default("")
+  status       String   @default("ACTIVE") // ACTIVE | MAINTENANCE | INACTIVE
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  availability    RoomAvailability[]
+  scheduleEntries ScheduleEntry[]
+
+  @@index([type, capacity])
+  @@map("rooms")
+}
+
+model RoomAvailability {
+  id        String   @id @default(uuid()) @db.Uuid
+  roomId    String   @map("room_id") @db.Uuid
+  termId    String   @map("term_id") @db.Uuid
+  weekday   String
+  startMin  Int      @map("start_min")
+  endMin    Int      @map("end_min")
+  available Boolean  @default(false)
+  reason    String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  term Term @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@index([termId, roomId])
+  @@map("room_availability")
+}
+
+model CalendarRestriction {
+  id        String   @id @default(uuid()) @db.Uuid
+  termId    String   @map("term_id") @db.Uuid
+  weekday   String?
+  startMin  Int      @default(0) @map("start_min")
+  endMin    Int      @default(1440) @map("end_min")
+  scope     String   @default("COLLEGE")
+  reason    String
+  approved  Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  term Term @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@index([termId])
+  @@map("calendar_restrictions")
+}
+
+model FacultyAvailability {
+  id        String   @id @default(uuid()) @db.Uuid
+  facultyId String   @map("faculty_id") @db.Uuid
+  termId    String   @map("term_id") @db.Uuid
+  weekday   String
+  startMin  Int      @map("start_min")
+  endMin    Int      @map("end_min")
+  status    String   @default("AVAILABLE") // AVAILABLE | UNAVAILABLE
+  reason    String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  faculty Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  term    Term    @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@index([termId, facultyId])
+  @@map("faculty_availability")
+}
+
+model FacultyQualification {
+  id        String   @id @default(uuid()) @db.Uuid
+  facultyId String   @map("faculty_id") @db.Uuid
+  subjectId String   @map("subject_id") @db.Uuid
+  source    String   @default("DECLARED") // DECLARED | HISTORY | DEAN
+  createdAt DateTime @default(now()) @map("created_at")
+
+  faculty Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([facultyId, subjectId])
+  @@index([subjectId])
+  @@map("faculty_qualifications")
+}
+
+model FacultyPreference {
+  id        String   @id @default(uuid()) @db.Uuid
+  facultyId String   @map("faculty_id") @db.Uuid
+  termId    String   @map("term_id") @db.Uuid
+  type      String   // PREFERRED_DAY | AVOID_DAY | PREFERRED_TIME_WINDOW | PREFERRED_ROOM
+  value     Json
+  weight    Float    @default(1.0)
+  source    String   @default("SURVEY") // SURVEY | LEARNED | DEAN
+  createdAt DateTime @default(now()) @map("created_at")
+
+  faculty Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  term    Term    @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@index([termId, facultyId])
+  @@map("faculty_preferences")
+}
+
+model Offering {
+  id                   String   @id @default(uuid()) @db.Uuid
+  code                 String   @unique
+  termId               String   @map("term_id") @db.Uuid
+  sectionId            String   @map("section_id") @db.Uuid
+  subjectId            String   @map("subject_id") @db.Uuid
+  component            String   @default("LECTURE") // LECTURE | LAB
+  meetingsPerWeek      Int      @default(2) @map("meetings_per_week")
+  minutesPerMeeting    Int      @default(90) @map("minutes_per_meeting")
+  meetingPattern       String   @default("ANY") // MWF | TTH | SINGLE | ANY
+  requiredRoomType     String   @default("LECTURE") @map("required_room_type") // LECTURE | LAB
+  preassignedFacultyId String?  @map("preassigned_faculty_id") @db.Uuid
+  combinedClassGroup   String?  @map("combined_class_group")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  term                Term                 @relation(fields: [termId], references: [id], onDelete: Cascade)
+  section             Section              @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  subject             Subject              @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  preassignedFaculty  Faculty?             @relation(fields: [preassignedFacultyId], references: [id], onDelete: SetNull)
+  scheduleEntries     ScheduleEntry[]
+  unscheduledMeetings UnscheduledMeeting[]
+
+  @@unique([termId, sectionId, subjectId, component])
+  @@index([termId])
+  @@map("offerings")
+}
+
+// ============================================================================
+// 3. Scheduling, Constraints & Proposals (Section 5 & Phases 2–3)
+// ============================================================================
+
+model Constraint {
+  id             String   @id @default(uuid()) @db.Uuid
+  termId         String   @map("term_id") @db.Uuid
+  catalogueCode  String   @map("catalogue_code") // HC-01..HC-15, SC-01..SC-16
+  scope          String   @default("TERM")
+  parameters     Json     @default("{}")
+  hardness       String   // HARD | SOFT
+  weight         Float    @default(1.0)
+  waivable       Boolean  @default(false)
+  approvalStatus String   @default("PENDING") @map("approval_status") // PENDING | APPROVED | REJECTED
+  approvedBy     String?  @map("approved_by")
+  source         String   @default("SYSTEM") // SYSTEM | IMPORT | CHAT | DEAN
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  term Term @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@index([termId, catalogueCode])
+  @@map("constraints")
+}
+
+model GenerationRun {
+  id             String   @id @default(uuid()) @db.Uuid
+  termId         String   @map("term_id") @db.Uuid
+  status         String   @default("QUEUED") // QUEUED | RUNNING | DONE | FAILED | CANCELLED
+  snapshot       Json
+  weightProfiles Json     @default("[]") @map("weight_profiles")
+  engineJobIds   Json     @default("[]") @map("engine_job_ids")
+  solverStatus   String?  @map("solver_status")
+  objective      Float?
+  bound          Float?
+  durationMs     Int?     @map("duration_ms")
+  modelVersionId String?  @map("model_version_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  term      Term       @relation(fields: [termId], references: [id], onDelete: Cascade)
+  schedules Schedule[]
+
+  @@index([termId, status])
+  @@map("generation_runs")
+}
+
+model Schedule {
+  id             String   @id @default(uuid()) @db.Uuid
+  termId         String   @map("term_id") @db.Uuid
+  runId          String?  @map("run_id") @db.Uuid
+  parentId       String?  @map("parent_id") @db.Uuid
+  candidateLabel String   @map("candidate_label")
+  status         String   @default("CANDIDATE") // CANDIDATE | ACCEPTED | ARCHIVED
+  source         String   @default("GENERATED") // GENERATED | IMPORTED
+  recheckNeeded  Boolean  @default(false) @map("recheck_needed")
+  version        Int      @default(1)
+  qualityScore   Float?   @map("quality_score")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  term                Term                 @relation(fields: [termId], references: [id], onDelete: Cascade)
+  run                 GenerationRun?       @relation(fields: [runId], references: [id], onDelete: SetNull)
+  parent              Schedule?            @relation("ScheduleLineage", fields: [parentId], references: [id], onDelete: SetNull)
+  revisions           Schedule[]           @relation("ScheduleLineage")
+  entries             ScheduleEntry[]
+  unscheduledMeetings UnscheduledMeeting[]
+  changes             ScheduleChange[]
+  exceptions          ScheduleException[]
+  proposals           ChangeProposal[]
+
+  @@index([termId, status])
+  @@map("schedules")
+}
+
+model ScheduleEntry {
+  id         String   @id @default(uuid()) @db.Uuid
+  scheduleId String   @map("schedule_id") @db.Uuid
+  offeringId String   @map("offering_id") @db.Uuid
+  facultyId  String   @map("faculty_id") @db.Uuid
+  roomId     String   @map("room_id") @db.Uuid
+  weekday    String
+  startMin   Int      @map("start_min")
+  endMin     Int      @map("end_min")
+  pinned     Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  offering Offering @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  faculty  Faculty  @relation(fields: [facultyId], references: [id], onDelete: Restrict)
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Restrict)
+
+  @@index([scheduleId, weekday, startMin])
+  @@index([scheduleId, facultyId])
+  @@index([scheduleId, roomId])
+  @@map("schedule_entries")
+}
+
+model UnscheduledMeeting {
+  id         String   @id @default(uuid()) @db.Uuid
+  scheduleId String   @map("schedule_id") @db.Uuid
+  offeringId String   @map("offering_id") @db.Uuid
+  reasonCode String   @map("reason_code")
+  details    Json     @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  offering Offering @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId])
+  @@map("unscheduled_meetings")
+}
+
+model ScheduleChange {
+  id         String   @id @default(uuid()) @db.Uuid
+  scheduleId String   @map("schedule_id") @db.Uuid
+  entryId    String?  @map("entry_id") @db.Uuid
+  before     Json?
+  after      Json?
+  actor      String   // DEAN | AI_PROPOSAL
+  reason     String   @default("")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId, createdAt])
+  @@map("schedule_changes")
+}
+
+model ScheduleException {
+  id             String   @id @default(uuid()) @db.Uuid
+  scheduleId     String   @map("schedule_id") @db.Uuid
+  entryId        String?  @map("entry_id") @db.Uuid
+  constraintCode String   @map("constraint_code")
+  reason         String
+  acceptedBy     String   @map("accepted_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId])
+  @@map("schedule_exceptions")
+}
+
+model ChangeProposal {
+  id             String   @id @default(uuid()) @db.Uuid
+  scheduleId     String   @map("schedule_id") @db.Uuid
+  operations     Json
+  impact         Json
+  status         String   @default("PENDING") // PENDING | APPLIED | REJECTED | EXPIRED
+  conversationId String?  @map("conversation_id") @db.Uuid
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId, status])
+  @@map("change_proposals")
+}
+
+// ============================================================================
+// 4. AI, ML, Imports & Evaluation (Section 5 & Phases 1C, 4, 5, 7)
+// ============================================================================
+
+model Conversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  termId    String?  @map("term_id") @db.Uuid
+  title     String   @default("New Conversation")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  term     Term?     @relation(fields: [termId], references: [id], onDelete: SetNull)
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  role           String   // user | assistant | tool
+  parts          Json
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model LlmUsage {
+  id        String   @id @default(uuid()) @db.Uuid
+  provider  String
+  model     String
+  tokensIn  Int      @map("tokens_in")
+  tokensOut Int      @map("tokens_out")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("llm_usage")
+}
+
+model ModelVersion {
+  id         String   @id @default(uuid()) @db.Uuid
+  kind       String   // FACULTY_FIT | PREFERENCE_MODEL
+  parameters Json
+  metrics    Json
+  trainedAt  DateTime @default(now()) @map("trained_at")
+  status     String   @default("ACTIVE") // ACTIVE | ARCHIVED | CANDIDATE
+
+  @@index([kind, status])
+  @@map("model_versions")
+}
+
+model LearningEvent {
+  id               String   @id @default(uuid()) @db.Uuid
+  type             String   // ACCEPTED_ASSIGNMENT | DEAN_EDIT | PREFERENCE_OVERRIDE
+  facultyId        String?  @map("faculty_id") @db.Uuid
+  subjectId        String?  @map("subject_id") @db.Uuid
+  slot             Json?
+  weight           Float    @default(1.0)
+  sourceScheduleId String?  @map("source_schedule_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  faculty Faculty? @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("learning_events")
+}
+
+model ImportBatch {
+  id            String   @id @default(uuid()) @db.Uuid
+  termId        String?  @map("term_id") @db.Uuid
+  dataset       String   // WORKBOOK | PAST_SCHEDULE | PREFERENCES
+  fileHash      String   @map("file_hash")
+  status        String   // DRY_RUN | COMMITTED | FAILED
+  rowCount      Int      @default(0) @map("row_count")
+  insertedCount Int      @default(0) @map("inserted_count")
+  updatedCount  Int      @default(0) @map("updated_count")
+  errors        Json     @default("[]")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  term Term? @relation(fields: [termId], references: [id], onDelete: SetNull)
+
+  @@index([fileHash])
+  @@map("import_batches")
+}
+
+model EvaluationSession {
+  id              String    @id @default(uuid()) @db.Uuid
+  stage           Int       // 1 | 2 | 3
+  scenario        String
+  participantRole String    @default("DEAN") @map("participant_role")
+  startedAt       DateTime  @default(now()) @map("started_at")
+  endedAt         DateTime? @map("ended_at")
+  scheduleId      String?   @map("schedule_id") @db.Uuid
+  notes           String    @default("")
+
+  @@index([stage])
+  @@map("evaluation_sessions")
+}

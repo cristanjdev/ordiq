@@ -1,17 +1,11 @@
-import { SectionPlaceholderView } from "@/features/workspace/section-placeholder-view";
+import { MasterDataWorkspace } from "@/features/data/master-data-workspace";
 
 export default function CoursesSectionsPage() {
   return (
-    <SectionPlaceholderView
+    <MasterDataWorkspace
+      initialDataset="sections"
       title="Courses & Sections"
-      phaseBadge="Phase 1B"
-      description="Manage subjects, lecture/laboratory offerings, section-level student counts (no individual student records), and fixed external blocks."
-      deliverables={[
-        "7 engineering programs (Civil, Computer, Electrical, Electronics, Geodetic, Industrial, Mechanical)",
-        "Section-level student counts only (D-21 data minimization)",
-        "Locked FixedBlocks for General Education, PATHFIT, and external building classes (D-23)",
-      ]}
+      subtitle="Manage subjects, section-level student counts (no individual student records), offerings, and external FixedBlocks."
     />
   );
 }
-

@@ -273,7 +273,7 @@ The OpenAPI document from FastAPI is the contract. `packages/contracts` generate
 | D-07 | Solver leaves a meeting unscheduled instead of returning bare INFEASIBLE | The Dean gets a usable candidate and a precise reason per meeting | Decided |
 | D-08 | Candidates may contain violations while being edited, accepted schedules cannot, apart from documented exceptions | The Dean can work in steps, and the guarantee holds at acceptance | Decided |
 | D-09 | Vercel AI SDK with an OpenAI-compatible adapter for Ollama | One tool-calling and streaming interface across providers, supports Premium | Decided |
-| D-10 | Better Auth with signup disabled and TOTP | Avoids handwritten auth. Authenticator app has no SMS cost | Verify at Phase 1 |
+| D-10 | Dean-only auth with Argon2id, RFC 6238 TOTP (`otpauth`), AES-256-GCM secret encryption, and Prisma/store session engine | Zero public signup, Authenticator app has no SMS cost, matches exact Prisma `User`/`Session` schema in Section 5 | Implemented |
 | D-11 | ML parameters stored as JSON in PostgreSQL, not pickles | Keeps the engine stateless and avoids unsafe deserialization | Decided |
 | D-12 | Local embeddings for NLP matching | Faculty data stays on our own infrastructure | Decided |
 | D-13 | AG Grid Community and FullCalendar free plugins only | Enterprise row grouping, Excel export and resource timeline views are paid. Export runs on the server | Decided |
@@ -599,50 +599,50 @@ Authentication comes first on purpose: **no real data enters an environment with
 
 ### 1A. Dean-only access
 
-- [ ] Add the auth library, with public signup disabled
-- [ ] Create the Dean account through a CLI seed command only
-- [ ] Hash passwords with Argon2id
-- [ ] Require TOTP enrollment at first login, with single-use recovery codes
-- [ ] Use secure, httpOnly, SameSite session cookies with idle and absolute timeouts
-- [ ] Add login rate limiting and lockout
-- [ ] Add route protection by default, so every API route needs a session unless explicitly public
-- [ ] Add the append-only audit log and a `withAudit` helper
+- [x] Add the auth library, with public signup disabled
+- [x] Create the Dean account through a CLI seed command only
+- [x] Hash passwords with Argon2id
+- [x] Require TOTP enrollment at first login, with single-use recovery codes
+- [x] Use secure, httpOnly, SameSite session cookies with idle and absolute timeouts
+- [x] Add login rate limiting and lockout
+- [x] Add route protection by default, so every API route needs a session unless explicitly public
+- [x] Add the append-only audit log and a `withAudit` helper
 
 ### 1B. Data model and master data
 
-- [ ] Write the Prisma schema from section 5 with indexes and unique rules
-- [ ] Build services and CRUD APIs for terms, programs, faculty, subjects, sections, rooms, offerings and fixed blocks
-- [ ] Build spreadsheet-like editable grids for each dataset, with add, import, export, search and filter as in Fig. 4
-- [ ] Require confirmation for important changes, and keep original records distinct from proposed changes
-- [ ] Build the fixture generator. The medium fixture models this college: 7 programs and 44 faculty with a mix of employment types
+- [x] Write the Prisma schema from section 5 with indexes and unique rules
+- [x] Build services and CRUD APIs for terms, programs, faculty, subjects, sections, rooms, offerings and fixed blocks
+- [x] Build spreadsheet-like editable grids for each dataset, with add, import, export, search and filter as in Fig. 4
+- [x] Require confirmation for important changes, and keep original records distinct from proposed changes
+- [x] Build the fixture generator. The medium fixture models this college: 7 programs and 44 faculty with a mix of employment types
 
 ### 1C. Import pipeline
 
-- [ ] Build the data-gathering workbook in `templates/`, with one sheet per dataset from the technical report
-- [ ] Add sheets for past schedules and faculty preferences
-- [ ] Implement the pipeline: parse, row validation, cross-reference checks, dry-run preview, atomic commit
-- [ ] Show errors by sheet, row and column, in plain language
-- [ ] Make imports idempotent using file hash and natural keys
-- [ ] Import the first-semester A.Y. 2026-2027 schedule, in the format the portal or spreadsheets provide, as a read-only `Schedule` for validation, ML and comparison
-- [ ] Write the data dictionary alongside the import templates
+- [x] Build the data-gathering workbook in `templates/`, with one sheet per dataset from the technical report
+- [x] Add sheets for past schedules and faculty preferences
+- [x] Implement the pipeline: parse, row validation, cross-reference checks, dry-run preview, atomic commit
+- [x] Show errors by sheet, row and column, in plain language
+- [x] Make imports idempotent using file hash and natural keys
+- [x] Import the first-semester A.Y. 2026-2027 schedule, in the format the portal or spreadsheets provide, as a read-only `Schedule` for validation, ML and comparison
+- [x] Write the data dictionary alongside the import templates
 
 ### 1D. Data readiness
 
-- [ ] Add a readiness report for each term
-- [ ] Check for missing availability, subjects with no qualified faculty, sections larger than any suitable room, and required hours above total capacity
-- [ ] Check for contact hours that do not match the subject, and flag outdated curriculum records
-- [ ] Report data quality by completeness, accuracy, consistency and currentness, the ISO/IEC 25012 ideas the manuscript cites
-- [ ] Block generation on critical gaps, and show warnings for the rest
+- [x] Add a readiness report for each term
+- [x] Check for missing availability, subjects with no qualified faculty, sections larger than any suitable room, and required hours above total capacity
+- [x] Check for contact hours that do not match the subject, and flag outdated curriculum records
+- [x] Report data quality by completeness, accuracy, consistency and currentness, the ISO/IEC 25012 ideas the manuscript cites
+- [x] Block generation on critical gaps, and show warnings for the rest
 
 ### Exit criteria
 
-- [ ] An unauthenticated request to any data route returns 401, tested by iterating over all routes
-- [ ] Login fails without the TOTP code
-- [ ] No route or screen exists to create a second account
-- [ ] A broken workbook produces row-level errors and writes nothing
-- [ ] The client's real data imports cleanly, or a written issue list goes to the client
-- [ ] No table can hold individual student records
-- [ ] Every create, update and delete appears in the audit log
+- [x] An unauthenticated request to any data route returns 401, tested by iterating over all routes
+- [x] Login fails without the TOTP code
+- [x] No route or screen exists to create a second account
+- [x] A broken workbook produces row-level errors and writes nothing
+- [x] The client's real data imports cleanly, or a written issue list goes to the client
+- [x] No table can hold individual student records
+- [x] Every create, update and delete appears in the audit log
 
 ---
 
