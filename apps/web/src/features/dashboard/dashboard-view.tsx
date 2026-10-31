@@ -42,7 +42,40 @@ export function DashboardView() {
     queryFn: fetchSystemHealth,
   });
 
+  const analyticsQuery = useQuery<{
+    candidateLabel: string;
+    metrics: {
+      classesScheduled: number;
+      totalMeetings: number;
+      scheduledPct: number;
+      conflictsDetected: number;
+      facultyLoadBalanceScore: number;
+      roomUtilizationPct: number;
+      unmetPreferencesCount: number;
+    };
+    studentChangeRequestRisk: {
+      totalRiskIndicators: number;
+      riskLevel: string;
+    };
+    manualComparison: {
+      manualHardViolations: number;
+      currentHardViolations: number;
+      hardViolationsEliminated: number;
+    } | null;
+  }>({
+    queryKey: ["dashboard-analytics", selectedTerm.id],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/v1/analytics?termCode=${encodeURIComponent(selectedTerm.id)}`,
+      );
+      if (!res.ok) throw new Error("Unauthenticated");
+      return res.json();
+    },
+    retry: false,
+  });
+
   const engine = healthQuery.data?.engine;
+  const analytics = analyticsQuery.data;
 
   return (
     <div className="space-y-5">
@@ -81,13 +114,15 @@ export function DashboardView() {
                 Total Classes Scheduled
               </p>
               <p className="mt-1 text-2xl font-bold text-[var(--ordiq-ink)]">
-                0{" "}
+                {analytics?.metrics.classesScheduled ?? 0}{" "}
                 <span className="text-xs font-normal text-[var(--ordiq-muted)]">
-                  / 0 offerings
+                  / {analytics?.metrics.totalMeetings ?? 0} offerings
                 </span>
               </p>
               <p className="mt-1 text-[11px] text-[var(--ordiq-muted)]">
-                Awaiting term workbook import
+                {analytics
+                  ? `${analytics.candidateLabel} (${analytics.metrics.scheduledPct}%)`
+                  : "Awaiting term workbook import"}
               </p>
             </div>
           </CardContent>
@@ -103,10 +138,12 @@ export function DashboardView() {
                 Hard Conflicts Detected
               </p>
               <p className="mt-1 text-2xl font-bold text-[var(--ordiq-ink)]">
-                0
+                {analytics?.metrics.conflictsDetected ?? 0}
               </p>
               <p className="mt-1 text-[11px] text-emerald-700 dark:text-emerald-300">
-                Validated by independent Python oracle
+                {analytics?.manualComparison
+                  ? `Eliminated ${analytics.manualComparison.hardViolationsEliminated} baseline conflict(s)`
+                  : "Validated by independent Python oracle"}
               </p>
             </div>
           </CardContent>
@@ -122,10 +159,14 @@ export function DashboardView() {
                 Faculty Load Balance
               </p>
               <p className="mt-1 text-2xl font-bold text-[var(--ordiq-ink)]">
-                —
+                {analytics
+                  ? `${analytics.metrics.facultyLoadBalanceScore}%`
+                  : "—"}
               </p>
               <p className="mt-1 text-[11px] text-[var(--ordiq-muted)]">
-                Computed when candidate is loaded
+                {analytics
+                  ? `${analytics.metrics.unmetPreferencesCount} unmet preference(s)`
+                  : "Computed when candidate is loaded"}
               </p>
             </div>
           </CardContent>
@@ -141,7 +182,7 @@ export function DashboardView() {
                 Room &amp; Lab Utilization
               </p>
               <p className="mt-1 text-2xl font-bold text-[var(--ordiq-ink)]">
-                —
+                {analytics ? `${analytics.metrics.roomUtilizationPct}%` : "—"}
               </p>
               <p className="mt-1 text-[11px] text-[var(--ordiq-muted)]">
                 Lecture (≥40 cap) &amp; Lab (≥30 cap)

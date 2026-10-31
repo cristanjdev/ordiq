@@ -57,7 +57,7 @@
   "faculty": [
     {
       "code": "FAC-001",
-      "name": "Engr. Faculty Member 01",
+      "name": "Engr. Maria Clara Santos",
       "programCode": "CE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Structural & Geotechnical Engineering",
@@ -68,7 +68,7 @@
     },
     {
       "code": "FAC-002",
-      "name": "Engr. Faculty Member 02",
+      "name": "Dr. Jose Rizal Mercado",
       "programCode": "CPE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Embedded Systems, Software & Computer Networks",
@@ -79,7 +79,7 @@
     },
     {
       "code": "FAC-003",
-      "name": "Engr. Faculty Member 03",
+      "name": "Engr. Gabriela Silang",
       "programCode": "EE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Power Systems & Electrical Machines",
@@ -90,7 +90,7 @@
     },
     {
       "code": "FAC-004",
-      "name": "Engr. Faculty Member 04",
+      "name": "Engr. Apolinario Mabini",
       "programCode": "ECE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Communications, Microelectronics & Signal Processing",
@@ -101,7 +101,7 @@
     },
     {
       "code": "FAC-005",
-      "name": "Engr. Faculty Member 05",
+      "name": "Dr. Melchora Aquino",
       "programCode": "GE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Surveying, GIS & Photogrammetry",
@@ -112,7 +112,7 @@
     },
     {
       "code": "FAC-006",
-      "name": "Engr. Faculty Member 06",
+      "name": "Engr. Antonio Luna",
       "programCode": "IE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Operations Research, Ergonomics & Quality Systems",
@@ -123,7 +123,7 @@
     },
     {
       "code": "FAC-007",
-      "name": "Engr. Faculty Member 07",
+      "name": "Engr. Juan Dela Cruz",
       "programCode": "ME",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Thermodynamics, Machine Design & HVAC",
@@ -134,7 +134,7 @@
     },
     {
       "code": "FAC-008",
-      "name": "Engr. Faculty Member 08",
+      "name": "Engr. Andres Bonifacio",
       "programCode": "CE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Structural & Geotechnical Engineering",
@@ -145,7 +145,7 @@
     },
     {
       "code": "FAC-009",
-      "name": "Engr. Faculty Member 09",
+      "name": "Dr. Emilio Jacinto",
       "programCode": "CPE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Embedded Systems, Software & Computer Networks",
@@ -156,7 +156,7 @@
     },
     {
       "code": "FAC-010",
-      "name": "Engr. Faculty Member 10",
+      "name": "Engr. Gregorio Del Pilar",
       "programCode": "EE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Power Systems & Electrical Machines",
@@ -167,7 +167,7 @@
     },
     {
       "code": "FAC-011",
-      "name": "Engr. Faculty Member 11",
+      "name": "Engr. Marcela Agoncillo",
       "programCode": "ECE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Communications, Microelectronics & Signal Processing",
@@ -178,7 +178,7 @@
     },
     {
       "code": "FAC-012",
-      "name": "Engr. Faculty Member 12",
+      "name": "Dr. Josefa Llanes Escoda",
       "programCode": "GE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Surveying, GIS & Photogrammetry",
@@ -189,7 +189,7 @@
     },
     {
       "code": "FAC-013",
-      "name": "Engr. Faculty Member 13",
+      "name": "Engr. Miguel Malvar",
       "programCode": "IE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Operations Research, Ergonomics & Quality Systems",
@@ -200,7 +200,7 @@
     },
     {
       "code": "FAC-014",
-      "name": "Engr. Faculty Member 14",
+      "name": "Engr. Macario Sakay",
       "programCode": "ME",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Thermodynamics, Machine Design & HVAC",
@@ -211,7 +211,7 @@
     },
     {
       "code": "FAC-015",
-      "name": "Engr. Faculty Member 15",
+      "name": "Dr. Trinidad Tecson",
       "programCode": "CE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Structural & Geotechnical Engineering",
@@ -222,7 +222,7 @@
     },
     {
       "code": "FAC-016",
-      "name": "Engr. Faculty Member 16",
+      "name": "Engr. Diego Silang",
       "programCode": "CPE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Embedded Systems, Software & Computer Networks",
@@ -233,7 +233,7 @@
     },
     {
       "code": "FAC-017",
-      "name": "Engr. Faculty Member 17",
+      "name": "Engr. Francisco Dagohoy",
       "programCode": "EE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Power Systems & Electrical Machines",
@@ -244,7 +244,7 @@
     },
     {
       "code": "FAC-018",
-      "name": "Engr. Faculty Member 18",
+      "name": "Dr. Graciano Lopez Jaena",
       "programCode": "ECE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Communications, Microelectronics & Signal Processing",
@@ -255,7 +255,7 @@
     },
     {
       "code": "FAC-019",
-      "name": "Engr. Faculty Member 19",
+      "name": "Engr. Marcelo Del Pilar",
       "programCode": "GE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Surveying, GIS & Photogrammetry",
@@ -266,7 +266,7 @@
     },
     {
       "code": "FAC-020",
-      "name": "Engr. Faculty Member 20",
+      "name": "Engr. Mariano Ponce",
       "programCode": "IE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Operations Research, Ergonomics & Quality Systems",
@@ -277,7 +277,7 @@
     },
     {
       "code": "FAC-021",
-      "name": "Engr. Faculty Member 21",
+      "name": "Dr. Pio Valenzuela",
       "programCode": "ME",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Thermodynamics, Machine Design & HVAC",
@@ -288,7 +288,7 @@
     },
     {
       "code": "FAC-022",
-      "name": "Engr. Faculty Member 22",
+      "name": "Engr. Teodoro Plata",
       "programCode": "CE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Structural & Geotechnical Engineering",
@@ -299,7 +299,7 @@
     },
     {
       "code": "FAC-023",
-      "name": "Engr. Faculty Member 23",
+      "name": "Engr. Ladislao Diwa",
       "programCode": "CPE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Embedded Systems, Software & Computer Networks",
@@ -310,7 +310,7 @@
     },
     {
       "code": "FAC-024",
-      "name": "Engr. Faculty Member 24",
+      "name": "Dr. Valentin Diaz",
       "programCode": "EE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Power Systems & Electrical Machines",
@@ -321,7 +321,7 @@
     },
     {
       "code": "FAC-025",
-      "name": "Engr. Faculty Member 25",
+      "name": "Engr. Briccio Pantas",
       "programCode": "ECE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Communications, Microelectronics & Signal Processing",
@@ -332,7 +332,7 @@
     },
     {
       "code": "FAC-026",
-      "name": "Engr. Faculty Member 26",
+      "name": "Engr. Restituto Javier",
       "programCode": "GE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Surveying, GIS & Photogrammetry",
@@ -343,7 +343,7 @@
     },
     {
       "code": "FAC-027",
-      "name": "Engr. Faculty Member 27",
+      "name": "Dr. Marina Dizon",
       "programCode": "IE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Operations Research, Ergonomics & Quality Systems",
@@ -354,7 +354,7 @@
     },
     {
       "code": "FAC-028",
-      "name": "Engr. Faculty Member 28",
+      "name": "Engr. Gregoria De Jesus",
       "programCode": "ME",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Thermodynamics, Machine Design & HVAC",
@@ -365,7 +365,7 @@
     },
     {
       "code": "FAC-029",
-      "name": "Engr. Faculty Member 29",
+      "name": "Engr. Teresa Magbanua",
       "programCode": "CE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Structural & Geotechnical Engineering",
@@ -376,7 +376,7 @@
     },
     {
       "code": "FAC-030",
-      "name": "Engr. Faculty Member 30",
+      "name": "Dr. Agueda Kahabagan",
       "programCode": "CPE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Embedded Systems, Software & Computer Networks",
@@ -387,7 +387,7 @@
     },
     {
       "code": "FAC-031",
-      "name": "Engr. Faculty Member 31",
+      "name": "Engr. Patrocinio Gamboa",
       "programCode": "EE",
       "employmentType": "PART_TIME",
       "specialization": "Power Systems & Electrical Machines",
@@ -398,7 +398,7 @@
     },
     {
       "code": "FAC-032",
-      "name": "Engr. Faculty Member 32",
+      "name": "Engr. Nazaria Lagos",
       "programCode": "ECE",
       "employmentType": "PART_TIME",
       "specialization": "Communications, Microelectronics & Signal Processing",
@@ -409,7 +409,7 @@
     },
     {
       "code": "FAC-033",
-      "name": "Engr. Faculty Member 33",
+      "name": "Dr. Paciano Rizal",
       "programCode": "GE",
       "employmentType": "PART_TIME",
       "specialization": "Surveying, GIS & Photogrammetry",
@@ -420,7 +420,7 @@
     },
     {
       "code": "FAC-034",
-      "name": "Engr. Faculty Member 34",
+      "name": "Engr. Vicente Lukban",
       "programCode": "IE",
       "employmentType": "PART_TIME",
       "specialization": "Operations Research, Ergonomics & Quality Systems",
@@ -431,7 +431,7 @@
     },
     {
       "code": "FAC-035",
-      "name": "Engr. Faculty Member 35",
+      "name": "Engr. Simeon Ola",
       "programCode": "ME",
       "employmentType": "PART_TIME",
       "specialization": "Thermodynamics, Machine Design & HVAC",
@@ -442,7 +442,7 @@
     },
     {
       "code": "FAC-036",
-      "name": "Engr. Faculty Member 36",
+      "name": "Dr. Artemio Ricarte",
       "programCode": "CE",
       "employmentType": "PART_TIME",
       "specialization": "Structural & Geotechnical Engineering",
@@ -453,7 +453,7 @@
     },
     {
       "code": "FAC-037",
-      "name": "Engr. Faculty Member 37",
+      "name": "Engr. Edilberto Evangelista",
       "programCode": "CPE",
       "employmentType": "PART_TIME",
       "specialization": "Embedded Systems, Software & Computer Networks",
@@ -464,7 +464,7 @@
     },
     {
       "code": "FAC-038",
-      "name": "Engr. Faculty Member 38",
+      "name": "Engr. Flaviano Yengko",
       "programCode": "EE",
       "employmentType": "PART_TIME",
       "specialization": "Power Systems & Electrical Machines",
@@ -475,7 +475,7 @@
     },
     {
       "code": "FAC-039",
-      "name": "Engr. Faculty Member 39",
+      "name": "Dr. Mamerto Natividad",
       "programCode": "ECE",
       "employmentType": "PART_TIME",
       "specialization": "Communications, Microelectronics & Signal Processing",
@@ -486,7 +486,7 @@
     },
     {
       "code": "FAC-040",
-      "name": "Engr. Faculty Member 40",
+      "name": "Engr. Manuel Tinio",
       "programCode": "GE",
       "employmentType": "PART_TIME",
       "specialization": "Surveying, GIS & Photogrammetry",
@@ -497,7 +497,7 @@
     },
     {
       "code": "FAC-041",
-      "name": "Engr. Faculty Member 41",
+      "name": "Engr. Servillano Aquino",
       "programCode": "IE",
       "employmentType": "PART_TIME",
       "specialization": "Operations Research, Ergonomics & Quality Systems",
@@ -508,7 +508,7 @@
     },
     {
       "code": "FAC-042",
-      "name": "Engr. Faculty Member 42",
+      "name": "Dr.Tomas Mascardo",
       "programCode": "ME",
       "employmentType": "PART_TIME",
       "specialization": "Thermodynamics, Machine Design & HVAC",
@@ -519,7 +519,7 @@
     },
     {
       "code": "FAC-043",
-      "name": "Engr. Faculty Member 43",
+      "name": "Engr. Maximino Hizon",
       "programCode": "CE",
       "employmentType": "PART_TIME",
       "specialization": "Structural & Geotechnical Engineering",
@@ -530,7 +530,7 @@
     },
     {
       "code": "FAC-044",
-      "name": "Engr. Faculty Member 44",
+      "name": "Engr. Pantaleon Garcia",
       "programCode": "CPE",
       "employmentType": "VISITING",
       "specialization": "Embedded Systems, Software & Computer Networks",

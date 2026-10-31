@@ -142,6 +142,53 @@ export function generateMediumCollegeFixture(): CollegeFixtureDataset {
     "VISITING",
   ];
 
+  const NAMED_FACULTY_LEADERS = [
+    "Engr. Maria Clara Santos",
+    "Dr. Jose Rizal Mercado",
+    "Engr. Gabriela Silang",
+    "Engr. Apolinario Mabini",
+    "Dr. Melchora Aquino",
+    "Engr. Antonio Luna",
+    "Engr. Juan Dela Cruz",
+    "Engr. Andres Bonifacio",
+    "Dr. Emilio Jacinto",
+    "Engr. Gregorio Del Pilar",
+    "Engr. Marcela Agoncillo",
+    "Dr. Josefa Llanes Escoda",
+    "Engr. Miguel Malvar",
+    "Engr. Macario Sakay",
+    "Dr. Trinidad Tecson",
+    "Engr. Diego Silang",
+    "Engr. Francisco Dagohoy",
+    "Dr. Graciano Lopez Jaena",
+    "Engr. Marcelo Del Pilar",
+    "Engr. Mariano Ponce",
+    "Dr. Pio Valenzuela",
+    "Engr. Teodoro Plata",
+    "Engr. Ladislao Diwa",
+    "Dr. Valentin Diaz",
+    "Engr. Briccio Pantas",
+    "Engr. Restituto Javier",
+    "Dr. Marina Dizon",
+    "Engr. Gregoria De Jesus",
+    "Engr. Teresa Magbanua",
+    "Dr. Agueda Kahabagan",
+    "Engr. Patrocinio Gamboa",
+    "Engr. Nazaria Lagos",
+    "Dr. Paciano Rizal",
+    "Engr. Vicente Lukban",
+    "Engr. Simeon Ola",
+    "Dr. Artemio Ricarte",
+    "Engr. Edilberto Evangelista",
+    "Engr. Flaviano Yengko",
+    "Dr. Mamerto Natividad",
+    "Engr. Manuel Tinio",
+    "Engr. Servillano Aquino",
+    "Dr.Tomas Mascardo",
+    "Engr. Maximino Hizon",
+    "Engr. Pantaleon Garcia",
+  ];
+
   const faculty: FacultyInput[] = employmentDistribution.map(
     (employmentType, idx) => {
       const num = idx + 1;
@@ -156,7 +203,7 @@ export function generateMediumCollegeFixture(): CollegeFixtureDataset {
         employmentType === "FULL_TIME_NON_PERMANENT";
       return {
         code,
-        name: `Engr. Faculty Member ${String(num).padStart(2, "0")}`,
+        name: NAMED_FACULTY_LEADERS[idx] ?? `Engr. Lorenzo Tan ${num}`,
         programCode: prog.code,
         employmentType,
         specialization:

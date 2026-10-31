@@ -20,6 +20,10 @@ import {
   type ScheduleExceptionRecord,
   type ScheduleRecord,
 } from "../master-data/master-data.store";
+import {
+  recordLearningEvent,
+  trainAndEvaluateFitModel,
+} from "../ml/ml.service";
 
 export interface EditScheduleEntryInput {
   scheduleId: string;
@@ -139,6 +143,21 @@ export async function editScheduleEntry(
     engineClient: input.engineClient,
     actor: input.actor,
   });
+
+  // Phase 5C: Record LearningEvent from Dean edit
+  const editedOffering = store.offerings.get(afterEntry.offeringCode);
+  if (editedOffering && afterEntry.facultyCode !== "EXTERNAL") {
+    recordLearningEvent({
+      termCode: sched.termCode,
+      scheduleId: sched.id,
+      type: "DEAN_EDIT",
+      facultyCode: afterEntry.facultyCode,
+      subjectCode: editedOffering.subjectCode,
+      weekday: afterEntry.weekday,
+      startMin: afterEntry.startMin,
+      endMin: afterEntry.endMin,
+    });
+  }
 
   await withAudit(
     {
@@ -350,6 +369,25 @@ export async function acceptCandidateSchedule(
     acceptedBy: options.actor,
   };
   store.schedules.set(accepted.id, accepted);
+
+  // Phase 5C: Record LearningEvents from accepted schedule and retrain ML fit model
+  for (const entry of accepted.entries) {
+    if (entry.facultyCode === "EXTERNAL") continue;
+    const off = store.offerings.get(entry.offeringCode);
+    if (off) {
+      recordLearningEvent({
+        termCode: accepted.termCode,
+        scheduleId: accepted.id,
+        type: "SCHEDULE_ACCEPTED",
+        facultyCode: entry.facultyCode,
+        subjectCode: off.subjectCode,
+        weekday: entry.weekday,
+        startMin: entry.startMin,
+        endMin: entry.endMin,
+      });
+    }
+  }
+  await trainAndEvaluateFitModel(options.actor, accepted.termCode);
 
   await withAudit(
     {

@@ -114,6 +114,26 @@ export class EngineClient {
         "res = find_alternative_slots(areq)",
         "sys.stdout.write(json.dumps({'status': 200, 'data': res.model_dump()}))",
       ].join("\n");
+    } else if (method === "POST" && routePath === "/v1/ml/train") {
+      script = [
+        "import json, sys",
+        "from engine.domain.models import MLTrainRequest",
+        "from engine.ml.recommender import train_fit_model",
+        "req = json.loads(sys.stdin.read())",
+        "mreq = MLTrainRequest.model_validate(req['body'])",
+        "res = train_fit_model(mreq)",
+        "sys.stdout.write(json.dumps({'status': 200, 'data': res.model_dump()}))",
+      ].join("\n");
+    } else if (method === "POST" && routePath === "/v1/ml/recommend") {
+      script = [
+        "import json, sys",
+        "from engine.domain.models import MLRecommendRequest",
+        "from engine.ml.recommender import recommend_faculty",
+        "req = json.loads(sys.stdin.read())",
+        "rreq = MLRecommendRequest.model_validate(req['body'])",
+        "res = recommend_faculty(rreq)",
+        "sys.stdout.write(json.dumps({'status': 200, 'data': res.model_dump()}))",
+      ].join("\n");
     } else {
       script = [
         "import json, sys",

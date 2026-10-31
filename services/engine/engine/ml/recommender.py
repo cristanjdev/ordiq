@@ -136,21 +136,22 @@ def train_fit_model(req: MLTrainRequest) -> MLTrainResponse:
         x_rows.append(feat)
         y_vals.append(1 if s.accepted_by_dean else 0)
 
-    # Ensure both positive and negative classes exist; add negative contrast samples if needed
+    # Ensure both positive and negative classes exist; add contrast samples if needed
     if len(set(y_vals)) < 2:
+        missing_label = 0 if 1 in y_vals else 1
         for s in samples[: max(2, len(samples) // 2)]:
-            neg_feat = _extract_features(
-                "Unrelated Specialization",
-                "OTHER",
+            contrast_feat = _extract_features(
+                "Unrelated Specialization" if missing_label == 0 else s.faculty_specialization,
+                "OTHER" if missing_label == 0 else s.faculty_program_code,
                 s.subject_name,
                 s.subject_description,
                 s.subject_program_code,
-                False,
-                0,
-                -2.0,
+                missing_label == 1,
+                0 if missing_label == 0 else 2,
+                -2.0 if missing_label == 0 else 5.0,
             )
-            x_rows.append(neg_feat)
-            y_vals.append(0)
+            x_rows.append(contrast_feat)
+            y_vals.append(missing_label)
 
     x_mat = np.asarray(x_rows, dtype=np.float64)
     y_arr = np.asarray(y_vals, dtype=np.int64)

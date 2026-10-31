@@ -32,7 +32,7 @@
   "faculty": [
     {
       "code": "FAC-001",
-      "name": "Engr. Faculty Member 01",
+      "name": "Engr. Maria Clara Santos",
       "programCode": "CE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Structural & Geotechnical Engineering",
@@ -43,7 +43,7 @@
     },
     {
       "code": "FAC-008",
-      "name": "Engr. Faculty Member 08",
+      "name": "Engr. Andres Bonifacio",
       "programCode": "CE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Structural & Geotechnical Engineering",
@@ -54,7 +54,7 @@
     },
     {
       "code": "FAC-015",
-      "name": "Engr. Faculty Member 15",
+      "name": "Dr. Trinidad Tecson",
       "programCode": "CE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Structural & Geotechnical Engineering",
@@ -65,7 +65,7 @@
     },
     {
       "code": "FAC-002",
-      "name": "Engr. Faculty Member 02",
+      "name": "Dr. Jose Rizal Mercado",
       "programCode": "CPE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Embedded Systems, Software & Computer Networks",
@@ -76,7 +76,7 @@
     },
     {
       "code": "FAC-009",
-      "name": "Engr. Faculty Member 09",
+      "name": "Dr. Emilio Jacinto",
       "programCode": "CPE",
       "employmentType": "FULL_TIME_PERMANENT",
       "specialization": "Embedded Systems, Software & Computer Networks",
@@ -87,7 +87,7 @@
     },
     {
       "code": "FAC-016",
-      "name": "Engr. Faculty Member 16",
+      "name": "Engr. Diego Silang",
       "programCode": "CPE",
       "employmentType": "FULL_TIME_NON_PERMANENT",
       "specialization": "Embedded Systems, Software & Computer Networks",
