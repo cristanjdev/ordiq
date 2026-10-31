@@ -1,17 +1,13 @@
-import { SectionPlaceholderView } from "@/features/workspace/section-placeholder-view";
+import { MasterDataWorkspace } from "@/features/data/master-data-workspace";
 
-export default function RulesPage() {
+export default function RulesAndPreferencesPage() {
   return (
-    <SectionPlaceholderView
-      title="Rules & Preferences"
-      phaseBadge="Phase 2"
-      description="Configure hard constraints (HC-01 to HC-15), soft preference weights (SC-01 to SC-16), and stakeholder approval status."
-      deliverables={[
-        "Non-waivable double-booking rules (HC-01 Faculty, HC-02 Room, HC-03 Section)",
-        "Stakeholder approval toggle for soft preferences (SC-01 to SC-16)",
-        "Dean directives created via workspace or AI Assistant",
-      ]}
+    <MasterDataWorkspace
+      initialDataset="fixedBlocks"
+      title="Rules, Fixed Blocks & Preferences"
+      subtitle="Configure locked university blocks (PATHFIT, GenEd), faculty availability, and scheduling rules."
     />
   );
 }
+
 

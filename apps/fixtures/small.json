@@ -1,0 +1,814 @@
+{
+  "name": "small",
+  "term": {
+    "code": "AY2026-2027-S1",
+    "academicYear": "2026-2027",
+    "semester": 1,
+    "status": "READY",
+    "slotSizeMin": 30,
+    "teachingDays": [
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY"
+    ],
+    "dayStartMin": 450,
+    "dayEndMin": 1230
+  },
+  "programs": [
+    {
+      "code": "CE",
+      "name": "BS Civil Engineering",
+      "coordinator": "Engr. Coordinator CE"
+    },
+    {
+      "code": "CPE",
+      "name": "BS Computer Engineering",
+      "coordinator": "Engr. Coordinator CpE"
+    }
+  ],
+  "faculty": [
+    {
+      "code": "FAC-001",
+      "name": "Engr. Faculty Member 01",
+      "programCode": "CE",
+      "employmentType": "FULL_TIME_PERMANENT",
+      "specialization": "Structural & Geotechnical Engineering",
+      "education": "MS Civil Engineering",
+      "maxLoadUnits": 21,
+      "maxLoadHours": 24,
+      "status": "ACTIVE"
+    },
+    {
+      "code": "FAC-008",
+      "name": "Engr. Faculty Member 08",
+      "programCode": "CE",
+      "employmentType": "FULL_TIME_PERMANENT",
+      "specialization": "Structural & Geotechnical Engineering",
+      "education": "MS Civil Engineering",
+      "maxLoadUnits": 21,
+      "maxLoadHours": 24,
+      "status": "ACTIVE"
+    },
+    {
+      "code": "FAC-015",
+      "name": "Engr. Faculty Member 15",
+      "programCode": "CE",
+      "employmentType": "FULL_TIME_NON_PERMANENT",
+      "specialization": "Structural & Geotechnical Engineering",
+      "education": "MS Civil Engineering",
+      "maxLoadUnits": 21,
+      "maxLoadHours": 24,
+      "status": "ACTIVE"
+    },
+    {
+      "code": "FAC-002",
+      "name": "Engr. Faculty Member 02",
+      "programCode": "CPE",
+      "employmentType": "FULL_TIME_PERMANENT",
+      "specialization": "Embedded Systems, Software & Computer Networks",
+      "education": "MS Computer Engineering",
+      "maxLoadUnits": 21,
+      "maxLoadHours": 24,
+      "status": "ACTIVE"
+    },
+    {
+      "code": "FAC-009",
+      "name": "Engr. Faculty Member 09",
+      "programCode": "CPE",
+      "employmentType": "FULL_TIME_PERMANENT",
+      "specialization": "Embedded Systems, Software & Computer Networks",
+      "education": "MS Computer Engineering",
+      "maxLoadUnits": 21,
+      "maxLoadHours": 24,
+      "status": "ACTIVE"
+    },
+    {
+      "code": "FAC-016",
+      "name": "Engr. Faculty Member 16",
+      "programCode": "CPE",
+      "employmentType": "FULL_TIME_NON_PERMANENT",
+      "specialization": "Embedded Systems, Software & Computer Networks",
+      "education": "MS Computer Engineering",
+      "maxLoadUnits": 21,
+      "maxLoadHours": 24,
+      "status": "ACTIVE"
+    }
+  ],
+  "subjects": [
+    {
+      "code": "CE101",
+      "name": "Civil Engineering Fundamentals",
+      "description": "Core introductory course for BS Civil Engineering. Covers Structural & Geotechnical Engineering.",
+      "programCode": "CE",
+      "yearLevel": 1,
+      "category": "MAJOR",
+      "units": 3,
+      "contactHours": 3,
+      "lectureHours": 3,
+      "labHours": 0,
+      "curriculumVersion": "2024",
+      "isCurrentCurriculum": true
+    },
+    {
+      "code": "CE201L",
+      "name": "Civil Engineering Applied Laboratory",
+      "description": "Laboratory course for BS Civil Engineering. Covers Structural & Geotechnical Engineering.",
+      "programCode": "CE",
+      "yearLevel": 2,
+      "category": "MAJOR",
+      "units": 2,
+      "contactHours": 3,
+      "lectureHours": 0,
+      "labHours": 3,
+      "curriculumVersion": "2024",
+      "isCurrentCurriculum": true
+    },
+    {
+      "code": "CPE101",
+      "name": "Computer Engineering Fundamentals",
+      "description": "Core introductory course for BS Computer Engineering. Covers Embedded Systems, Software & Computer Networks.",
+      "programCode": "CPE",
+      "yearLevel": 1,
+      "category": "MAJOR",
+      "units": 3,
+      "contactHours": 3,
+      "lectureHours": 3,
+      "labHours": 0,
+      "curriculumVersion": "2024",
+      "isCurrentCurriculum": true
+    },
+    {
+      "code": "CPE201L",
+      "name": "Computer Engineering Applied Laboratory",
+      "description": "Laboratory course for BS Computer Engineering. Covers Embedded Systems, Software & Computer Networks.",
+      "programCode": "CPE",
+      "yearLevel": 2,
+      "category": "MAJOR",
+      "units": 2,
+      "contactHours": 3,
+      "lectureHours": 0,
+      "labHours": 3,
+      "curriculumVersion": "2024",
+      "isCurrentCurriculum": true
+    }
+  ],
+  "sections": [
+    {
+      "code": "CE-1A",
+      "programCode": "CE",
+      "yearLevel": 1,
+      "studentCount": 38
+    },
+    {
+      "code": "CE-1B",
+      "programCode": "CE",
+      "yearLevel": 1,
+      "studentCount": 38
+    },
+    {
+      "code": "CPE-1A",
+      "programCode": "CPE",
+      "yearLevel": 1,
+      "studentCount": 38
+    },
+    {
+      "code": "CPE-1B",
+      "programCode": "CPE",
+      "yearLevel": 1,
+      "studentCount": 38
+    }
+  ],
+  "rooms": [
+    {
+      "code": "EN-LEC-01",
+      "name": "Engineering Lecture Room 201",
+      "type": "LECTURE",
+      "capacity": 42,
+      "equipment": [
+        "Projector",
+        "Whiteboard"
+      ],
+      "restrictions": "",
+      "status": "ACTIVE"
+    },
+    {
+      "code": "EN-LEC-02",
+      "name": "Engineering Lecture Room 202",
+      "type": "LECTURE",
+      "capacity": 44,
+      "equipment": [
+        "Projector",
+        "Whiteboard"
+      ],
+      "restrictions": "",
+      "status": "ACTIVE"
+    },
+    {
+      "code": "EN-LAB-01",
+      "name": "CE Laboratory 101",
+      "type": "LAB",
+      "capacity": 40,
+      "equipment": [
+        "Laboratory Workstations",
+        "Safety Kit"
+      ],
+      "restrictions": "CE / General Engineering Lab",
+      "status": "ACTIVE"
+    },
+    {
+      "code": "EN-LAB-02",
+      "name": "CPE Laboratory 102",
+      "type": "LAB",
+      "capacity": 38,
+      "equipment": [
+        "Laboratory Workstations",
+        "Safety Kit"
+      ],
+      "restrictions": "CPE / General Engineering Lab",
+      "status": "ACTIVE"
+    }
+  ],
+  "offerings": [
+    {
+      "code": "OFF-AY2026-2027-S1-CE-1A-CE101",
+      "termCode": "AY2026-2027-S1",
+      "sectionCode": "CE-1A",
+      "subjectCode": "CE101",
+      "component": "LECTURE",
+      "meetingsPerWeek": 2,
+      "minutesPerMeeting": 90,
+      "meetingPattern": "MWF",
+      "requiredRoomType": "LECTURE",
+      "preassignedFacultyCode": "FAC-001",
+      "combinedClassGroup": null
+    },
+    {
+      "code": "OFF-AY2026-2027-S1-CPE-1A-CPE101",
+      "termCode": "AY2026-2027-S1",
+      "sectionCode": "CPE-1A",
+      "subjectCode": "CPE101",
+      "component": "LECTURE",
+      "meetingsPerWeek": 2,
+      "minutesPerMeeting": 90,
+      "meetingPattern": "TTH",
+      "requiredRoomType": "LECTURE",
+      "preassignedFacultyCode": "FAC-002",
+      "combinedClassGroup": null
+    },
+    {
+      "code": "OFF-AY2026-2027-S1-CE-1B-CE101",
+      "termCode": "AY2026-2027-S1",
+      "sectionCode": "CE-1B",
+      "subjectCode": "CE101",
+      "component": "LECTURE",
+      "meetingsPerWeek": 2,
+      "minutesPerMeeting": 90,
+      "meetingPattern": "TTH",
+      "requiredRoomType": "LECTURE",
+      "preassignedFacultyCode": "FAC-008",
+      "combinedClassGroup": null
+    },
+    {
+      "code": "OFF-AY2026-2027-S1-CPE-1B-CPE101",
+      "termCode": "AY2026-2027-S1",
+      "sectionCode": "CPE-1B",
+      "subjectCode": "CPE101",
+      "component": "LECTURE",
+      "meetingsPerWeek": 2,
+      "minutesPerMeeting": 90,
+      "meetingPattern": "MWF",
+      "requiredRoomType": "LECTURE",
+      "preassignedFacultyCode": "FAC-009",
+      "combinedClassGroup": null
+    }
+  ],
+  "fixedBlocks": [
+    {
+      "termCode": "AY2026-2027-S1",
+      "sectionCode": "CE-1A",
+      "weekday": "FRIDAY",
+      "startMin": 930,
+      "endMin": 1050,
+      "label": "PATHFIT 1",
+      "location": "University Gymnasium / CAS Building"
+    },
+    {
+      "termCode": "AY2026-2027-S1",
+      "sectionCode": "CPE-1A",
+      "weekday": "FRIDAY",
+      "startMin": 930,
+      "endMin": 1050,
+      "label": "PATHFIT 1",
+      "location": "University Gymnasium / CAS Building"
+    },
+    {
+      "termCode": "AY2026-2027-S1",
+      "sectionCode": "CE-1B",
+      "weekday": "FRIDAY",
+      "startMin": 930,
+      "endMin": 1050,
+      "label": "PATHFIT 1",
+      "location": "University Gymnasium / CAS Building"
+    },
+    {
+      "termCode": "AY2026-2027-S1",
+      "sectionCode": "CPE-1B",
+      "weekday": "FRIDAY",
+      "startMin": 930,
+      "endMin": 1050,
+      "label": "PATHFIT 1",
+      "location": "University Gymnasium / CAS Building"
+    }
+  ],
+  "facultyAvailability": [
+    {
+      "facultyCode": "FAC-001",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "MONDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-001",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "TUESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-001",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "WEDNESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-001",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "THURSDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-001",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "FRIDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-001",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "SATURDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-002",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "MONDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-002",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "TUESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-002",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "WEDNESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-002",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "THURSDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-002",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "FRIDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-002",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "SATURDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-008",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "MONDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-008",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "TUESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-008",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "WEDNESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-008",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "THURSDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-008",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "FRIDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-008",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "SATURDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-009",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "MONDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-009",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "TUESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-009",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "WEDNESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-009",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "THURSDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-009",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "FRIDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-009",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "SATURDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-015",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "MONDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-015",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "TUESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-015",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "WEDNESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-015",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "THURSDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-015",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "FRIDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-015",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "SATURDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-016",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "MONDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-016",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "TUESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-016",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "WEDNESDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-016",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "THURSDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-016",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "FRIDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    },
+    {
+      "facultyCode": "FAC-016",
+      "termCode": "AY2026-2027-S1",
+      "weekday": "SATURDAY",
+      "startMin": 450,
+      "endMin": 1050,
+      "status": "AVAILABLE",
+      "reason": "Regular availability"
+    }
+  ],
+  "facultyQualifications": [
+    {
+      "facultyCode": "FAC-001",
+      "subjectCode": "CE101",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-001",
+      "subjectCode": "CE201L",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-002",
+      "subjectCode": "CPE101",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-002",
+      "subjectCode": "CPE201L",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-008",
+      "subjectCode": "CE101",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-008",
+      "subjectCode": "CE201L",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-009",
+      "subjectCode": "CPE101",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-009",
+      "subjectCode": "CPE201L",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-015",
+      "subjectCode": "CE101",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-015",
+      "subjectCode": "CE201L",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-016",
+      "subjectCode": "CPE101",
+      "source": "DECLARED"
+    },
+    {
+      "facultyCode": "FAC-016",
+      "subjectCode": "CPE201L",
+      "source": "DECLARED"
+    }
+  ],
+  "facultyPreferences": [
+    {
+      "facultyCode": "FAC-001",
+      "termCode": "AY2026-2027-S1",
+      "type": "AVOID_DAY",
+      "value": "SATURDAY",
+      "weight": 1,
+      "source": "SURVEY"
+    },
+    {
+      "facultyCode": "FAC-002",
+      "termCode": "AY2026-2027-S1",
+      "type": "PREFERRED_TIME_WINDOW",
+      "value": "07:30-12:00",
+      "weight": 1,
+      "source": "SURVEY"
+    },
+    {
+      "facultyCode": "FAC-008",
+      "termCode": "AY2026-2027-S1",
+      "type": "PREFERRED_TIME_WINDOW",
+      "value": "07:30-12:00",
+      "weight": 1,
+      "source": "SURVEY"
+    },
+    {
+      "facultyCode": "FAC-009",
+      "termCode": "AY2026-2027-S1",
+      "type": "AVOID_DAY",
+      "value": "SATURDAY",
+      "weight": 1,
+      "source": "SURVEY"
+    }
+  ],
+  "pastSchedule": [
+    {
+      "offeringCode": "OFF-AY2026-2027-S1-CE-1A-CE101",
+      "facultyCode": "FAC-001",
+      "roomCode": "EN-LEC-01",
+      "weekday": "MONDAY",
+      "startMin": 450,
+      "endMin": 540
+    },
+    {
+      "offeringCode": "OFF-AY2026-2027-S1-CE-1A-CE101",
+      "facultyCode": "FAC-001",
+      "roomCode": "EN-LEC-01",
+      "weekday": "WEDNESDAY",
+      "startMin": 450,
+      "endMin": 540
+    },
+    {
+      "offeringCode": "OFF-AY2026-2027-S1-CPE-1A-CPE101",
+      "facultyCode": "FAC-002",
+      "roomCode": "EN-LEC-02",
+      "weekday": "TUESDAY",
+      "startMin": 540,
+      "endMin": 630
+    },
+    {
+      "offeringCode": "OFF-AY2026-2027-S1-CPE-1A-CPE101",
+      "facultyCode": "FAC-002",
+      "roomCode": "EN-LEC-02",
+      "weekday": "THURSDAY",
+      "startMin": 540,
+      "endMin": 630
+    },
+    {
+      "offeringCode": "OFF-AY2026-2027-S1-CE-1B-CE101",
+      "facultyCode": "FAC-008",
+      "roomCode": "EN-LEC-01",
+      "weekday": "TUESDAY",
+      "startMin": 630,
+      "endMin": 720
+    },
+    {
+      "offeringCode": "OFF-AY2026-2027-S1-CE-1B-CE101",
+      "facultyCode": "FAC-008",
+      "roomCode": "EN-LEC-01",
+      "weekday": "THURSDAY",
+      "startMin": 630,
+      "endMin": 720
+    },
+    {
+      "offeringCode": "OFF-AY2026-2027-S1-CPE-1B-CPE101",
+      "facultyCode": "FAC-009",
+      "roomCode": "EN-LEC-02",
+      "weekday": "MONDAY",
+      "startMin": 720,
+      "endMin": 810
+    },
+    {
+      "offeringCode": "OFF-AY2026-2027-S1-CPE-1B-CPE101",
+      "facultyCode": "FAC-009",
+      "roomCode": "EN-LEC-02",
+      "weekday": "WEDNESDAY",
+      "startMin": 720,
+      "endMin": 810
+    }
+  ]
+}

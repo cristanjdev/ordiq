@@ -709,7 +709,7 @@ export async function importWorkbookPayload(
       weekday: row.weekday,
       startMin: row.startMin,
       endMin: row.endMin,
-      pinned: true,
+      pinned: false,
     }));
     const importedSchedule: ScheduleRecord = {
       id: crypto.randomUUID(),

@@ -1,6 +1,315 @@
 {
   "components": {
     "schemas": {
+      "AlternativeSlot": {
+        "description": "A single feasible alternative slot and room ranked by quality impact.",
+        "properties": {
+          "end_min": {
+            "title": "End Min",
+            "type": "integer"
+          },
+          "faculty_code": {
+            "title": "Faculty Code",
+            "type": "string"
+          },
+          "quality_delta": {
+            "title": "Quality Delta",
+            "type": "number"
+          },
+          "resulting_quality_score": {
+            "title": "Resulting Quality Score",
+            "type": "number"
+          },
+          "room_code": {
+            "title": "Room Code",
+            "type": "string"
+          },
+          "start_min": {
+            "title": "Start Min",
+            "type": "integer"
+          },
+          "weekday": {
+            "$ref": "#/components/schemas/Weekday"
+          }
+        },
+        "required": [
+          "weekday",
+          "start_min",
+          "end_min",
+          "room_code",
+          "faculty_code",
+          "quality_delta",
+          "resulting_quality_score"
+        ],
+        "title": "AlternativeSlot",
+        "type": "object"
+      },
+      "AlternativesRequest": {
+        "description": "Payload for POST /v1/alternatives.",
+        "properties": {
+          "current_entries": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduledMeetingEntry"
+            },
+            "title": "Current Entries",
+            "type": "array"
+          },
+          "max_results": {
+            "default": 5,
+            "title": "Max Results",
+            "type": "integer"
+          },
+          "meeting_index": {
+            "default": 0,
+            "title": "Meeting Index",
+            "type": "integer"
+          },
+          "offering_code": {
+            "title": "Offering Code",
+            "type": "string"
+          },
+          "problem": {
+            "$ref": "#/components/schemas/Problem"
+          }
+        },
+        "required": [
+          "problem",
+          "current_entries",
+          "offering_code"
+        ],
+        "title": "AlternativesRequest",
+        "type": "object"
+      },
+      "AlternativesResponse": {
+        "description": "Response from POST /v1/alternatives.",
+        "properties": {
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/AlternativeSlot"
+            },
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "meeting_index": {
+            "title": "Meeting Index",
+            "type": "integer"
+          },
+          "offering_code": {
+            "title": "Offering Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offering_code",
+          "meeting_index",
+          "alternatives"
+        ],
+        "title": "AlternativesResponse",
+        "type": "object"
+      },
+      "AvailabilityWindow": {
+        "description": "Faculty or room availability window.",
+        "properties": {
+          "end_min": {
+            "title": "End Min",
+            "type": "integer"
+          },
+          "entity_code": {
+            "title": "Entity Code",
+            "type": "string"
+          },
+          "start_min": {
+            "title": "Start Min",
+            "type": "integer"
+          },
+          "status": {
+            "default": "AVAILABLE",
+            "enum": [
+              "AVAILABLE",
+              "UNAVAILABLE",
+              "PREFERRED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "weekday": {
+            "$ref": "#/components/schemas/Weekday"
+          }
+        },
+        "required": [
+          "entity_code",
+          "weekday",
+          "start_min",
+          "end_min"
+        ],
+        "title": "AvailabilityWindow",
+        "type": "object"
+      },
+      "CalendarRestrictionModel": {
+        "description": "Calendar or room maintenance restriction (HC-14).",
+        "properties": {
+          "end_min": {
+            "title": "End Min",
+            "type": "integer"
+          },
+          "reason": {
+            "default": "Maintenance",
+            "title": "Reason",
+            "type": "string"
+          },
+          "room_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Code"
+          },
+          "start_min": {
+            "title": "Start Min",
+            "type": "integer"
+          },
+          "weekday": {
+            "$ref": "#/components/schemas/Weekday"
+          }
+        },
+        "required": [
+          "weekday",
+          "start_min",
+          "end_min"
+        ],
+        "title": "CalendarRestrictionModel",
+        "type": "object"
+      },
+      "ComponentType": {
+        "description": "Course offering component types.",
+        "enum": [
+          "LECTURE",
+          "LAB"
+        ],
+        "title": "ComponentType",
+        "type": "string"
+      },
+      "ConstraintHardness": {
+        "description": "Constraint hardness levels.",
+        "enum": [
+          "HARD",
+          "SOFT"
+        ],
+        "title": "ConstraintHardness",
+        "type": "string"
+      },
+      "DirectiveModel": {
+        "description": "Dean directive or constraint record (HC-12 / D-16).",
+        "properties": {
+          "approved": {
+            "default": true,
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "end_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Min"
+          },
+          "faculty_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Code"
+          },
+          "hardness": {
+            "$ref": "#/components/schemas/ConstraintHardness",
+            "default": "HARD"
+          },
+          "id": {
+            "default": "DIR-1",
+            "title": "Id",
+            "type": "string"
+          },
+          "offering_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Code"
+          },
+          "room_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Code"
+          },
+          "section_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section Code"
+          },
+          "start_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Min"
+          },
+          "type": {
+            "$ref": "#/components/schemas/DirectiveType"
+          },
+          "weekday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Weekday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "weight": {
+            "default": 10.0,
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "DirectiveModel",
+        "type": "object"
+      },
       "DirectiveType": {
         "description": "Closed set of chat-driven directive types (D-16).",
         "enum": [
@@ -14,6 +323,17 @@
           "SET_WEIGHT"
         ],
         "title": "DirectiveType",
+        "type": "string"
+      },
+      "EmploymentType": {
+        "description": "Faculty employment classifications from the manuscript.",
+        "enum": [
+          "FULL_TIME_PERMANENT",
+          "FULL_TIME_NON_PERMANENT",
+          "PART_TIME",
+          "VISITING"
+        ],
+        "title": "EmploymentType",
         "type": "string"
       },
       "ErrorDetail": {
@@ -54,6 +374,295 @@
           "error"
         ],
         "title": "ErrorEnvelope",
+        "type": "object"
+      },
+      "ExceptionWaiverModel": {
+        "description": "Documented waiver for a waivable constraint (D-18).",
+        "properties": {
+          "approved_by": {
+            "default": "dean",
+            "title": "Approved By",
+            "type": "string"
+          },
+          "code": {
+            "$ref": "#/components/schemas/HardConstraintCode"
+          },
+          "faculty_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Code"
+          },
+          "offering_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Code"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "room_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Code"
+          },
+          "section_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section Code"
+          }
+        },
+        "required": [
+          "code",
+          "reason"
+        ],
+        "title": "ExceptionWaiverModel",
+        "type": "object"
+      },
+      "FacultyModel": {
+        "description": "Faculty member in problem snapshot.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "employment_type": {
+            "$ref": "#/components/schemas/EmploymentType",
+            "default": "FULL_TIME_PERMANENT"
+          },
+          "max_load_hours": {
+            "default": 24.0,
+            "title": "Max Load Hours",
+            "type": "number"
+          },
+          "max_load_units": {
+            "default": 21.0,
+            "title": "Max Load Units",
+            "type": "number"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "program_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Code"
+          },
+          "specialization": {
+            "default": "",
+            "title": "Specialization",
+            "type": "string"
+          },
+          "status": {
+            "default": "ACTIVE",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "FacultyModel",
+        "type": "object"
+      },
+      "FacultyPreferenceModel": {
+        "description": "Faculty preference record (SC-01, SC-04).",
+        "properties": {
+          "approved": {
+            "default": true,
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "faculty_code": {
+            "title": "Faculty Code",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          },
+          "weight": {
+            "default": 5.0,
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "faculty_code",
+          "type",
+          "value"
+        ],
+        "title": "FacultyPreferenceModel",
+        "type": "object"
+      },
+      "FacultyRecommendationItem": {
+        "description": "Ranked recommendation with score and top contributing factors.",
+        "properties": {
+          "factors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Factors",
+            "type": "array"
+          },
+          "faculty_code": {
+            "title": "Faculty Code",
+            "type": "string"
+          },
+          "fit_score": {
+            "title": "Fit Score",
+            "type": "number"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "subject_code": {
+            "title": "Subject Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "faculty_code",
+          "subject_code",
+          "fit_score",
+          "rank",
+          "factors"
+        ],
+        "title": "FacultyRecommendationItem",
+        "type": "object"
+      },
+      "FacultySubjectPair": {
+        "description": "Candidate pair to score in POST /v1/ml/recommend.",
+        "properties": {
+          "faculty_code": {
+            "title": "Faculty Code",
+            "type": "string"
+          },
+          "faculty_program_code": {
+            "default": "",
+            "title": "Faculty Program Code",
+            "type": "string"
+          },
+          "faculty_specialization": {
+            "default": "",
+            "title": "Faculty Specialization",
+            "type": "string"
+          },
+          "historical_count": {
+            "default": 0,
+            "title": "Historical Count",
+            "type": "integer"
+          },
+          "preference_weight": {
+            "default": 0.0,
+            "title": "Preference Weight",
+            "type": "number"
+          },
+          "qualified": {
+            "default": true,
+            "title": "Qualified",
+            "type": "boolean"
+          },
+          "subject_category": {
+            "default": "MAJOR",
+            "title": "Subject Category",
+            "type": "string"
+          },
+          "subject_code": {
+            "title": "Subject Code",
+            "type": "string"
+          },
+          "subject_description": {
+            "default": "",
+            "title": "Subject Description",
+            "type": "string"
+          },
+          "subject_name": {
+            "default": "",
+            "title": "Subject Name",
+            "type": "string"
+          },
+          "subject_program_code": {
+            "default": "",
+            "title": "Subject Program Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "faculty_code",
+          "subject_code"
+        ],
+        "title": "FacultySubjectPair",
+        "type": "object"
+      },
+      "FixedBlockModel": {
+        "description": "Locked section block outside college control (PATHFIT, GenEd, D-23).",
+        "properties": {
+          "end_min": {
+            "title": "End Min",
+            "type": "integer"
+          },
+          "label": {
+            "default": "Fixed Block",
+            "title": "Label",
+            "type": "string"
+          },
+          "section_code": {
+            "title": "Section Code",
+            "type": "string"
+          },
+          "start_min": {
+            "title": "Start Min",
+            "type": "integer"
+          },
+          "weekday": {
+            "$ref": "#/components/schemas/Weekday"
+          }
+        },
+        "required": [
+          "section_code",
+          "weekday",
+          "start_min",
+          "end_min"
+        ],
+        "title": "FixedBlockModel",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -151,6 +760,583 @@
         "title": "HealthResponse",
         "type": "object"
       },
+      "HistoricalAssignmentSample": {
+        "description": "Training sample linking a faculty member and subject with outcome weight.",
+        "properties": {
+          "accepted_by_dean": {
+            "default": true,
+            "title": "Accepted By Dean",
+            "type": "boolean"
+          },
+          "faculty_code": {
+            "title": "Faculty Code",
+            "type": "string"
+          },
+          "faculty_program_code": {
+            "default": "",
+            "title": "Faculty Program Code",
+            "type": "string"
+          },
+          "faculty_specialization": {
+            "default": "",
+            "title": "Faculty Specialization",
+            "type": "string"
+          },
+          "historical_count": {
+            "default": 1,
+            "title": "Historical Count",
+            "type": "integer"
+          },
+          "preference_weight": {
+            "default": 0.0,
+            "title": "Preference Weight",
+            "type": "number"
+          },
+          "qualified": {
+            "default": true,
+            "title": "Qualified",
+            "type": "boolean"
+          },
+          "subject_category": {
+            "default": "MAJOR",
+            "title": "Subject Category",
+            "type": "string"
+          },
+          "subject_code": {
+            "title": "Subject Code",
+            "type": "string"
+          },
+          "subject_description": {
+            "default": "",
+            "title": "Subject Description",
+            "type": "string"
+          },
+          "subject_name": {
+            "default": "",
+            "title": "Subject Name",
+            "type": "string"
+          },
+          "subject_program_code": {
+            "default": "",
+            "title": "Subject Program Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "faculty_code",
+          "subject_code"
+        ],
+        "title": "HistoricalAssignmentSample",
+        "type": "object"
+      },
+      "MLModelMetrics": {
+        "description": "Evaluation metrics for the trained faculty-subject fit model.",
+        "properties": {
+          "baseline_top1_accuracy": {
+            "title": "Baseline Top1 Accuracy",
+            "type": "number"
+          },
+          "feature_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Feature Names",
+            "type": "array"
+          },
+          "sample_count": {
+            "title": "Sample Count",
+            "type": "integer"
+          },
+          "top1_accuracy": {
+            "title": "Top1 Accuracy",
+            "type": "number"
+          },
+          "top3_accuracy": {
+            "title": "Top3 Accuracy",
+            "type": "number"
+          }
+        },
+        "required": [
+          "sample_count",
+          "top1_accuracy",
+          "top3_accuracy",
+          "baseline_top1_accuracy",
+          "feature_names"
+        ],
+        "title": "MLModelMetrics",
+        "type": "object"
+      },
+      "MLRecommendRequest": {
+        "description": "Payload for POST /v1/ml/recommend.",
+        "properties": {
+          "pairs": {
+            "items": {
+              "$ref": "#/components/schemas/FacultySubjectPair"
+            },
+            "title": "Pairs",
+            "type": "array"
+          },
+          "parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parameters"
+          }
+        },
+        "required": [
+          "pairs"
+        ],
+        "title": "MLRecommendRequest",
+        "type": "object"
+      },
+      "MLRecommendResponse": {
+        "description": "Response from POST /v1/ml/recommend.",
+        "properties": {
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/FacultyRecommendationItem"
+            },
+            "title": "Recommendations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recommendations"
+        ],
+        "title": "MLRecommendResponse",
+        "type": "object"
+      },
+      "MLTrainRequest": {
+        "description": "Payload for POST /v1/ml/train.",
+        "properties": {
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricalAssignmentSample"
+            },
+            "title": "Samples",
+            "type": "array"
+          }
+        },
+        "required": [
+          "samples"
+        ],
+        "title": "MLTrainRequest",
+        "type": "object"
+      },
+      "MLTrainResponse": {
+        "description": "Response from POST /v1/ml/train storing parameters as JSON (D-11).",
+        "properties": {
+          "metrics": {
+            "$ref": "#/components/schemas/MLModelMetrics"
+          },
+          "model_kind": {
+            "default": "logistic_regression_tfidf_v1",
+            "title": "Model Kind",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          }
+        },
+        "required": [
+          "parameters",
+          "metrics"
+        ],
+        "title": "MLTrainResponse",
+        "type": "object"
+      },
+      "OfferingModel": {
+        "description": "Course offering requiring meetings in the term.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "combined_class_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Combined Class Group"
+          },
+          "component": {
+            "$ref": "#/components/schemas/ComponentType",
+            "default": "LECTURE"
+          },
+          "meeting_pattern": {
+            "default": "ANY",
+            "title": "Meeting Pattern",
+            "type": "string"
+          },
+          "meetings_per_week": {
+            "default": 2,
+            "title": "Meetings Per Week",
+            "type": "integer"
+          },
+          "minutes_per_meeting": {
+            "default": 90,
+            "title": "Minutes Per Meeting",
+            "type": "integer"
+          },
+          "preassigned_faculty_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preassigned Faculty Code"
+          },
+          "required_room_type": {
+            "$ref": "#/components/schemas/RoomType",
+            "default": "LECTURE"
+          },
+          "section_code": {
+            "title": "Section Code",
+            "type": "string"
+          },
+          "subject_code": {
+            "title": "Subject Code",
+            "type": "string"
+          },
+          "units_override": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Units Override"
+          }
+        },
+        "required": [
+          "code",
+          "section_code",
+          "subject_code"
+        ],
+        "title": "OfferingModel",
+        "type": "object"
+      },
+      "Problem": {
+        "description": "Complete stateless problem snapshot sent to the engine.",
+        "properties": {
+          "calendar_restrictions": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarRestrictionModel"
+            },
+            "title": "Calendar Restrictions",
+            "type": "array"
+          },
+          "directives": {
+            "items": {
+              "$ref": "#/components/schemas/DirectiveModel"
+            },
+            "title": "Directives",
+            "type": "array"
+          },
+          "faculty": {
+            "items": {
+              "$ref": "#/components/schemas/FacultyModel"
+            },
+            "title": "Faculty",
+            "type": "array"
+          },
+          "faculty_availability": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityWindow"
+            },
+            "title": "Faculty Availability",
+            "type": "array"
+          },
+          "faculty_preferences": {
+            "items": {
+              "$ref": "#/components/schemas/FacultyPreferenceModel"
+            },
+            "title": "Faculty Preferences",
+            "type": "array"
+          },
+          "fixed_blocks": {
+            "items": {
+              "$ref": "#/components/schemas/FixedBlockModel"
+            },
+            "title": "Fixed Blocks",
+            "type": "array"
+          },
+          "ml_fit_scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Optional key 'facultyCode:subjectCode' -> [0, 1] fit score (SC-07).",
+            "title": "Ml Fit Scores",
+            "type": "object"
+          },
+          "offerings": {
+            "items": {
+              "$ref": "#/components/schemas/OfferingModel"
+            },
+            "title": "Offerings",
+            "type": "array"
+          },
+          "prior_entries": {
+            "description": "Optional baseline entries for regeneration (SC-06) or pinned entries.",
+            "items": {
+              "$ref": "#/components/schemas/ScheduledMeetingEntry"
+            },
+            "title": "Prior Entries",
+            "type": "array"
+          },
+          "qualifications": {
+            "items": {
+              "$ref": "#/components/schemas/QualificationModel"
+            },
+            "title": "Qualifications",
+            "type": "array"
+          },
+          "room_availability": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityWindow"
+            },
+            "title": "Room Availability",
+            "type": "array"
+          },
+          "rooms": {
+            "items": {
+              "$ref": "#/components/schemas/RoomModel"
+            },
+            "title": "Rooms",
+            "type": "array"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SectionModel"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "soft_weights": {
+            "$ref": "#/components/schemas/SoftWeightsConfig"
+          },
+          "subjects": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectModel"
+            },
+            "title": "Subjects",
+            "type": "array"
+          },
+          "term": {
+            "$ref": "#/components/schemas/TermConfig"
+          },
+          "waivers": {
+            "description": "Documented exceptions for waivable rules (D-18).",
+            "items": {
+              "$ref": "#/components/schemas/ExceptionWaiverModel"
+            },
+            "title": "Waivers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "term"
+        ],
+        "title": "Problem",
+        "type": "object"
+      },
+      "QualificationModel": {
+        "description": "Faculty qualification for a subject.",
+        "properties": {
+          "faculty_code": {
+            "title": "Faculty Code",
+            "type": "string"
+          },
+          "subject_code": {
+            "title": "Subject Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "faculty_code",
+          "subject_code"
+        ],
+        "title": "QualificationModel",
+        "type": "object"
+      },
+      "QualityReport": {
+        "description": "Detailed soft-constraint quality report for a schedule.",
+        "properties": {
+          "penalties_by_code": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/SoftConstraintCode"
+            },
+            "title": "Penalties By Code",
+            "type": "object"
+          },
+          "quality_score": {
+            "description": "Normalized 0..100 quality score (higher is better).",
+            "title": "Quality Score",
+            "type": "number"
+          },
+          "total_penalty": {
+            "title": "Total Penalty",
+            "type": "number"
+          },
+          "unmet_preferences": {
+            "items": {
+              "$ref": "#/components/schemas/UnmetPreference"
+            },
+            "title": "Unmet Preferences",
+            "type": "array"
+          }
+        },
+        "required": [
+          "total_penalty",
+          "quality_score"
+        ],
+        "title": "QualityReport",
+        "type": "object"
+      },
+      "RoomModel": {
+        "description": "Room or laboratory in problem snapshot.",
+        "properties": {
+          "capacity": {
+            "title": "Capacity",
+            "type": "integer"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "default": "ACTIVE",
+            "title": "Status",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/RoomType",
+            "default": "LECTURE"
+          }
+        },
+        "required": [
+          "code",
+          "capacity"
+        ],
+        "title": "RoomModel",
+        "type": "object"
+      },
+      "RoomType": {
+        "description": "Room classifications.",
+        "enum": [
+          "LECTURE",
+          "LAB"
+        ],
+        "title": "RoomType",
+        "type": "string"
+      },
+      "ScheduledMeetingEntry": {
+        "description": "A single scheduled class meeting in a candidate or existing schedule.",
+        "properties": {
+          "end_min": {
+            "title": "End Min",
+            "type": "integer"
+          },
+          "faculty_code": {
+            "title": "Faculty Code",
+            "type": "string"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "meeting_index": {
+            "default": 0,
+            "title": "Meeting Index",
+            "type": "integer"
+          },
+          "offering_code": {
+            "title": "Offering Code",
+            "type": "string"
+          },
+          "pinned": {
+            "default": false,
+            "title": "Pinned",
+            "type": "boolean"
+          },
+          "room_code": {
+            "title": "Room Code",
+            "type": "string"
+          },
+          "start_min": {
+            "title": "Start Min",
+            "type": "integer"
+          },
+          "weekday": {
+            "$ref": "#/components/schemas/Weekday"
+          }
+        },
+        "required": [
+          "offering_code",
+          "faculty_code",
+          "room_code",
+          "weekday",
+          "start_min",
+          "end_min"
+        ],
+        "title": "ScheduledMeetingEntry",
+        "type": "object"
+      },
+      "SectionModel": {
+        "description": "Student section in problem snapshot (section-level counts only, D-21).",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "program_code": {
+            "title": "Program Code",
+            "type": "string"
+          },
+          "student_count": {
+            "title": "Student Count",
+            "type": "integer"
+          },
+          "year_level": {
+            "default": 1,
+            "title": "Year Level",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "program_code",
+          "student_count"
+        ],
+        "title": "SectionModel",
+        "type": "object"
+      },
       "SoftConstraintCode": {
         "description": "Catalogue codes for soft preference objectives (Section 6).",
         "enum": [
@@ -172,6 +1358,381 @@
           "SC-16"
         ],
         "title": "SoftConstraintCode",
+        "type": "string"
+      },
+      "SoftWeightsConfig": {
+        "description": "Configured weights for soft constraints SC-01 to SC-16.",
+        "properties": {
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/SoftConstraintCode"
+            },
+            "title": "Weights",
+            "type": "object"
+          }
+        },
+        "title": "SoftWeightsConfig",
+        "type": "object"
+      },
+      "Solution": {
+        "description": "Solver output containing scheduled entries, unscheduled diagnostics, and solver telemetry.",
+        "properties": {
+          "best_bound": {
+            "default": 0.0,
+            "title": "Best Bound",
+            "type": "number"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduledMeetingEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "objective_value": {
+            "default": 0.0,
+            "title": "Objective Value",
+            "type": "number"
+          },
+          "optimality_gap_pct": {
+            "default": 0.0,
+            "title": "Optimality Gap Pct",
+            "type": "number"
+          },
+          "profile_name": {
+            "default": "BALANCED",
+            "title": "Profile Name",
+            "type": "string"
+          },
+          "solve_time_ms": {
+            "default": 0,
+            "title": "Solve Time Ms",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "PROVEN_OPTIMAL",
+              "BEST_FOUND",
+              "INFEASIBLE",
+              "CANCELLED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "unscheduled": {
+            "items": {
+              "$ref": "#/components/schemas/UnscheduledMeetingResult"
+            },
+            "title": "Unscheduled",
+            "type": "array"
+          },
+          "validation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ValidationResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "Solution",
+        "type": "object"
+      },
+      "SolveJobResponse": {
+        "description": "Response from POST /v1/solve and GET /v1/solve/{jobId}.",
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "progress_pct": {
+            "default": 0,
+            "title": "Progress Pct",
+            "type": "integer"
+          },
+          "solution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Solution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "QUEUED",
+              "RUNNING",
+              "DONE",
+              "CANCELLED",
+              "FAILED"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "title": "SolveJobResponse",
+        "type": "object"
+      },
+      "SolveRequest": {
+        "description": "Payload for POST /v1/solve.",
+        "properties": {
+          "problem": {
+            "$ref": "#/components/schemas/Problem"
+          },
+          "profile_name": {
+            "default": "BALANCED",
+            "title": "Profile Name",
+            "type": "string"
+          },
+          "time_limit_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Limit Seconds"
+          }
+        },
+        "required": [
+          "problem"
+        ],
+        "title": "SolveRequest",
+        "type": "object"
+      },
+      "SubjectModel": {
+        "description": "Course subject in problem snapshot.",
+        "properties": {
+          "category": {
+            "default": "MAJOR",
+            "title": "Category",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "contact_hours": {
+            "default": 3.0,
+            "title": "Contact Hours",
+            "type": "number"
+          },
+          "lab_hours": {
+            "default": 0.0,
+            "title": "Lab Hours",
+            "type": "number"
+          },
+          "lecture_hours": {
+            "default": 3.0,
+            "title": "Lecture Hours",
+            "type": "number"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "program_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Code"
+          },
+          "units": {
+            "default": 3.0,
+            "title": "Units",
+            "type": "number"
+          },
+          "year_level": {
+            "default": 1,
+            "title": "Year Level",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "SubjectModel",
+        "type": "object"
+      },
+      "TermConfig": {
+        "description": "Term slot grid and operating window configuration.",
+        "properties": {
+          "allowed_weekdays": {
+            "items": {
+              "$ref": "#/components/schemas/Weekday"
+            },
+            "title": "Allowed Weekdays",
+            "type": "array"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "day_end_min": {
+            "default": 1230,
+            "title": "Day End Min",
+            "type": "integer"
+          },
+          "day_start_min": {
+            "default": 450,
+            "title": "Day Start Min",
+            "type": "integer"
+          },
+          "official_breaks": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Official Breaks",
+            "type": "array"
+          },
+          "slot_step_minutes": {
+            "default": 30,
+            "title": "Slot Step Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "TermConfig",
+        "type": "object"
+      },
+      "UnmetPreference": {
+        "description": "A soft preference or goal that incurred a penalty.",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/SoftConstraintCode"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "faculty_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Code"
+          },
+          "offering_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Code"
+          },
+          "penalty": {
+            "title": "Penalty",
+            "type": "number"
+          },
+          "section_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section Code"
+          }
+        },
+        "required": [
+          "code",
+          "description",
+          "penalty"
+        ],
+        "title": "UnmetPreference",
+        "type": "object"
+      },
+      "UnscheduledMeetingResult": {
+        "description": "Diagnostic record for a meeting the solver left unscheduled (D-07, 2C).",
+        "properties": {
+          "meeting_index": {
+            "title": "Meeting Index",
+            "type": "integer"
+          },
+          "offering_code": {
+            "title": "Offering Code",
+            "type": "string"
+          },
+          "reason_code": {
+            "$ref": "#/components/schemas/UnscheduledReasonCode"
+          },
+          "reason_detail": {
+            "title": "Reason Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offering_code",
+          "meeting_index",
+          "reason_code",
+          "reason_detail"
+        ],
+        "title": "UnscheduledMeetingResult",
+        "type": "object"
+      },
+      "UnscheduledReasonCode": {
+        "description": "Reason codes for meetings left unscheduled (2C Diagnostics).",
+        "enum": [
+          "NO_QUALIFIED_FACULTY",
+          "NO_ROOM_CAPACITY",
+          "FACULTY_LOAD_FULL",
+          "NO_COMMON_SLOT"
+        ],
+        "title": "UnscheduledReasonCode",
         "type": "string"
       },
       "ValidationError": {
@@ -213,6 +1774,182 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "ValidationRequest": {
+        "description": "Payload for POST /v1/validate.",
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduledMeetingEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "problem": {
+            "$ref": "#/components/schemas/Problem"
+          }
+        },
+        "required": [
+          "problem",
+          "entries"
+        ],
+        "title": "ValidationRequest",
+        "type": "object"
+      },
+      "ValidationResponse": {
+        "description": "Response from POST /v1/validate.",
+        "properties": {
+          "hard_violation_count": {
+            "title": "Hard Violation Count",
+            "type": "integer"
+          },
+          "quality": {
+            "$ref": "#/components/schemas/QualityReport"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          },
+          "violations": {
+            "items": {
+              "$ref": "#/components/schemas/Violation"
+            },
+            "title": "Violations",
+            "type": "array"
+          },
+          "waived_violation_count": {
+            "default": 0,
+            "title": "Waived Violation Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "valid",
+          "hard_violation_count",
+          "violations",
+          "quality"
+        ],
+        "title": "ValidationResponse",
+        "type": "object"
+      },
+      "Violation": {
+        "description": "A single hard constraint violation detected by the independent validator.",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/HardConstraintCode"
+          },
+          "end_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Min"
+          },
+          "entry_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Entry Ids",
+            "type": "array"
+          },
+          "faculty_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Faculty Codes",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "offering_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Offering Codes",
+            "type": "array"
+          },
+          "room_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Room Codes",
+            "type": "array"
+          },
+          "section_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Section Codes",
+            "type": "array"
+          },
+          "start_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Min"
+          },
+          "waivable": {
+            "title": "Waivable",
+            "type": "boolean"
+          },
+          "waived": {
+            "default": false,
+            "title": "Waived",
+            "type": "boolean"
+          },
+          "waiver_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waiver Reason"
+          },
+          "weekday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Weekday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "waivable"
+        ],
+        "title": "Violation",
+        "type": "object"
+      },
+      "Weekday": {
+        "description": "Teaching days of the week (D-05).",
+        "enum": [
+          "MONDAY",
+          "TUESDAY",
+          "WEDNESDAY",
+          "THURSDAY",
+          "FRIDAY",
+          "SATURDAY"
+        ],
+        "title": "Weekday",
+        "type": "string"
       }
     }
   },
@@ -294,6 +2031,605 @@
           }
         },
         "summary": "Engine liveness and capability check"
+      }
+    },
+    "/v1/alternatives": {
+      "post": {
+        "description": "Evaluate feasible non-conflicting slots for a meeting.",
+        "operationId": "findAlternatives",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Engine-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Engine-Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlternativesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlternativesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid engine token"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Find feasible alternative slots and rooms ranked by quality impact"
+      }
+    },
+    "/v1/ml/recommend": {
+      "post": {
+        "description": "Return ranked faculty recommendations per subject.",
+        "operationId": "recommendFaculty",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Engine-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Engine-Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MLRecommendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MLRecommendResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid engine token"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rank faculty per subject with fit score and plain-language factors"
+      }
+    },
+    "/v1/ml/train": {
+      "post": {
+        "description": "Train regularized logistic regression / similarity model.",
+        "operationId": "trainMlModel",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Engine-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Engine-Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MLTrainRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MLTrainResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid engine token"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Train faculty-subject fit model and return JSON parameters and metrics"
+      }
+    },
+    "/v1/solve": {
+      "post": {
+        "description": "Run a CP-SAT solve for the provided problem snapshot and weight profile.",
+        "operationId": "startSolveJob",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Engine-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Engine-Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolveJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid engine token"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start a CP-SAT solve job and return a job ID"
+      }
+    },
+    "/v1/solve/{job_id}": {
+      "get": {
+        "description": "Retrieve a solve job from the in-memory registry.",
+        "operationId": "getSolveJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Engine-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Engine-Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolveJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid engine token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Solve job not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get solve job status, progress, and solution"
+      }
+    },
+    "/v1/solve/{job_id}/cancel": {
+      "post": {
+        "description": "Mark a solve job as cancelled.",
+        "operationId": "cancelSolveJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Engine-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Engine-Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolveJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid engine token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Solve job not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel a solve job"
+      }
+    },
+    "/v1/validate": {
+      "post": {
+        "description": "Validate all 15 hard constraints and score 16 soft constraints.",
+        "operationId": "validateSchedule",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Engine-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Engine-Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid engine token"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Independently validate any schedule and compute quality score"
       }
     }
   }

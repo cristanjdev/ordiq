@@ -319,8 +319,10 @@ export function generateMediumCollegeFixture(): CollegeFixtureDataset {
       sec.yearLevel === 1 ? `${sec.programCode}101` : `${sec.programCode}201L`;
     const isLab = sec.yearLevel === 2;
     const offCode = `OFF-${term.code}-${sec.code}-${subjCode}`;
+    const progFacs = faculty.filter((f) => f.programCode === sec.programCode);
     const matchingFac =
-      faculty.find((f) => f.programCode === sec.programCode) ?? faculty[0];
+      progFacs[Math.floor(idx / 7) % Math.max(1, progFacs.length)] ??
+      faculty[0];
     if (!matchingFac) return;
 
     offerings.push({
@@ -421,24 +423,34 @@ export function generateSmallFixture(): CollegeFixtureDataset {
           ? o.preassignedFacultyCode
           : (faculty[0]?.code ?? null),
     }));
-  const offCodes = new Set(offerings.map((o) => o.code));
 
-  const pastSchedule = medium.pastSchedule
-    .filter((ps) => offCodes.has(ps.offeringCode))
-    .map((ps, idx) => {
-      const off = offerings.find((o) => o.code === ps.offeringCode);
-      const isLab = off?.requiredRoomType === "LAB";
-      const pool = isLab ? labRooms : lecRooms;
-      const roomCode = pool[idx % pool.length]?.code ?? ps.roomCode;
-      const facultyCode = facCodes.has(ps.facultyCode)
-        ? ps.facultyCode
-        : (faculty[0]?.code ?? ps.facultyCode);
-      return {
-        ...ps,
+  const pastSchedule: PastScheduleRowInput[] = [];
+  offerings.forEach((off, offIdx) => {
+    const isLab = off.requiredRoomType === "LAB";
+    const pool = isLab ? labRooms : lecRooms;
+    const roomCode = pool[offIdx % pool.length]?.code ?? rooms[0]?.code ?? "EN-LEC-01";
+    const facCode =
+      off.preassignedFacultyCode ??
+      faculty.find((f) => f.programCode === off.subjectCode.slice(0, 2))?.code ??
+      faculty[0]?.code ??
+      "FAC-001";
+    const days: [Weekday, Weekday] =
+      off.meetingPattern === "TTH"
+        ? ["TUESDAY", "THURSDAY"]
+        : ["MONDAY", "WEDNESDAY"];
+    const startMin = 450 + offIdx * 90;
+    const endMin = startMin + off.minutesPerMeeting;
+    for (const day of days) {
+      pastSchedule.push({
+        offeringCode: off.code,
+        facultyCode: facCode,
         roomCode,
-        facultyCode,
-      };
-    });
+        weekday: day,
+        startMin,
+        endMin,
+      });
+    }
+  });
 
   return {
     name: "small",
@@ -511,7 +523,7 @@ export async function loadFixtureIntoStore(
       weekday: row.weekday,
       startMin: row.startMin,
       endMin: row.endMin,
-      pinned: true,
+      pinned: false,
     }));
     const importedSchedule: ScheduleRecord = {
       id: crypto.randomUUID(),

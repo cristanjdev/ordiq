@@ -658,54 +658,54 @@ Write the validator **first**. It then acts as the test oracle for the solver.
 
 ### 2A. Domain and validator
 
-- [ ] Define the Pydantic `Problem`, `Solution`, `Violation` and `QualityReport` models
-- [ ] Build snapshot creation in `server/modules/generation`
-- [ ] Implement one validator function per hard constraint, in plain Python with no CP-SAT
-- [ ] Implement quality scoring per soft constraint
-- [ ] Add property-based tests with Hypothesis
-- [ ] Return the records involved in each violation, and list unmet preferences
-- [ ] Expose `POST /v1/validate`
-- [ ] Add the "Check existing schedule" action for imported schedules. This early result already shows value and supports evaluation Stage 2
+- [x] Define the Pydantic `Problem`, `Solution`, `Violation` and `QualityReport` models
+- [x] Build snapshot creation in `server/modules/generation`
+- [x] Implement one validator function per hard constraint, in plain Python with no CP-SAT
+- [x] Implement quality scoring per soft constraint
+- [x] Add property-based tests with Hypothesis
+- [x] Return the records involved in each violation, and list unmet preferences
+- [x] Expose `POST /v1/validate`
+- [x] Add the "Check existing schedule" action for imported schedules. This early result already shows value and supports evaluation Stage 2
 
 ### 2B. Solver
 
-- [ ] Map the week onto one time axis: `weekday × slots per day + slot`
-- [ ] Create decision variables for each meeting: `scheduled`, `start`, faculty choice, room choice
-- [ ] Build optional intervals per faculty and room candidate, and pre-filter candidates to reduce the model
-- [ ] Add `NoOverlap` for each faculty, room and section (`HC-01` to `HC-03`)
-- [ ] Add remaining hard constraints, with one module per constraint family
-- [ ] Add soft constraints as weighted objective terms read from the problem data
-- [ ] Add the unscheduled penalty, so that hard infeasibility becomes a partial candidate (D-07)
-- [ ] Enforce meeting patterns and same-time rules once the client confirms them (`HC-13`)
-- [ ] Treat fixed blocks and combined classes correctly
-- [ ] Support pinned entries, and use the prior schedule as a hint with `SC-06` for regeneration
-- [ ] Run a time limit, progress reporting, cancellation and worker count from config
-- [ ] Return solver status, objective, bound and gap
+- [x] Map the week onto one time axis: `weekday × slots per day + slot`
+- [x] Create decision variables for each meeting: `scheduled`, `start`, faculty choice, room choice
+- [x] Build optional intervals per faculty and room candidate, and pre-filter candidates to reduce the model
+- [x] Add `NoOverlap` for each faculty, room and section (`HC-01` to `HC-03`)
+- [x] Add remaining hard constraints, with one module per constraint family
+- [x] Add soft constraints as weighted objective terms read from the problem data
+- [x] Add the unscheduled penalty, so that hard infeasibility becomes a partial candidate (D-07)
+- [x] Enforce meeting patterns and same-time rules once the client confirms them (`HC-13`)
+- [x] Treat fixed blocks and combined classes correctly
+- [x] Support pinned entries, and use the prior schedule as a hint with `SC-06` for regeneration
+- [x] Run a time limit, progress reporting, cancellation and worker count from config
+- [x] Return solver status, objective, bound and gap
 
 ### 2C. Diagnostics
 
-- [ ] Give each unscheduled meeting a reason code, for example `NO_QUALIFIED_FACULTY`, `NO_ROOM_CAPACITY`, `FACULTY_LOAD_FULL`, `NO_COMMON_SLOT`
-- [ ] Implement `POST /v1/alternatives`, returning feasible slots ranked by quality impact
+- [x] Give each unscheduled meeting a reason code, for example `NO_QUALIFIED_FACULTY`, `NO_ROOM_CAPACITY`, `FACULTY_LOAD_FULL`, `NO_COMMON_SLOT`
+- [x] Implement `POST /v1/alternatives`, returning feasible slots ranked by quality impact
 
 ### 2D. Web integration
 
-- [ ] Build the `GenerationRun` lifecycle, with idempotent saving of results
-- [ ] Generate about 3 candidates per run from weight profiles (D-19)
-- [ ] Re-validate every solver result before saving
-- [ ] Build the generation UI, with progress and a results summary
-- [ ] Mark `SOLVER_MODEL_BUG` and fail the run if the validator rejects solver output
-- [ ] When master data changes, set `recheck needed`, revalidate affected entries and show what changed
+- [x] Build the `GenerationRun` lifecycle, with idempotent saving of results
+- [x] Generate about 3 candidates per run from weight profiles (D-19)
+- [x] Re-validate every solver result before saving
+- [x] Build the generation UI, with progress and a results summary
+- [x] Mark `SOLVER_MODEL_BUG` and fail the run if the validator rejects solver output
+- [x] When master data changes, set `recheck needed`, revalidate affected entries and show what changed
 
 ### Exit criteria
 
-- [ ] Every fixture size yields zero hard violations according to the independent validator
-- [ ] Each hard constraint has a test that proves it can be violated and detected
-- [ ] An impossible fixture returns a partial candidate with correct reasons, and no mandatory rule is relaxed
-- [ ] The imported manual schedule produces a conflict report that the proponents can verify by hand
-- [ ] Changing a room's capacity flags the affected entries
-- [ ] Regeneration after a small change keeps most entries in place
-- [ ] A medium fixture solves within `SOLVER_TIME_LIMIT_SECONDS` per candidate
-- [ ] The real dataset produces candidates that the proponents can review
+- [x] Every fixture size yields zero hard violations according to the independent validator
+- [x] Each hard constraint has a test that proves it can be violated and detected
+- [x] An impossible fixture returns a partial candidate with correct reasons, and no mandatory rule is relaxed
+- [x] The imported manual schedule produces a conflict report that the proponents can verify by hand
+- [x] Changing a room's capacity flags the affected entries
+- [x] Regeneration after a small change keeps most entries in place
+- [x] A medium fixture solves within `SOLVER_TIME_LIMIT_SECONDS` per candidate
+- [x] The real dataset produces candidates that the proponents can review
 
 ---
 
@@ -717,30 +717,30 @@ Write the validator **first**. It then acts as the test oracle for the solver.
 
 ### Tasks
 
-- [ ] Build the spreadsheet-like workspace with AG Grid
-- [ ] Build the weekly timetable with FullCalendar, viewed by faculty, room or section
-- [ ] Add filters by faculty, room, section, subject, day and time
-- [ ] Support direct edits and drag-and-drop, each calling `POST /v1/validate`
-- [ ] Show conflict and pending-change indicators, with the constraint explained in plain words
-- [ ] Add pin and unpin
-- [ ] Add a panel for unscheduled meetings, with suggested alternatives
-- [ ] Add optimistic locking through `Schedule.version`
-- [ ] Record every change in `ScheduleChange`, and add undo
-- [ ] Add side-by-side candidate comparison: conflicts, unmet preferences, utilization, load balance
-- [ ] Add documented exceptions with a required reason, for waivable rules only (D-18)
-- [ ] Build the accept flow, blocked while any unwaived violation or unscheduled meeting remains
-- [ ] Label every schedule clearly as a candidate that is not official and not for release
-- [ ] Build the revision flow from an accepted schedule
-- [ ] Make the layout usable on a phone for review. Heavy editing stays desktop-first
+- [x] Build the spreadsheet-like workspace with AG Grid
+- [x] Build the weekly timetable with FullCalendar, viewed by faculty, room or section
+- [x] Add filters by faculty, room, section, subject, day and time
+- [x] Support direct edits and drag-and-drop, each calling `POST /v1/validate`
+- [x] Show conflict and pending-change indicators, with the constraint explained in plain words
+- [x] Add pin and unpin
+- [x] Add a panel for unscheduled meetings, with suggested alternatives
+- [x] Add optimistic locking through `Schedule.version`
+- [x] Record every change in `ScheduleChange`, and add undo
+- [x] Add side-by-side candidate comparison: conflicts, unmet preferences, utilization, load balance
+- [x] Add documented exceptions with a required reason, for waivable rules only (D-18)
+- [x] Build the accept flow, blocked while any unwaived violation or unscheduled meeting remains
+- [x] Label every schedule clearly as a candidate that is not official and not for release
+- [x] Build the revision flow from an accepted schedule
+- [x] Make the layout usable on a phone for review. Heavy editing stays desktop-first
 
 ### Exit criteria
 
-- [ ] An edit that causes a conflict shows it on screen before the Dean moves on
-- [ ] A schedule with an unwaived violation cannot be accepted, including by calling the API directly
-- [ ] `HC-01` to `HC-03` cannot be waived through the UI or API
-- [ ] Every exception appears with its reason in the reports
-- [ ] Two tabs editing the same candidate cannot silently overwrite each other
-- [ ] Every edit shows in the revision history
+- [x] An edit that causes a conflict shows it on screen before the Dean moves on
+- [x] A schedule with an unwaived violation cannot be accepted, including by calling the API directly
+- [x] `HC-01` to `HC-03` cannot be waived through the UI or API
+- [x] Every exception appears with its reason in the reports
+- [x] Two tabs editing the same candidate cannot silently overwrite each other
+- [x] Every edit shows in the revision history
 
 ---
 

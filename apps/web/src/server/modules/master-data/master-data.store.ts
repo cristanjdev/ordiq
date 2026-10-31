@@ -1,5 +1,8 @@
 import type {
+  DirectiveType,
   EmploymentType,
+  EngineValidationResponse,
+  HardConstraintCode,
   RoomType,
   ScheduleStatus,
   Weekday,
@@ -137,9 +140,28 @@ export interface FacultyPreferenceRecord {
   source: "SURVEY" | "LEARNED" | "DEAN";
 }
 
+export interface DirectiveRecord {
+  id: string;
+  termCode: string;
+  type: DirectiveType;
+  hardness: "HARD" | "SOFT";
+  approved: boolean;
+  facultyCode: string | null;
+  sectionCode: string | null;
+  roomCode: string | null;
+  offeringCode: string | null;
+  weekday: Weekday | null;
+  startMin: number | null;
+  endMin: number | null;
+  weight: number;
+  createdBy: string;
+  createdAt: string;
+}
+
 export interface ScheduleEntryRecord {
   id: string;
   offeringCode: string;
+  meetingIndex?: number;
   facultyCode: string;
   roomCode: string;
   weekday: Weekday;
@@ -148,16 +170,167 @@ export interface ScheduleEntryRecord {
   pinned: boolean;
 }
 
+export interface UnscheduledMeetingRecord {
+  offeringCode: string;
+  meetingIndex: number;
+  reasonCode: string;
+  reasonDetail: string;
+}
+
+export interface ScheduleExceptionRecord {
+  id: string;
+  scheduleId: string;
+  code: HardConstraintCode;
+  offeringCode: string | null;
+  facultyCode: string | null;
+  roomCode: string | null;
+  sectionCode: string | null;
+  reason: string;
+  approvedBy: string;
+  createdAt: string;
+}
+
+export interface ScheduleChangeRecord {
+  id: string;
+  scheduleId: string;
+  actor: string;
+  action: string;
+  beforeJson: unknown;
+  afterJson: unknown;
+  createdAt: string;
+}
+
 export interface ScheduleRecord {
   id: string;
   termCode: string;
+  runId?: string | null;
+  parentScheduleId?: string | null;
   candidateLabel: string;
+  profileName?: string;
   status: ScheduleStatus;
   source: "GENERATED" | "IMPORTED";
+  solverStatus?: "PROVEN_OPTIMAL" | "BEST_FOUND" | "INFEASIBLE" | "CANCELLED";
+  optimalityGapPct?: number;
   recheckNeeded: boolean;
   version: number;
   qualityScore: number | null;
   entries: ScheduleEntryRecord[];
+  unscheduled?: UnscheduledMeetingRecord[];
+  exceptions?: ScheduleExceptionRecord[];
+  changes?: ScheduleChangeRecord[];
+  validationReport?: EngineValidationResponse | null;
+  acceptedAt?: string | null;
+  acceptedBy?: string | null;
+}
+
+export interface GenerationRunRecord {
+  id: string;
+  termCode: string;
+  status: "QUEUED" | "RUNNING" | "DONE" | "FAILED" | "CANCELLED" | "SOLVER_MODEL_BUG";
+  profiles: string[];
+  candidateScheduleIds: string[];
+  error: string | null;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export interface ChangeProposalRecord {
+  id: string;
+  scheduleId: string;
+  termCode: string;
+  status: "PENDING" | "APPLIED" | "REJECTED";
+  summary: string;
+  offeringCode: string;
+  meetingIndex: number;
+  beforeEntry: ScheduleEntryRecord;
+  afterEntry: ScheduleEntryRecord;
+  qualityDelta: number;
+  resultingQualityScore: number;
+  valid: boolean;
+  createdBy: string;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface MessageRecord {
+  id: string;
+  conversationId: string;
+  role: "user" | "assistant";
+  content: string;
+  parts: unknown[];
+  createdAt: string;
+}
+
+export interface ConversationRecord {
+  id: string;
+  termCode: string;
+  title: string;
+  messages: MessageRecord[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LlmUsageRecord {
+  id: string;
+  provider: string;
+  model: string;
+  tokensIn: number;
+  tokensOut: number;
+  estimatedCostPhp: number;
+  createdAt: string;
+}
+
+export interface ModelVersionRecord {
+  id: string;
+  versionNumber: number;
+  kind: string;
+  status: "ACTIVE" | "CANDIDATE" | "ARCHIVED";
+  parameters: Record<string, unknown>;
+  metrics: {
+    sampleCount: number;
+    top1Accuracy: number;
+    top3Accuracy: number;
+    baselineTop1Accuracy: number;
+    featureNames: string[];
+  };
+  trainedAt: string;
+}
+
+export interface LearningEventRecord {
+  id: string;
+  termCode: string;
+  scheduleId: string;
+  type: "SCHEDULE_ACCEPTED" | "DEAN_EDIT";
+  facultyCode: string;
+  subjectCode: string;
+  weekday: Weekday;
+  startMin: number;
+  weight: number;
+  createdAt: string;
+}
+
+export interface EvaluationSessionRecord {
+  id: string;
+  termCode: string;
+  stage: "STAGE_1_BASELINE" | "STAGE_2_CONFLICT_CHECK" | "STAGE_3_GENERATION";
+  scenario: string;
+  participantRole: string;
+  scheduleId: string | null;
+  startedAt: string;
+  endedAt: string | null;
+  durationMinutes: number | null;
+  correctionCount: number;
+  conflictCountBefore: number;
+  conflictCountAfter: number;
+  iso25010Ratings: {
+    functionalSuitability: number;
+    performanceEfficiency: number;
+    usability: number;
+    reliability: number;
+    security: number;
+    maintainability: number;
+  } | null;
+  notes: string;
 }
 
 export interface ImportBatchRecord {
@@ -185,7 +358,15 @@ export interface MasterDataState {
   facultyAvailability: Map<string, FacultyAvailabilityRecord>;
   facultyQualifications: Map<string, FacultyQualificationRecord>;
   facultyPreferences: Map<string, FacultyPreferenceRecord>;
+  directives: Map<string, DirectiveRecord>;
   schedules: Map<string, ScheduleRecord>;
+  generationRuns: Map<string, GenerationRunRecord>;
+  proposals: Map<string, ChangeProposalRecord>;
+  conversations: Map<string, ConversationRecord>;
+  llmUsage: LlmUsageRecord[];
+  modelVersions: Map<string, ModelVersionRecord>;
+  learningEvents: LearningEventRecord[];
+  evaluationSessions: Map<string, EvaluationSessionRecord>;
   importBatches: Map<string, ImportBatchRecord>;
   aliasCounter: number;
 }
@@ -224,7 +405,15 @@ export function createEmptyMasterDataState(): MasterDataState {
     facultyAvailability: new Map(),
     facultyQualifications: new Map(),
     facultyPreferences: new Map(),
+    directives: new Map(),
     schedules: new Map(),
+    generationRuns: new Map(),
+    proposals: new Map(),
+    conversations: new Map(),
+    llmUsage: [],
+    modelVersions: new Map(),
+    learningEvents: [],
+    evaluationSessions: new Map(),
     importBatches: new Map(),
     aliasCounter: 0,
   };
@@ -240,7 +429,9 @@ export function resetMasterDataState(): void {
   state = createEmptyMasterDataState();
 }
 
-export function allocateNextFacultyAlias(current: MasterDataState = state): string {
+export function allocateNextFacultyAlias(
+  current: MasterDataState = state,
+): string {
   current.aliasCounter += 1;
   return `ALIAS-${String(current.aliasCounter).padStart(3, "0")}`;
 }
@@ -256,4 +447,3 @@ export function flagSchedulesForRecheck(termCode?: string): void {
     }
   }
 }
-

@@ -8,6 +8,24 @@ export type ApiErrorEnvelope = components["schemas"]["ErrorEnvelope"];
 export type HardConstraintCode = components["schemas"]["HardConstraintCode"];
 export type SoftConstraintCode = components["schemas"]["SoftConstraintCode"];
 export type DirectiveType = components["schemas"]["DirectiveType"];
+export type EngineProblem = components["schemas"]["Problem"];
+export type EngineSolution = components["schemas"]["Solution"];
+export type EngineViolation = components["schemas"]["Violation"];
+export type EngineQualityReport = components["schemas"]["QualityReport"];
+export type EngineValidationRequest = components["schemas"]["ValidationRequest"];
+export type EngineValidationResponse = components["schemas"]["ValidationResponse"];
+export type EngineSolveRequest = components["schemas"]["SolveRequest"];
+export type EngineSolveJobResponse = components["schemas"]["SolveJobResponse"];
+export type EngineAlternativesRequest = components["schemas"]["AlternativesRequest"];
+export type EngineAlternativesResponse = components["schemas"]["AlternativesResponse"];
+export type EngineAlternativeSlot = components["schemas"]["AlternativeSlot"];
+export type EngineScheduledMeetingEntry = components["schemas"]["ScheduledMeetingEntry"];
+export type EngineUnscheduledMeetingResult = components["schemas"]["UnscheduledMeetingResult"];
+export type EngineUnscheduledReasonCode = components["schemas"]["UnscheduledReasonCode"];
+export type EngineMLTrainRequest = components["schemas"]["MLTrainRequest"];
+export type EngineMLTrainResponse = components["schemas"]["MLTrainResponse"];
+export type EngineMLRecommendRequest = components["schemas"]["MLRecommendRequest"];
+export type EngineMLRecommendResponse = components["schemas"]["MLRecommendResponse"];
 
 export const HARD_CONSTRAINT_CODES: readonly HardConstraintCode[] = [
   "HC-01",

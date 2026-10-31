@@ -23,7 +23,13 @@ import {
 } from "@/components/ui/card";
 import { useShell } from "@/features/shell/providers";
 
-export type DatasetKind = "faculty" | "subjects" | "sections" | "rooms" | "offerings";
+export type DatasetKind =
+  | "faculty"
+  | "subjects"
+  | "sections"
+  | "rooms"
+  | "offerings"
+  | "fixedBlocks";
 
 interface ReadinessReportDto {
   termCode: string;
@@ -85,8 +91,9 @@ export function MasterDataWorkspace({
   const dataQuery = useQuery<{ items: Array<Record<string, unknown>> }>({
     queryKey: ["master-data", dataset, selectedTerm.id],
     queryFn: async () => {
+      const routeSegment = dataset === "fixedBlocks" ? "fixed-blocks" : dataset;
       const res = await fetch(
-        `/api/v1/${dataset}?termCode=${encodeURIComponent(selectedTerm.id)}`,
+        `/api/v1/${routeSegment}?termCode=${encodeURIComponent(selectedTerm.id)}`,
       );
       if (!res.ok) throw new Error("Requires active Dean session");
       return (await res.json()) as { items: Array<Record<string, unknown>> };
@@ -273,6 +280,7 @@ export function MasterDataWorkspace({
                 { id: "sections", label: "Sections" },
                 { id: "rooms", label: "Rooms & Labs" },
                 { id: "offerings", label: "Offerings" },
+                { id: "fixedBlocks", label: "Fixed Blocks" },
               ] as const
             ).map((tab) => (
               <Button
