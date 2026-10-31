@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js / Web
+.next/
+out/
+build/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python / Engine
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+*.egg-info/
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+!apps/web/.env.example
+!services/engine/.env.example
+
+# Client & Real College Data (Never commit real data)
+docs/client/real-data/
+*.xlsx
+!templates/*.xlsx
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.log
+npm-debug.log*
+pnpm-debug.log*
+

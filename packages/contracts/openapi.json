@@ -1,0 +1,300 @@
+{
+  "components": {
+    "schemas": {
+      "DirectiveType": {
+        "description": "Closed set of chat-driven directive types (D-16).",
+        "enum": [
+          "FACULTY_NOT_ON_DAY",
+          "FACULTY_TIME_WINDOW",
+          "SECTION_TIME_WINDOW",
+          "AVOID_ROOM",
+          "REQUIRE_ROOM",
+          "PIN_MEETING",
+          "ASSIGN_FACULTY",
+          "SET_WEIGHT"
+        ],
+        "title": "DirectiveType",
+        "type": "string"
+      },
+      "ErrorDetail": {
+        "description": "Structured error body.",
+        "properties": {
+          "code": {
+            "description": "Stable machine-readable error code.",
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": true,
+            "description": "Additional structured diagnostic details.",
+            "title": "Details",
+            "type": "object"
+          },
+          "message": {
+            "description": "Human-readable error summary.",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "ErrorEnvelope": {
+        "description": "Standard error wrapper across web and engine APIs.",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorEnvelope",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HardConstraintCode": {
+        "description": "Catalogue codes for mandatory constraints (Section 6).",
+        "enum": [
+          "HC-01",
+          "HC-02",
+          "HC-03",
+          "HC-04",
+          "HC-05",
+          "HC-06",
+          "HC-07",
+          "HC-08",
+          "HC-09",
+          "HC-10",
+          "HC-11",
+          "HC-12",
+          "HC-13",
+          "HC-14",
+          "HC-15"
+        ],
+        "title": "HardConstraintCode",
+        "type": "string"
+      },
+      "HealthResponse": {
+        "description": "Liveness and solver configuration payload returned by GET /healthz.",
+        "properties": {
+          "service": {
+            "const": "ordiq-engine",
+            "default": "ordiq-engine",
+            "title": "Service",
+            "type": "string"
+          },
+          "solver_time_limit_seconds": {
+            "description": "Configured CP-SAT time limit per candidate solve.",
+            "title": "Solver Time Limit Seconds",
+            "type": "integer"
+          },
+          "solver_workers": {
+            "description": "Configured parallel worker count for CP-SAT.",
+            "title": "Solver Workers",
+            "type": "integer"
+          },
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          },
+          "supported_directives": {
+            "items": {
+              "$ref": "#/components/schemas/DirectiveType"
+            },
+            "title": "Supported Directives",
+            "type": "array"
+          },
+          "supported_hard_constraints": {
+            "items": {
+              "$ref": "#/components/schemas/HardConstraintCode"
+            },
+            "title": "Supported Hard Constraints",
+            "type": "array"
+          },
+          "supported_soft_constraints": {
+            "items": {
+              "$ref": "#/components/schemas/SoftConstraintCode"
+            },
+            "title": "Supported Soft Constraints",
+            "type": "array"
+          },
+          "version": {
+            "description": "Engine semantic version.",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "solver_time_limit_seconds",
+          "solver_workers"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "SoftConstraintCode": {
+        "description": "Catalogue codes for soft preference objectives (Section 6).",
+        "enum": [
+          "SC-01",
+          "SC-02",
+          "SC-03",
+          "SC-04",
+          "SC-05",
+          "SC-06",
+          "SC-07",
+          "SC-08",
+          "SC-09",
+          "SC-10",
+          "SC-11",
+          "SC-12",
+          "SC-13",
+          "SC-14",
+          "SC-15",
+          "SC-16"
+        ],
+        "title": "SoftConstraintCode",
+        "type": "string"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Stateless optimization (CP-SAT), independent constraint validation, and machine learning service for ORDIQ.",
+    "title": "ORDIQ Scheduling & ML Engine",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/healthz": {
+      "get": {
+        "description": "Return engine liveness status and active solver settings.",
+        "operationId": "getEngineHealth",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Engine-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Engine-Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid engine token"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Engine liveness and capability check"
+      }
+    }
+  }
+}

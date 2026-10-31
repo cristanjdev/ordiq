@@ -1,0 +1,26 @@
+{
+  "name": "ordiq",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ORDIQ — Order Meets Intelligence: AI-Based Scheduling Decision-Support System for MSEUF College of Engineering",
+  "packageManager": "pnpm@12.16.1",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @ordiq/web dev",
+    "build": "pnpm --filter @ordiq/contracts build && pnpm --filter @ordiq/web build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
+    "contracts:generate": "pnpm --filter @ordiq/contracts generate",
+    "contracts:check": "pnpm --filter @ordiq/contracts check"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3"
+  }
+}
+

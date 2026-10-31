@@ -1,0 +1,470 @@
+<title>SchedAI Quotation</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
+<style>
+/* Layout: one centred document column; a sky header band; every table full width with centred cells. */
+:root {
+  --bg: #f5fbff;
+  --surface: #ffffff;
+  --ink: #0b2a3d;
+  --muted: #4a6678;
+  --line: #cfe8f7;
+  --sky: #0ea5e9;
+  --sky-deep: #0369a1;
+  --sky-soft: #e0f2fe;
+  --sky-tint: #f0f9ff;
+  --on-sky: #ffffff;
+  --font-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #06161f; --surface: #0b2230; --ink: #e4f3fc; --muted: #9dbbcc; --line: #1d4660;
+    --sky: #38bdf8; --sky-deep: #0c4a6e; --sky-soft: #0f3a52; --sky-tint: #0a2a3b; --on-sky: #f0f9ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #06161f; --surface: #0b2230; --ink: #e4f3fc; --muted: #9dbbcc; --line: #1d4660;
+  --sky: #38bdf8; --sky-deep: #0c4a6e; --sky-soft: #0f3a52; --sky-tint: #0a2a3b; --on-sky: #f0f9ff;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Header band */
+.band { background: var(--sky-deep); color: var(--on-sky); }
+.band .wrap { padding-block: 44px 36px; display: grid; gap: 14px; }
+.eyebrow {
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85;
+}
+h1 {
+  font-family: var(--font-display); font-weight: 700; margin: 0;
+  font-size: clamp(26px, 4.6vw, 40px); line-height: 1.15; text-wrap: balance;
+}
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-block; padding: 3px 12px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16); font-size: 13px; font-weight: 600;
+}
+
+main .wrap { padding-block: 32px 56px; display: grid; gap: 40px; }
+section { display: grid; gap: 14px; min-width: 0; }
+h2 {
+  font-family: var(--font-display); font-weight: 600; margin: 0;
+  font-size: 22px; line-height: 1.25; color: var(--ink); text-wrap: balance;
+  display: flex; align-items: center; gap: 10px;
+}
+h2::before {
+  content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--sky); flex: none;
+}
+h3 { font-family: var(--font-display); font-size: 15px; font-weight: 600; margin: 0; color: var(--sky-deep); }
+:root[data-theme="dark"] h3 { color: var(--sky); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) h3 { color: var(--sky); } }
+p { margin: 0; max-width: 68ch; }
+ul, ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; }
+.muted { color: var(--muted); }
+
+/* Tables: always 100% wide, every cell centred */
+.tbl { width: 100%; overflow-x: auto; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+table {
+  width: 100%; border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+th, td {
+  text-align: center; vertical-align: middle;
+  padding: 10px 14px; border-bottom: 1px solid var(--line);
+}
+tr:last-child > td { border-bottom: 0; }
+th + th, td + td { border-left: 1px solid var(--line); }
+thead th {
+  background: var(--sky-soft); color: var(--ink);
+  font-family: var(--font-display); font-weight: 600; font-size: 13.5px;
+}
+td.k { font-weight: 700; }
+tr.total td { background: var(--sky-tint); font-weight: 700; }
+.rec { background: var(--sky-tint); }
+thead th.rec { background: var(--sky); color: var(--on-sky); }
+.price { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+.yes { color: var(--sky); font-weight: 700; font-size: 17px; }
+.no { color: var(--muted); }
+.note { font-size: 13.5px; color: var(--muted); }
+
+/* Feature groups */
+.groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.group {
+  background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--sky);
+  border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; align-content: start;
+}
+
+/* Timeline */
+.phases { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.phase {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; display: grid; gap: 6px; align-content: start;
+}
+.phase.last { border: 2px solid var(--sky); background: var(--sky-tint); }
+.phase .wk { font-size: 13px; color: var(--muted); }
+.phase ul { font-size: 14px; padding-left: 18px; gap: 2px; }
+.pays { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.pay {
+  border-radius: 10px; padding: 12px 14px; background: var(--sky-soft);
+  text-align: center; display: grid; gap: 2px;
+}
+.pay b { font-family: var(--font-display); font-size: 14px; }
+.pay span { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--sky-deep); }
+:root[data-theme="dark"] .pay span { color: var(--sky); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pay span { color: var(--sky); } }
+
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+
+footer .wrap { padding-block: 20px 32px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 720px) {
+  .groups, .cols { grid-template-columns: 1fr; }
+  .phases { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  th, td { padding: 8px 10px; font-size: 14px; }
+}
+@media (max-width: 440px) {
+  .phases, .pays { grid-template-columns: 1fr; }
+}
+
+@media print {
+  @page { size: A4; margin: 14mm; }
+  :root {
+    --bg: #ffffff; --surface: #ffffff; --ink: #0b2a3d; --muted: #4a6678; --line: #cfe8f7;
+    --sky: #0ea5e9; --sky-deep: #0369a1; --sky-soft: #e0f2fe; --sky-tint: #f0f9ff; --on-sky: #ffffff;
+    color-scheme: light;
+  }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-size: 12.5px; }
+  .wrap { max-width: none; padding-left: 0; padding-right: 0; }
+  .band .wrap { padding: 28px 24px; }
+  main .wrap { gap: 26px; }
+  section, .tbl, .group, .phase, tr { break-inside: avoid; }
+  h2 { break-after: avoid; }
+}
+</style>
+
+<header class="band">
+  <div class="wrap">
+    <div class="eyebrow">Quotation · Q-2026-002</div>
+    <h1>AI Scheduling Engine for Department Class Scheduling</h1>
+    <div class="meta">
+      <span class="chip">22 October 2026</span>
+      <span class="chip">Prepared for Jamir Obcemea</span>
+      <span class="chip">Prepared by Cristan Jade Jumawan</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <section>
+      <div class="tbl">
+        <table>
+          <thead><tr><th colspan="2">Quotation details</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Quotation no.</td><td>Q-2026-002</td></tr>
+            <tr><td class="k">Date issued</td><td>22 October 2026</td></tr>
+            <tr><td class="k">Project</td><td>AI-driven scheduling engine that automatically generates optimal, conflict-free class schedules for the department</td></tr>
+            <tr><td class="k">Prepared for</td><td>Jamir Obcemea</td></tr>
+            <tr><td class="k">Attention</td><td>Client</td></tr>
+            <tr><td class="k">Prepared by</td><td>Cristan Jade Jumawan</td></tr>
+            <tr><td class="k">Contact</td><td>cristanjade14@gmail.com · 0961 711 0582</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Summary</h2>
+      <p>The developer will build an AI scheduling engine that automatically generates optimal, conflict-free class schedules for the department. The Dean gives instructions through a GPT-style chat, and the system learns from past schedules and the Dean's adjustments through machine learning.</p>
+      <p>This quotation updates the earlier ₱15,000 quote. It adds the features requested by the panel during the proposal defense: machine learning, Dean-only access and stronger data security.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th colspan="2">Recommended option</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Package</td><td><strong>Standard</strong></td></tr>
+            <tr><td class="k">One-time fee</td><td class="price">₱30,000</td></tr>
+            <tr><td class="k">Monthly running cost</td><td>About ₱100–₱1,000 (AI usage and hosting, paid directly to the providers)</td></tr>
+            <tr><td class="k">Ready in</td><td>8 weeks from the downpayment</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>What the system will do</h2>
+      <div class="groups">
+        <div class="group">
+          <h3>Schedule generation</h3>
+          <ul>
+            <li>Automatically generates a complete class schedule from subjects, sections, faculty, rooms, time slots and the department's rules</li>
+            <li>Guarantees no faculty, room or section conflicts, and respects room capacity, room type (lecture/laboratory), faculty availability and maximum teaching load</li>
+            <li>Optimizes for faculty preferred days and times, minimal vacant gaps and balanced teaching loads</li>
+            <li>Re-generates a new optimal schedule when something changes, such as a faculty member becoming unavailable</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h3>For the Dean</h3>
+          <ul>
+            <li>Give instructions in plain language through a GPT-style chat (for example: "Generate the 1st semester schedule, and don't schedule Prof. X on Fridays")</li>
+            <li>Review the schedule in a spreadsheet-like workspace and a timetable view</li>
+            <li>See a dashboard of faculty workload, room utilization, subject distribution and schedule quality</li>
+            <li>Export schedules per section, faculty or room, and faculty load reports, to PDF and Excel</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h3>Machine learning</h3>
+          <ul>
+            <li>Recommends the best-fit faculty for each subject, based on specialization and past assignments</li>
+            <li>Learns faculty and department patterns, such as preferred time slots, rooms and loads</li>
+            <li>Improves every semester by learning from finalized schedules and the Dean's adjustments</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h3>Security and privacy</h3>
+          <ul>
+            <li>Only the Dean can access the system, with a password and a one-time code (multi-factor authentication)</li>
+            <li>Faculty names and personal details are replaced with codes before anything is sent to the AI service</li>
+            <li>Every login and change is recorded in an audit log</li>
+            <li>Data is encrypted in transit and at rest, and handled under the Data Privacy Act of 2012 (RA 10173)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Packages</h2>
+      <p>In every package, the developer handles setup, fixes from testing and turnover, and gives the proponents a 1-hour system walkthrough. Basic is the original ₱15,000 scope and does not include the machine learning requested by the panel.</p>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr><th></th><th>Basic</th><th class="rec">Standard (recommended)</th><th>Premium</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="k">One-time fee</td><td class="price">₱15,000</td><td class="price rec">₱30,000</td><td class="price">₱38,000</td></tr>
+            <tr><td class="k">Ready in</td><td>5 weeks</td><td class="rec">8 weeks</td><td>10 weeks</td></tr>
+            <tr><td class="k">Free support after turnover</td><td>30 days</td><td class="rec">60 days</td><td>90 days</td></tr>
+            <tr><td>GPT-style chat interface</td><td class="yes">✓</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Automatic optimal, conflict-free schedule generation</td><td class="yes">✓</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Spreadsheet-like workspace and timetable view</td><td class="yes">✓</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Dashboard and analytics</td><td class="yes">✓</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>PDF and Excel reports</td><td class="yes">✓</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Password login</td><td class="yes">✓</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Machine learning: faculty–subject recommendations</td><td class="no">—</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Machine learning: learns from each semester and the Dean's adjustments</td><td class="no">—</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Dean-only access with multi-factor authentication</td><td class="no">—</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Audit logs</td><td class="no">—</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Faculty names hidden from the AI service (anonymization)</td><td class="no">—</td><td class="yes rec">✓</td><td class="yes">✓</td></tr>
+            <tr><td>AI runs on the school's own server, data never leaves the department</td><td class="no">—</td><td class="no rec">—</td><td class="yes">✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">All prices are in Philippine pesos (PHP).</p>
+    </section>
+
+    <section>
+      <h2>Price breakdown: Standard package</h2>
+      <p>Items 1–4, 6 and 8 make up the original ₱15,000 scope. Items 5 and 7 are the features added after the proposal defense.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>#</th><th>Item</th><th>Description</th><th>Amount (PHP)</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td class="k">Requirements and data setup</td><td>Data-gathering template, database design, loading the department's data</td><td>₱2,000</td></tr>
+            <tr><td>2</td><td class="k">Web application and chat interface</td><td>GPT-style chat, spreadsheet-like workspace, timetable view, mobile-ready</td><td>₱3,500</td></tr>
+            <tr><td>3</td><td class="k">Scheduling engine</td><td>Hard and soft constraints, optimal schedule generation, re-generation on changes</td><td>₱4,000</td></tr>
+            <tr><td>4</td><td class="k">Generative AI integration</td><td>Plain-language instructions, function calling, explanations of results</td><td>₱2,500</td></tr>
+            <tr><td>5</td><td class="k">Machine learning module</td><td>Faculty–subject recommendations, preference learning, learning from each semester</td><td>₱10,000</td></tr>
+            <tr><td>6</td><td class="k">Dashboard and reports</td><td>Workload, room utilization and distribution analytics; PDF and Excel export</td><td>₱2,000</td></tr>
+            <tr><td>7</td><td class="k">Security and privacy</td><td>Dean-only access, multi-factor authentication, audit logs, data anonymization, encryption</td><td>₱5,000</td></tr>
+            <tr><td>8</td><td class="k">Testing, turnover and walkthrough</td><td>Fixes from testing, turnover of source code, 1-hour system walkthrough</td><td>₱1,000</td></tr>
+            <tr class="total"><td colspan="3">Total one-time fee</td><td class="price">₱30,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Premium</strong> adds one item: setting up and tuning an open-source AI model on the school's server, ₱8,000, for a total of ₱38,000.</p>
+      <p><strong>Optional add-on (any package):</strong> technical documentation for the paper (system architecture diagram, technology stack description, user manual), ₱3,000.</p>
+    </section>
+
+    <section>
+      <h2>Technology and AI approach</h2>
+      <p>The system uses a hybrid AI design: the scheduling engine guarantees a conflict-free schedule, machine learning makes it smarter each semester, and generative AI lets the Dean work in plain language.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Part</th><th>Technology</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Frontend</td><td>React + TypeScript (Next.js), Tailwind CSS, AG Grid, FullCalendar, Recharts</td><td>Chat, scheduling workspace, timetable, dashboard</td></tr>
+            <tr><td class="k">Backend</td><td>Node.js + TypeScript</td><td>Accounts, data, reports, connects the AI and the engine</td></tr>
+            <tr><td class="k">Database</td><td>PostgreSQL with Prisma</td><td>Faculty, subjects, sections, rooms, schedules</td></tr>
+            <tr><td class="k">Scheduling engine</td><td>Python + Google OR-Tools (CP-SAT solver)</td><td>Generates the optimal, conflict-free schedule</td></tr>
+            <tr><td class="k">Machine learning</td><td>Python (scikit-learn) and NLP text matching</td><td>Faculty–subject recommendations, preference learning</td></tr>
+            <tr><td class="k">Generative AI</td><td>OpenAI GPT or Anthropic Claude via API (Standard); open-source model such as Llama, Qwen or Gemma on the school's server (Premium)</td><td>Understands instructions, explains results</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>The AI does not invent schedules.</strong> It turns the Dean's request into inputs for the scheduling engine, then explains the result. Every schedule comes from the department's real data and rules.</li>
+        <li><strong>Paid API accounts only.</strong> Data sent through the providers' paid APIs is not used to train their models by default.</li>
+        <li><strong>Works with one semester of data.</strong> The engine needs no history. Machine learning starts from the available semester plus faculty profiles and a preference survey, and improves every semester after.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Monthly running cost</h2>
+      <p>Running the system costs about ₱100–₱1,000 a month, paid by the proponents directly to the providers. These are estimates; actual charges follow the providers' rates.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Per month (estimate)</th><th>Basic</th><th class="rec">Standard</th><th>Premium</th></tr></thead>
+          <tbody>
+            <tr><td class="k">AI usage (pay per use)</td><td>₱100–₱300</td><td class="rec">₱100–₱300</td><td>₱0 (school's server)</td></tr>
+            <tr><td class="k">Cloud hosting and database (optional)</td><td>₱500–₱700</td><td class="rec">₱500–₱700</td><td>₱0 (school's server)</td></tr>
+            <tr class="total"><td>Total if run locally for the defense</td><td>₱100–₱300</td><td>₱100–₱300</td><td>₱0</td></tr>
+            <tr class="total"><td>Total if deployed online</td><td>₱600–₱1,000</td><td>₱600–₱1,000</td><td>₱0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>Running locally:</strong> the system can run on a laptop for development, testing and the defense, with no hosting fees.</li>
+        <li><strong>Premium</strong> needs a server with enough computing power, preferably with a GPU, provided by the school.</li>
+        <li><strong>Changes after the free support period</strong> are billed at ₱500 per hour.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Timeline</h2>
+      <p>The developer will deliver the Standard package in 8 weeks from the downpayment. Basic follows the same phases in 5 weeks, and Premium in 10 weeks. Payments follow the same milestones.</p>
+      <div class="phases">
+        <div class="phase">
+          <h3>Setup and data</h3>
+          <div class="wk">Weeks 1–2</div>
+          <ul><li>Data template</li><li>Database design</li><li>Loading the data</li><li>Preference survey</li></ul>
+        </div>
+        <div class="phase">
+          <h3>Core system</h3>
+          <div class="wk">Weeks 3–4</div>
+          <ul><li>Scheduling engine</li><li>Web app and chat</li><li>Dean-only security</li></ul>
+        </div>
+        <div class="phase">
+          <h3>AI and machine learning</h3>
+          <div class="wk">Weeks 5–6</div>
+          <ul><li>Machine learning</li><li>Generative AI</li><li>Dashboard and reports</li></ul>
+        </div>
+        <div class="phase last">
+          <h3>Testing and turnover</h3>
+          <div class="wk">Weeks 7–8</div>
+          <ul><li>Testing and fixes</li><li>Source code turnover</li><li>1-hour walkthrough</li><li>60-day support starts</li></ul>
+        </div>
+      </div>
+      <div class="pays">
+        <div class="pay"><b>Downpayment · 50%</b><span>₱15,000</span><small class="muted">Week 1</small></div>
+        <div class="pay"><b>Testing starts · 30%</b><span>₱9,000</span><small class="muted">Week 7</small></div>
+        <div class="pay"><b>Turnover · 20%</b><span>₱6,000</span><small class="muted">End of week 8</small></div>
+      </div>
+      <p class="note">To keep this schedule, the developer needs the department's data in week 1. Any delay there moves later dates by the same amount.</p>
+    </section>
+
+    <section>
+      <h2>Payment terms</h2>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>When</th><th>Share</th><th>Basic</th><th class="rec">Standard</th><th>Premium</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Downpayment, to start development</td><td>50%</td><td>₱7,500</td><td class="rec">₱15,000</td><td>₱19,000</td></tr>
+            <tr><td class="k">When testing starts</td><td>30%</td><td>₱4,500</td><td class="rec">₱9,000</td><td>₱11,400</td></tr>
+            <tr><td class="k">On turnover</td><td>20%</td><td>₱3,000</td><td class="rec">₱6,000</td><td>₱7,600</td></tr>
+            <tr class="total"><td>Total</td><td>100%</td><td>₱15,000</td><td>₱30,000</td><td>₱38,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Payment by bank transfer or GCash to [Account name · Bank or GCash · Account number].</p>
+    </section>
+
+    <section>
+      <h2>What the developer needs from the proponents</h2>
+      <div class="cols">
+        <div class="group">
+          <h3>Within week 1, in the data-gathering template</h3>
+          <ul>
+            <li>At least 1 semester of past class schedules (more semesters improve the machine learning)</li>
+            <li>Faculty list with specializations, educational background, teaching loads and availability</li>
+            <li>Room list with capacity and type (lecture/laboratory)</li>
+            <li>Curriculum and subjects per program and year level</li>
+            <li>The department's approved scheduling rules</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h3>During development</h3>
+          <ul>
+            <li>Faculty preference survey results (preferred days, time slots and subjects), Standard and Premium only</li>
+            <li>One contact person to answer questions and approve each phase</li>
+            <li>Feedback during the testing phase on any wrong or unclear results</li>
+            <li>Access to the school's server, Premium only</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="cols">
+        <div class="group">
+          <h2>Not included</h2>
+          <ul>
+            <li>AI usage, hosting and domain fees (see Monthly running cost)</li>
+            <li>Server or GPU hardware for Premium</li>
+            <li>Encoding printed, handwritten or scanned records into the data template (quoted separately after a review)</li>
+            <li>Writing the thesis paper or its chapters (technical documentation is available as an add-on)</li>
+            <li>Features or rule changes beyond this quotation</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h2>Ownership and privacy</h2>
+          <ul>
+            <li>After full payment, the proponents own the source code and all system data.</li>
+            <li>The developer handles the department's data under the Data Privacy Act of 2012 (RA 10173).</li>
+            <li>The developer will sign a Non-Disclosure Agreement before receiving the department's data, if requested.</li>
+            <li>After turnover, the developer deletes all copies of the department's data.</li>
+            <li>Data is encrypted in transit and at rest, and only the Dean can access the system.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Terms and conditions</h2>
+      <ol>
+        <li><strong>Currency:</strong> All amounts are in Philippine pesos (PHP).</li>
+        <li><strong>Payments:</strong> Each payment is due within 7 days of its milestone.</li>
+        <li><strong>Scope changes:</strong> Work outside this quotation, including new features or rule changes requested by the panel later, starts only after written approval. It is quoted separately or billed at ₱500 per hour.</li>
+        <li><strong>Free support:</strong> Bugs reported during the free support period (30, 60 or 90 days, by package) are fixed at no cost.</li>
+        <li><strong>Schedule:</strong> Delivery dates move by the same amount if data, approvals or testing feedback arrive late.</li>
+        <li><strong>Cancellation:</strong> If the proponents cancel after work begins, payments already made cover the work completed to that date.</li>
+        <li><strong>Third-party services:</strong> AI and hosting charges follow the providers' actual rates and are paid directly by the proponents.</li>
+        <li><strong>Validity:</strong> This quotation is valid for 30 days from the date issued.</li>
+      </ol>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">Quotation Q-2026-002 · AI Scheduling Engine for Department Class Scheduling · Prepared for Jamir Obcemea by Cristan Jade Jumawan · cristanjade14@gmail.com · 0961 711 0582</div>
+</footer>

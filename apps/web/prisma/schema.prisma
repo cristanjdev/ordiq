@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Term {
+  id           String   @id @default(uuid()) @db.Uuid
+  code         String   @unique
+  academicYear String   @map("academic_year")
+  semester     Int
+  status       String   @default("DRAFT")
+  slotSizeMin  Int      @default(30) @map("slot_size_min")
+  dayStartMin  Int      @default(450) @map("day_start_min")
+  dayEndMin    Int      @default(1230) @map("day_end_min")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("terms")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  actor     String
+  action    String
+  entity    String
+  entityId  String   @map("entity_id")
+  before    Json?
+  after     Json?
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+

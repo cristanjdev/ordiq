@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/**
+ * ORDIQ Design Tokens (Section 4 & Decision D-20)
+ * Identity from Figure 3 & Figure 4: Maroon (#6E0F17 / #4A0A0F) and Orange (#EA580C / #F97316),
+ * supporting both light and dark modes.
+ */
+:root {
+  --ordiq-bg: #f6f4f4;
+  --ordiq-surface: #ffffff;
+  --ordiq-surface-muted: #f3eeee;
+  --ordiq-ink: #1e1315;
+  --ordiq-muted: #685659;
+  --ordiq-border: #e5dadd;
+
+  --ordiq-maroon: #7a121b;
+  --ordiq-maroon-deep: #4a0a0f;
+  --ordiq-maroon-darker: #2d0508;
+  --ordiq-orange: #ea580c;
+  --ordiq-orange-deep: #c2410c;
+  --ordiq-amber: #f59e0b;
+}
+
+.dark {
+  --ordiq-bg: #12090b;
+  --ordiq-surface: #1c1013;
+  --ordiq-surface-muted: #27161a;
+  --ordiq-ink: #f8f1f2;
+  --ordiq-muted: #b59da1;
+  --ordiq-border: #382025;
+
+  --ordiq-maroon: #991b27;
+  --ordiq-maroon-deep: #3b080c;
+  --ordiq-maroon-darker: #1f0406;
+  --ordiq-orange: #f97316;
+  --ordiq-orange-deep: #ea580c;
+  --ordiq-amber: #fbbf24;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--ordiq-bg);
+  color: var(--ordiq-ink);
+  font-family:
+    "Inter",
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  margin: 0;
+  padding: 0;
+}
+

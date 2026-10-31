@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ordiq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ordiq_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-ordiq}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ordiq_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ordiq} -d ${POSTGRES_DB:-ordiq}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  engine:
+    build:
+      context: .
+      dockerfile: infra/engine.Dockerfile
+    restart: unless-stopped
+    environment:
+      ENGINE_TOKEN: ${ENGINE_TOKEN:-dev-engine-shared-secret-token-32chars}
+      SOLVER_TIME_LIMIT_SECONDS: ${SOLVER_TIME_LIMIT_SECONDS:-120}
+      SOLVER_WORKERS: ${SOLVER_WORKERS:-4}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    expose:
+      - "8000"
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import os, urllib.request; req = urllib.request.Request('http://127.0.0.1:8000/healthz', headers={'X-Engine-Token': os.environ['ENGINE_TOKEN']}); urllib.request.urlopen(req, timeout=3)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/web.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      engine:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ordiq}:${POSTGRES_PASSWORD:-ordiq_dev_password}@postgres:5432/${POSTGRES_DB:-ordiq}?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:-dev-auth-secret-change-in-production-32chars}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-dev-encryption-key-change-in-prod-32c}
+      ENGINE_URL: http://engine:8000
+      ENGINE_TOKEN: ${ENGINE_TOKEN:-dev-engine-shared-secret-token-32chars}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      LLM_API_KEY: ${LLM_API_KEY:-sk-placeholder-dev-key}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://localhost:11434/v1}
+      LLM_MONTHLY_TOKEN_BUDGET: ${LLM_MONTHLY_TOKEN_BUDGET:-500000}
+    ports:
+      - "3000:3000"
+
+volumes:
+  ordiq_pgdata:
+
