@@ -6,7 +6,7 @@ import {
   rollbackModelVersion,
   trainAndEvaluateFitModel,
 } from "../../../../server/modules/ml/ml.service";
-import { withAuth } from "../../../../server/platform/auth";
+import { withDeanRoute } from "@/server/http/dean-route";
 import { toErrorResponse } from "../../../../server/platform/errors";
 
 const mlActionSchema = z.discriminatedUnion("action", [
@@ -20,7 +20,7 @@ const mlActionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-export const GET = withAuth(async (req) => {
+export const GET = withDeanRoute(async (req) => {
   try {
     const url = new URL(req.url);
     const subjectCode = url.searchParams.get("subjectCode");
@@ -44,7 +44,7 @@ export const GET = withAuth(async (req) => {
   }
 });
 
-export const POST = withAuth(async (req, ctx) => {
+export const POST = withDeanRoute(async (req, ctx) => {
   try {
     const body = mlActionSchema.parse(await req.json());
     if (body.action === "train") {

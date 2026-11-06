@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /**
  * ORDIQ Design Tokens (Section 4 & Decision D-20)
  * Identity from Figure 3 & Figure 4: Maroon (#6E0F17 / #4A0A0F) and Orange (#EA580C / #F97316),
@@ -41,7 +43,12 @@
   box-sizing: border-box;
 }
 
+html,
 body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
   background-color: var(--ordiq-bg);
   color: var(--ordiq-ink);
   font-family:
@@ -50,7 +57,108 @@ body {
     system-ui,
     -apple-system,
     sans-serif;
-  margin: 0;
-  padding: 0;
 }
+
+/* Hide scrollbars globally when utility class applied */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Modern sleek scrollbar for dashboard panels */
+.ordiq-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.ordiq-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ordiq-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(140, 120, 125, 0.25);
+  border-radius: 9999px;
+}
+.ordiq-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 120, 125, 0.45);
+}
+.ordiq-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 120, 125, 0.3) transparent;
+}
+
+@keyframes indeterminate-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-indeterminate-progress {
+  animation: indeterminate-progress 1.2s infinite ease-in-out;
+}
+
+/* AI launcher button: soft pop-in after the assistant panel closes */
+@keyframes ai-launcher-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-ai-launcher-in {
+  animation: ai-launcher-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ai-launcher-in {
+    animation: none;
+  }
+}
+
+/* Settings info bubble: quick fade and lift on open */
+@keyframes info-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-info-pop {
+  animation: info-pop 160ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-info-pop {
+    animation: none;
+  }
+}
+
+@keyframes caret-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+.animate-caret-blink {
+  animation: caret-blink 1s infinite;
+}
+
 

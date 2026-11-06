@@ -3,6 +3,7 @@ import {
   type ScheduleRecord,
 } from "../master-data/master-data.store";
 import { getTermReadinessReport } from "../readiness/readiness.service";
+import { describeViolation } from "../schedules/violation-text";
 
 export interface FacultyLoadItemDto {
   facultyCode: string;
@@ -83,6 +84,8 @@ export interface ScheduleAnalyticsReportDto {
     constraintId: string;
     severity: "HARD" | "SOFT";
     message: string;
+    /** Plain-language sentence for the Dean. */
+    description: string;
     waived: boolean;
   }>;
   studentChangeRequestRisk: StudentChangeRequestRiskDto;
@@ -386,10 +389,14 @@ export function computeScheduleAnalytics(
     },
     facultyLoads,
     roomUtilizations,
-    topConflicts: violations.slice(0, 10).map((v) => ({
+    // Unresolved conflicts first, so waived ones never push them out.
+    topConflicts: [...unwaivedHardViolations, ...violations.filter((v) => v.waived)]
+      .slice(0, 10)
+      .map((v) => ({
       constraintId: v.code,
       severity: "HARD",
       message: v.message,
+      description: describeViolation(v, state, sched?.entries ?? []),
       waived: v.waived ?? false,
     })),
     studentChangeRequestRisk: {

@@ -1,6 +1,9 @@
 import type { Weekday } from "@ordiq/contracts";
 import { withAudit } from "../../platform/audit";
 import { AppError } from "../../platform/errors";
+import { logger } from "../../platform/logger";
+import { runLiveAssistantTurn } from "./live-assistant";
+import { type LlmProvider, resolveLlmConfig } from "./llm-provider";
 import {
   type ChangeProposalRecord,
   type ConversationRecord,
@@ -33,7 +36,7 @@ export interface ChatTurnInput {
   conversationId?: string;
   scheduleId?: string;
   prompt: string;
-  provider?: "openai" | "anthropic" | "ollama";
+  provider?: LlmProvider;
   simulateProviderFailure?: boolean;
   actor?: string;
 }
@@ -46,8 +49,10 @@ export interface ChatTurnResponse {
   refusalReason?: string;
   invokedTool: AiToolName | null;
   invokedToolArgs: Record<string, unknown> | null;
-  provider: "openai" | "anthropic" | "ollama";
+  provider: LlmProvider;
   model: string;
+  /** live: a provider answered; offline: built-in assistant; offline-fallback: provider failed. */
+  mode: "live" | "offline" | "offline-fallback";
   streamedChunks: string[];
   tokensIn: number;
   tokensOut: number;
@@ -648,8 +653,9 @@ export async function runAiAssistantTurn(
       refused: false,
       invokedTool: null,
       invokedToolArgs: null,
-      provider: input.provider ?? "openai",
+      provider: input.provider ?? resolveLlmConfig().provider,
       model: "offline-fallback",
+      mode: "offline-fallback",
       streamedChunks: [fallbackText],
       tokensIn: 0,
       tokensOut: 0,
@@ -658,31 +664,23 @@ export async function runAiAssistantTurn(
     };
   }
 
-  // Check refusal boundaries first
+  // Refusal boundaries are deterministic and checked before any model call.
+  const config = resolveLlmConfig(input.provider);
   const refusal = detectRefusalIntent(input.prompt);
   if (refusal.refused) {
-    const gwRes = await invokeLlmThroughPrivacyGateway({
-      provider: input.provider,
-      systemPrompt: SYSTEM_PROMPT_V1,
-      messages: conv.messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
-      synthesizedAssistantReply:
-        refusal.reply ?? "I cannot perform that request.",
-    });
+    const replyText = refusal.reply ?? "I cannot perform that request.";
+    // Offline, the refusal still goes through the gateway so the egress audit
+    // covers it; live, no provider call is needed to refuse.
+    const gwRes = config.live
+      ? null
+      : await invokeLlmThroughPrivacyGateway({
+          provider: input.provider,
+          systemPrompt: SYSTEM_PROMPT_V1,
+          messages: conv.messages.map((m) => ({ role: m.role, content: m.content })),
+          synthesizedAssistantReply: replyText,
+        });
 
-    const assistantMsg: MessageRecord = {
-      id: crypto.randomUUID(),
-      conversationId: conv.id,
-      role: "assistant",
-      content: gwRes.restoredReply,
-      parts: [],
-      createdAt: new Date().toISOString(),
-    };
-    conv.messages.push(assistantMsg);
-    conv.updatedAt = new Date().toISOString();
-
+    const assistantMsg = appendAssistantMessage(conv, gwRes?.restoredReply ?? replyText, []);
     return {
       conversationId: conv.id,
       userMessage: userMsg,
@@ -691,17 +689,97 @@ export async function runAiAssistantTurn(
       refusalReason: refusal.reason,
       invokedTool: null,
       invokedToolArgs: null,
-      provider: gwRes.provider,
-      model: gwRes.model,
-      streamedChunks: gwRes.streamedChunks,
-      tokensIn: gwRes.tokensIn,
-      tokensOut: gwRes.tokensOut,
-      estimatedCostPhp: gwRes.estimatedCostPhp,
-      egressPayloadId: gwRes.egressPayloadId,
+      provider: gwRes?.provider ?? config.provider,
+      model: gwRes?.model ?? config.model,
+      mode: config.live ? "live" : "offline",
+      streamedChunks: gwRes?.streamedChunks ?? [replyText],
+      tokensIn: gwRes?.tokensIn ?? 0,
+      tokensOut: gwRes?.tokensOut ?? 0,
+      estimatedCostPhp: gwRes?.estimatedCostPhp ?? 0,
+      egressPayloadId: gwRes?.egressPayloadId ?? "none",
     };
   }
 
-  // Select and run one of the 14 permitted tools
+  if (config.live) {
+    try {
+      const live = await runLiveAssistantTurn({
+        config,
+        systemPrompt: SYSTEM_PROMPT_V1,
+        history: conv.messages,
+        termCode: input.termCode,
+        scheduleId: input.scheduleId,
+        actor,
+      });
+      const assistantMsg = appendAssistantMessage(
+        conv,
+        live.text,
+        live.toolResults.map((r) => r.structuredPart),
+      );
+      const firstCall = live.toolCalls[0];
+      return {
+        conversationId: conv.id,
+        userMessage: userMsg,
+        assistantMessage: assistantMsg,
+        refused: false,
+        invokedTool: firstCall?.toolName ?? null,
+        invokedToolArgs: firstCall?.args ?? null,
+        provider: config.provider,
+        model: config.model,
+        mode: "live",
+        streamedChunks: live.streamedChunks,
+        tokensIn: live.tokensIn,
+        tokensOut: live.tokensOut,
+        estimatedCostPhp: live.estimatedCostPhp,
+        egressPayloadId: live.egressPayloadId,
+      };
+    } catch (error) {
+      // Never surface provider errors (they may echo request text); answer
+      // with the built-in assistant instead.
+      logger.warn("ai_provider_failed", {
+        provider: config.provider,
+        model: config.model,
+        error: error instanceof Error ? error.name : "unknown",
+      });
+      return runOfflineTurn(input, conv, userMsg, actor, PROVIDER_FALLBACK_NOTE);
+    }
+  }
+
+  return runOfflineTurn(input, conv, userMsg, actor);
+}
+
+const PROVIDER_FALLBACK_NOTE =
+  "\n\n(The AI provider could not be reached, so this answer comes from ORDIQ's built-in assistant.)";
+
+function appendAssistantMessage(
+  conv: ConversationRecord,
+  content: string,
+  parts: MessageRecord["parts"],
+): MessageRecord {
+  const assistantMsg: MessageRecord = {
+    id: crypto.randomUUID(),
+    conversationId: conv.id,
+    role: "assistant",
+    content,
+    parts,
+    createdAt: new Date().toISOString(),
+  };
+  conv.messages.push(assistantMsg);
+  conv.updatedAt = new Date().toISOString();
+  return assistantMsg;
+}
+
+/**
+ * Deterministic turn: pattern-matched tool selection and a templated reply,
+ * still routed through the privacy gateway. Used without a configured
+ * provider, under tests, and as the fallback when a provider call fails.
+ */
+async function runOfflineTurn(
+  input: ChatTurnInput,
+  conv: ConversationRecord,
+  userMsg: MessageRecord,
+  actor: string,
+  note?: string,
+): Promise<ChatTurnResponse> {
   const { toolName, args } = selectToolAndArgsForPrompt(
     input.prompt,
     input.termCode,
@@ -709,10 +787,7 @@ export async function runAiAssistantTurn(
   );
   const toolResult = await executeAiTool(toolName, args, actor);
   const facultyCode = args.facultyCode as string | undefined;
-  const synthesizedReply = synthesizeReplyFromToolResult(
-    toolResult,
-    facultyCode,
-  );
+  const synthesizedReply = synthesizeReplyFromToolResult(toolResult, facultyCode);
 
   // Pass history + allowlist-serialized tool output through the Privacy Gateway
   const gwMessages: Array<{
@@ -720,10 +795,7 @@ export async function runAiAssistantTurn(
     content: string;
     toolName?: string;
   }> = [
-    ...conv.messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    })),
+    ...conv.messages.map((m) => ({ role: m.role, content: m.content })),
     {
       role: "tool",
       toolName,
@@ -733,21 +805,14 @@ export async function runAiAssistantTurn(
 
   const gwRes = await invokeLlmThroughPrivacyGateway({
     provider: input.provider,
+    model: note ? "offline-fallback" : undefined,
     systemPrompt: SYSTEM_PROMPT_V1,
     messages: gwMessages,
     synthesizedAssistantReply: synthesizedReply,
   });
 
-  const assistantMsg: MessageRecord = {
-    id: crypto.randomUUID(),
-    conversationId: conv.id,
-    role: "assistant",
-    content: gwRes.restoredReply,
-    parts: [toolResult.structuredPart],
-    createdAt: new Date().toISOString(),
-  };
-  conv.messages.push(assistantMsg);
-  conv.updatedAt = new Date().toISOString();
+  const content = note ? `${gwRes.restoredReply}${note}` : gwRes.restoredReply;
+  const assistantMsg = appendAssistantMessage(conv, content, [toolResult.structuredPart]);
 
   return {
     conversationId: conv.id,
@@ -758,7 +823,8 @@ export async function runAiAssistantTurn(
     invokedToolArgs: args,
     provider: gwRes.provider,
     model: gwRes.model,
-    streamedChunks: gwRes.streamedChunks,
+    mode: note ? "offline-fallback" : "offline",
+    streamedChunks: note ? [...gwRes.streamedChunks, note] : gwRes.streamedChunks,
     tokensIn: gwRes.tokensIn,
     tokensOut: gwRes.tokensOut,
     estimatedCostPhp: gwRes.estimatedCostPhp,

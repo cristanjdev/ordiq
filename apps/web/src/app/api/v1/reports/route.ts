@@ -4,7 +4,7 @@ import {
   generateScheduleReport,
   REPORT_TYPES,
 } from "../../../../server/modules/reports/reports.service";
-import { withAuth } from "../../../../server/platform/auth";
+import { withDeanRoute } from "@/server/http/dean-route";
 import { toErrorResponse } from "../../../../server/platform/errors";
 
 const reportQuerySchema = z.object({
@@ -16,7 +16,7 @@ const reportQuerySchema = z.object({
   entityFilter: z.string().optional(),
 });
 
-export const GET = withAuth(async (req, ctx) => {
+export const GET = withDeanRoute(async (req, ctx) => {
   try {
     const url = new URL(req.url);
     const parsed = reportQuerySchema.parse({

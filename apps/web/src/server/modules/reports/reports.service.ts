@@ -1,4 +1,14 @@
 import ExcelJS from "exceljs";
+import {
+  componentLabel,
+  employmentLabel,
+  loadStatusLabel,
+  profileLabel,
+  scheduleStatusLabel,
+  solverStatusLabel,
+  unscheduledReasonLabel,
+  weekdayLabel,
+} from "@/lib/display-labels";
 import { withAudit } from "../../platform/audit";
 import { AppError } from "../../platform/errors";
 import {
@@ -10,6 +20,7 @@ import {
 import { getMasterDataState } from "../master-data/master-data.store";
 import { getTermReadinessReport } from "../readiness/readiness.service";
 import { compareCandidateSchedules } from "../schedules/schedules.service";
+import { describeViolation } from "../schedules/violation-text";
 
 export const REPORT_TYPES = [
   "SECTION_SCHEDULE",
@@ -203,8 +214,8 @@ export async function generateScheduleReport(
               off?.sectionCode ?? "-",
               e.offeringCode,
               off?.subjectCode ?? "-",
-              off?.component ?? "LECTURE",
-              e.weekday,
+              componentLabel(off?.component ?? "LECTURE"),
+              weekdayLabel(e.weekday),
               formatMinutesToClock(e.startMin),
               formatMinutesToClock(e.endMin),
               e.roomCode,
@@ -236,7 +247,7 @@ export async function generateScheduleReport(
             return [
               e.facultyCode,
               fac?.name ?? e.facultyCode,
-              e.weekday,
+              weekdayLabel(e.weekday),
               formatMinutesToClock(e.startMin),
               formatMinutesToClock(e.endMin),
               e.offeringCode,
@@ -271,7 +282,7 @@ export async function generateScheduleReport(
             return [
               e.roomCode,
               room?.name ?? e.roomCode,
-              e.weekday,
+              weekdayLabel(e.weekday),
               formatMinutesToClock(e.startMin),
               formatMinutesToClock(e.endMin),
               e.offeringCode,
@@ -306,13 +317,13 @@ export async function generateScheduleReport(
             l.facultyCode,
             l.facultyName,
             l.programCode,
-            l.employmentType,
+            employmentLabel(l.employmentType),
             String(l.assignedUnits),
             String(l.regularMaxUnits),
             String(l.overloadUnits),
             String(l.preparationsCount),
             `${l.utilizationPct}%`,
-            l.statusLabel,
+            loadStatusLabel(l.statusLabel),
           ]);
           break;
         }
@@ -352,7 +363,7 @@ export async function generateScheduleReport(
           headers = ["Metric", "Value", "Calculation / Notes"];
           rows = [
             ["Term Code", analytics.termCode, "Academic term snapshot"],
-            ["Schedule Label", analytics.candidateLabel, analytics.status],
+            ["Schedule Label", analytics.candidateLabel, scheduleStatusLabel(analytics.status)],
             [
               "Classes Scheduled",
               `${analytics.metrics.classesScheduled} / ${analytics.metrics.totalMeetings} (${analytics.metrics.scheduledPct}%)`,
@@ -399,24 +410,24 @@ export async function generateScheduleReport(
           const violationRows = (
             sched?.validationReport?.violations ?? []
           ).map((v) => [
-            "VIOLATION",
+            "Rule violation",
             v.code,
-            v.waived ? "WAIVED" : "UNWAIVED",
-            v.message,
+            v.waived ? "Waived" : "Needs fixing",
+            describeViolation(v, state, sched?.entries ?? []),
             v.waiver_reason ?? "-",
           ]);
           const exceptionRows = (sched?.exceptions ?? []).map((ex) => [
-            "EXCEPTION_WAIVER",
+            "Documented exception",
             ex.code,
-            "APPROVED_WAIVER",
+            "Approved",
             ex.reason,
             ex.approvedBy,
           ]);
           const unscheduledRows = (sched?.unscheduled ?? []).map((u) => [
-            "UNSCHEDULED",
-            u.reasonCode,
-            "UNPLACED",
-            `${u.offeringCode} (#${u.meetingIndex}): ${u.reasonDetail}`,
+            "Unscheduled class",
+            unscheduledReasonLabel(u.reasonCode),
+            "Not placed",
+            `${u.offeringCode} (meeting ${u.meetingIndex + 1}): ${u.reasonDetail}`,
             "-",
           ]);
           rows = [...violationRows, ...exceptionRows, ...unscheduledRows];
@@ -475,9 +486,9 @@ export async function generateScheduleReport(
               : [];
           rows = comps.map((c) => [
             c.candidateLabel,
-            c.profileName,
-            c.status,
-            c.solverStatus,
+            profileLabel(c.profileName),
+            scheduleStatusLabel(c.status),
+            solverStatusLabel(c.solverStatus),
             String(c.qualityScore),
             String(c.hardViolationCount),
             String(c.unscheduledCount),
@@ -513,9 +524,9 @@ export async function generateScheduleReport(
               off?.sectionCode ?? "-",
               off?.subjectCode ?? "-",
               subj?.name ?? "-",
-              off?.component ?? "LECTURE",
+              componentLabel(off?.component ?? "LECTURE"),
               String(subj?.units ?? 3),
-              e.weekday,
+              weekdayLabel(e.weekday),
               formatMinutesToClock(e.startMin),
               formatMinutesToClock(e.endMin),
               e.roomCode,

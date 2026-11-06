@@ -56,10 +56,24 @@ const prismaAuditSink: AuditSink = {
   },
 };
 
-let activeAuditSink: AuditSink = prismaAuditSink;
+/**
+ * The automated test suite never writes to the real audit_logs table: under
+ * NODE_ENV=test the default sink only returns the record. The running app
+ * (development and production) always writes to PostgreSQL.
+ */
+const testAuditSink: AuditSink = {
+  async write(input: AuditInput): Promise<AuditRecord> {
+    return { ...input, id: crypto.randomUUID(), createdAt: new Date() };
+  },
+};
+
+const defaultAuditSink: AuditSink =
+  process.env.NODE_ENV === "test" ? testAuditSink : prismaAuditSink;
+
+let activeAuditSink: AuditSink = defaultAuditSink;
 
 export function setAuditSinkForTests(sink: AuditSink | null): void {
-  activeAuditSink = sink ?? prismaAuditSink;
+  activeAuditSink = sink ?? defaultAuditSink;
 }
 
 /**

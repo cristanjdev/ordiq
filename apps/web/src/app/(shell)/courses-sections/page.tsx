@@ -1,11 +1,11 @@
-import { MasterDataWorkspace } from "@/features/data/master-data-workspace";
+import { CurriculumWorkspace } from "@/features/curriculum/curriculum-workspace";
+import { ProgramsTermsSection } from "@/features/curriculum/programs-terms-section";
 
 export default function CoursesSectionsPage() {
   return (
-    <MasterDataWorkspace
-      initialDataset="sections"
-      title="Courses & Sections"
-      subtitle="Manage subjects, section-level student counts (no individual student records), offerings, and external FixedBlocks."
-    />
+    <div className="space-y-5">
+      <CurriculumWorkspace />
+      <ProgramsTermsSection />
+    </div>
   );
 }

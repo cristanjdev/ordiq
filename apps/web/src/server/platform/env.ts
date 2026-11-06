@@ -23,7 +23,7 @@ export const envSchema = z
     ENGINE_TOKEN: z
       .string()
       .min(16, "ENGINE_TOKEN must be at least 16 characters"),
-    LLM_PROVIDER: z.enum(["openai", "anthropic", "ollama"]),
+    LLM_PROVIDER: z.enum(["openai", "anthropic", "gemini", "ollama"]),
     LLM_MODEL: z.string().min(1, "LLM_MODEL is required"),
     LLM_API_KEY: z.string().optional(),
     LLM_BASE_URL: z.string().url().optional().or(z.literal("")),
@@ -34,7 +34,9 @@ export const envSchema = z
   })
   .superRefine((data, ctx) => {
     if (
-      (data.LLM_PROVIDER === "openai" || data.LLM_PROVIDER === "anthropic") &&
+      (data.LLM_PROVIDER === "openai" ||
+        data.LLM_PROVIDER === "anthropic" ||
+        data.LLM_PROVIDER === "gemini") &&
       (!data.LLM_API_KEY || data.LLM_API_KEY.trim().length === 0)
     ) {
       ctx.addIssue({

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { AuthSessionProvider } from "@/features/auth/auth-session-provider";
 import { AppShell } from "@/features/shell/app-shell";
 
 export default function ShellLayout({
@@ -6,6 +7,9 @@ export default function ShellLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AuthSessionProvider>
+      <AppShell>{children}</AppShell>
+    </AuthSessionProvider>
+  );
 }
-

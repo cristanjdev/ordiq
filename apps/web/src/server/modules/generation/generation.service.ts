@@ -134,11 +134,16 @@ export function buildProblemSnapshot(
   const directives = Array.from(store.directives.values()).filter(
     (d) => d.termCode === term.code,
   );
+  // Dean weight overrides (Rules page) set the Balanced profile's weight; the
+  // other profiles scale by the same ratio so they keep their own emphasis.
+  const balanced: Record<string, number> = CANDIDATE_PROFILES.BALANCED.weights;
   for (const d of directives) {
     if (d.type === "SET_WEIGHT" && d.offeringCode) {
       const code = d.offeringCode as SoftConstraintCode;
       if (code in baseWeights) {
-        baseWeights[code] = d.weight;
+        const reference = balanced[code] ?? 0;
+        baseWeights[code] =
+          reference > 0 ? Math.round(baseWeights[code] * (d.weight / reference) * 100) / 100 : d.weight;
       }
     }
   }

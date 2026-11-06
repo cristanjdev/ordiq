@@ -1,5 +1,11 @@
+import { Suspense } from "react";
 import { AiAssistantView } from "@/features/ai/ai-assistant-view";
 
 export default function AssistantPage() {
-  return <AiAssistantView />;
+  // The view reads the active tab from the URL (?tab=...).
+  return (
+    <Suspense fallback={null}>
+      <AiAssistantView />
+    </Suspense>
+  );
 }

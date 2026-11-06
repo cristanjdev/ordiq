@@ -15,7 +15,8 @@ import {
   getMeetingAlternatives,
   undoLastScheduleChange,
 } from "../../../../server/modules/schedules/schedules.service";
-import { withAuth } from "../../../../server/platform/auth";
+import { withDeanRoute } from "@/server/http/dean-route";
+import { withViolationDescriptions } from "@/server/modules/schedules/violation-text";
 import { toErrorResponse } from "../../../../server/platform/errors";
 
 const hardCodeEnum = z.enum(
@@ -72,7 +73,7 @@ const scheduleActionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-export const GET = withAuth(async (request) => {
+export const GET = withDeanRoute(async (request) => {
   const { searchParams } = new URL(request.url);
   const termCode = searchParams.get("termCode") ?? "AY2026-2027-S1";
   const scheduleId = searchParams.get("scheduleId");
@@ -92,16 +93,16 @@ export const GET = withAuth(async (request) => {
         { status: 404 },
       );
     }
-    return NextResponse.json({ schedule: sched }, { status: 200 });
+    return NextResponse.json({ schedule: withViolationDescriptions(sched, store) }, { status: 200 });
   }
 
-  const schedules = Array.from(store.schedules.values()).filter(
-    (s) => s.termCode === termCode,
-  );
+  const schedules = Array.from(store.schedules.values())
+    .filter((s) => s.termCode === termCode)
+    .map((s) => withViolationDescriptions(s, store));
   return NextResponse.json({ schedules }, { status: 200 });
 });
 
-export const POST = withAuth(async (request, { user }) => {
+export const POST = withDeanRoute(async (request, { user }) => {
   try {
     const body = await request.json();
     const parsed = scheduleActionSchema.parse(body);

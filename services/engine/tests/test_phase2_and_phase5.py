@@ -576,6 +576,113 @@ def test_small_and_medium_fixtures_solve_with_zero_hard_violations() -> None:
     assert unchanged >= len(sol_initial.entries) - 1
 
 
+def _scaled_medium_problem(copies: int, staff_copies: int) -> Problem:
+    """Medium fixture replicated `copies` times, with faculty and rooms replicated
+    `staff_copies` times so the term stays feasible at the larger size."""
+    base = _load_fixture_problem("medium")
+    sections, offerings = [], []
+    for i in range(copies):
+        sections += [s.model_copy(update={"code": f"{s.code}-{i}"}) for s in base.sections]
+        offerings += [
+            o.model_copy(
+                update={
+                    "code": f"{o.code}-{i}",
+                    "section_code": f"{o.section_code}-{i}",
+                    "combined_class_group": None,
+                    "preassigned_faculty_code": None,
+                }
+            )
+            for o in base.offerings
+        ]
+    faculty, quals, fac_windows, rooms = [], [], [], []
+    for j in range(staff_copies):
+        faculty += [f.model_copy(update={"code": f"{f.code}-{j}"}) for f in base.faculty]
+        quals += [
+            q.model_copy(update={"faculty_code": f"{q.faculty_code}-{j}"})
+            for q in base.qualifications
+        ]
+        fac_windows += [
+            w.model_copy(update={"entity_code": f"{w.entity_code}-{j}"})
+            for w in base.faculty_availability
+        ]
+        rooms += [r.model_copy(update={"code": f"{r.code}-{j}"}) for r in base.rooms]
+    return base.model_copy(
+        update={
+            "sections": sections,
+            "offerings": offerings,
+            "faculty": faculty,
+            "qualifications": quals,
+            "faculty_availability": fac_windows,
+            "rooms": rooms,
+            "room_availability": [],
+            "fixed_blocks": [],
+            "faculty_preferences": [],
+        }
+    )
+
+
+def test_solver_scales_to_a_multi_program_term() -> None:
+    """Regression: the per-combination model left most meetings unscheduled at
+    medium size. The decomposed model must place a 144-meeting term completely."""
+    prob = _scaled_medium_problem(copies=3, staff_copies=2)
+    assert sum(o.meetings_per_week for o in prob.offerings) == 144
+    sol = solve_problem(prob, profile_name="BALANCED", time_limit_seconds=40)
+    assert sol.status in ("PROVEN_OPTIMAL", "BEST_FOUND")
+    assert len(sol.unscheduled) == 0
+    assert sol.validation is not None
+    assert sol.validation.hard_violation_count == 0
+
+
+def test_combined_class_sections_share_slot_room_and_faculty() -> None:
+    base = _load_fixture_problem("medium")
+    lead, follower = (o for o in base.offerings if o.subject_code == "CE101")
+    hall = base.rooms[0].model_copy(
+        update={"code": "HALL-90", "capacity": 90, "type": RoomType.LECTURE}
+    )
+
+    def combined(pattern_follower: str) -> Problem:
+        return base.model_copy(
+            update={
+                "rooms": [*base.rooms, hall],
+                "offerings": [
+                    o.model_copy(
+                        update={
+                            "combined_class_group": "G-CE101",
+                            "meeting_pattern": lead.meeting_pattern
+                            if o.code == lead.code
+                            else pattern_follower,
+                        }
+                    )
+                    if o.code in (lead.code, follower.code)
+                    else o
+                    for o in base.offerings
+                ],
+            }
+        )
+
+    sol = solve_problem(combined(lead.meeting_pattern), time_limit_seconds=20)
+    assert sol.validation is not None
+    assert sol.validation.hard_violation_count == 0
+    assert len(sol.unscheduled) == 0
+    slots = {
+        code: sorted(
+            (e.meeting_index, e.weekday, e.start_min, e.room_code, e.faculty_code)
+            for e in sol.entries
+            if e.offering_code == code
+        )
+        for code in (lead.code, follower.code)
+    }
+    assert slots[lead.code] == slots[follower.code]
+    assert {s[3] for s in slots[lead.code]} == {"HALL-90"}
+
+    # A follower whose meeting pattern can never match the leader's is left
+    # unscheduled (HC-08) rather than placed on days that break its pattern (HC-13).
+    clash = "TTH" if lead.meeting_pattern == "MWF" else "MWF"
+    sol_clash = solve_problem(combined(clash), time_limit_seconds=20)
+    assert sol_clash.validation is not None
+    assert not [v for v in sol_clash.validation.violations if v.code.value == "HC-13"]
+
+
 def test_impossible_fixtures_return_partial_candidates_with_diagnostic_reasons() -> None:
     """Exit Criterion 3: Impossible fixture returns partial candidate with accurate reason codes."""
     # Case 1: NO_QUALIFIED_FACULTY

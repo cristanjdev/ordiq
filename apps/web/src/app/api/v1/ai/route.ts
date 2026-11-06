@@ -5,8 +5,13 @@ import {
   runAiAssistantTurn,
 } from "../../../../server/modules/ai/ai-orchestrator";
 import { getMasterDataState } from "../../../../server/modules/master-data/master-data.store";
-import { withAuth } from "../../../../server/platform/auth";
-import { toErrorResponse } from "../../../../server/platform/errors";
+import { withDeanRoute } from "@/server/http/dean-route";
+import { AppError, toErrorResponse } from "../../../../server/platform/errors";
+import { getSystemSettings } from "../../../../server/platform/system-settings";
+import { describeEntry, describeOffering } from "../../../../server/modules/ai/briefing.service";
+import { resolveLlmConfig } from "../../../../server/modules/ai/llm-provider";
+import { checkMonthlyTokenBudget } from "../../../../server/modules/ai/privacy-gateway";
+import { recordAudit } from "../../../../server/platform/audit";
 
 const aiActionSchema = z.discriminatedUnion("action", [
   z.object({
@@ -15,16 +20,20 @@ const aiActionSchema = z.discriminatedUnion("action", [
     conversationId: z.string().optional(),
     scheduleId: z.string().optional(),
     prompt: z.string().min(1),
-    provider: z.enum(["openai", "anthropic", "ollama"]).optional(),
+    provider: z.enum(["openai", "anthropic", "gemini", "ollama"]).optional(),
   }),
   z.object({
     action: z.literal("review_proposal"),
     proposalId: z.string().min(1),
     decision: z.enum(["APPLY", "REJECT"]),
   }),
+  z.object({
+    action: z.literal("delete_conversation"),
+    conversationId: z.string().min(1),
+  }),
 ]);
 
-export const GET = withAuth(async (req) => {
+export const GET = withDeanRoute(async (req) => {
   try {
     const url = new URL(req.url);
     const termCode = url.searchParams.get("termCode") ?? "AY2026-2027-S1";
@@ -33,9 +42,20 @@ export const GET = withAuth(async (req) => {
     const conversations = Array.from(state.conversations.values())
       .filter((c) => c.termCode === termCode)
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-    const proposals = Array.from(state.proposals.values()).filter(
-      (p) => p.termCode === termCode,
-    );
+    // Readable before/after for the review screen.
+    const proposals = Array.from(state.proposals.values())
+      .filter((p) => p.termCode === termCode)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((p) => ({
+        ...p,
+        offeringLabel: describeOffering(p.offeringCode),
+        beforeText: describeEntry(p.beforeEntry),
+        afterText: describeEntry(p.afterEntry),
+        scheduleLabel: state.schedules.get(p.scheduleId)?.candidateLabel ?? p.scheduleId,
+      }));
+    await getSystemSettings(); // load the token budget from Settings
+    const budget = checkMonthlyTokenBudget();
+    const llm = resolveLlmConfig();
     const totalTokensUsed = state.llmUsage.reduce(
       (sum, u) => sum + u.tokensIn + u.tokensOut,
       0,
@@ -54,6 +74,14 @@ export const GET = withAuth(async (req) => {
         requestCount: state.llmUsage.length,
         totalTokensUsed,
         totalEstimatedCostPhp,
+        monthTokensUsed: budget.usedTokens,
+        monthTokenBudget: budget.budgetTokens,
+      },
+      provider: {
+        provider: llm.provider,
+        model: llm.model,
+        live: llm.live,
+        offlineReason: llm.offlineReason ?? null,
       },
     });
   } catch (err) {
@@ -61,10 +89,17 @@ export const GET = withAuth(async (req) => {
   }
 });
 
-export const POST = withAuth(async (req, ctx) => {
+export const POST = withDeanRoute(async (req, ctx) => {
   try {
     const body = aiActionSchema.parse(await req.json());
     if (body.action === "chat") {
+      if (!(await getSystemSettings()).ai.assistantEnabled) {
+        throw new AppError(
+          "AI_ASSISTANT_DISABLED",
+          "The AI Assistant is turned off in Settings.",
+          403,
+        );
+      }
       const turn = await runAiAssistantTurn({
         termCode: body.termCode,
         conversationId: body.conversationId,
@@ -74,6 +109,23 @@ export const POST = withAuth(async (req, ctx) => {
         actor: ctx.user.username,
       });
       return NextResponse.json(turn);
+    }
+
+    if (body.action === "delete_conversation") {
+      const state = getMasterDataState();
+      const conv = state.conversations.get(body.conversationId);
+      if (!conv) {
+        throw new AppError("NOT_FOUND", "The conversation no longer exists.", 404);
+      }
+      state.conversations.delete(body.conversationId);
+      await recordAudit({
+        actor: ctx.user.username,
+        action: "AI_CONVERSATION_DELETED",
+        entity: "Conversation",
+        entityId: conv.id,
+        before: { title: conv.title, termCode: conv.termCode, messageCount: conv.messages.length },
+      });
+      return NextResponse.json({ deleted: conv.id });
     }
 
     const updatedProposal = await reviewChangeProposal({

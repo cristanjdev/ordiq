@@ -1,15 +1,12 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import {
-  CheckCircle2,
-  ClipboardCheck,
   FileSpreadsheet,
   FileText,
   ShieldAlert,
 } from "lucide-react";
 import * as React from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -119,40 +116,9 @@ const REPORT_CATALOGUE: readonly ReportCatalogueItem[] = [
   },
 ] as const;
 
-interface EvaluationEvidenceDto {
-  termCode: string;
-  baselineCarePolicy: string;
-  iso25010TestCases: Array<{
-    id: string;
-    qualityCharacteristic: string;
-    stage: string;
-    title: string;
-    verificationTarget: string;
-    status: string;
-  }>;
-  stage2HistoricalComparison: {
-    manualCandidateLabel: string;
-    manualHardViolations: number;
-    currentHardViolations: number;
-    hardViolationsEliminated: number;
-  } | null;
-}
-
 export function ReportsView() {
   const { selectedTerm } = useShell();
   const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
-
-  const evalQuery = useQuery<EvaluationEvidenceDto>({
-    queryKey: ["evaluation-evidence", selectedTerm.id],
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/v1/evaluation?termCode=${encodeURIComponent(selectedTerm.id)}`,
-      );
-      if (!res.ok) throw new Error("Requires active Dean session");
-      return (await res.json()) as EvaluationEvidenceDto;
-    },
-    retry: false,
-  });
 
   const exportMutation = useMutation({
     mutationFn: async (input: {
@@ -181,8 +147,6 @@ export function ReportsView() {
     },
   });
 
-  const evalData = evalQuery.data;
-
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -190,13 +154,12 @@ export function ReportsView() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold tracking-tight text-[var(--ordiq-ink)]">
-              Reports, Portal Exports & Evaluation Evidence
+              Reports & Portal Exports
             </h1>
-            <Badge variant="default">Phase 6 & 7 · Audited Exports</Badge>
           </div>
           <p className="mt-0.5 text-xs text-[var(--ordiq-muted)]">
             Generate printable PDF and Excel (.xlsx) reports per section,
-            faculty, and room, plus Stage 1–3 ISO/IEC 25010 evaluation evidence.
+            faculty, and room.
           </p>
         </div>
       </div>
@@ -250,7 +213,7 @@ export function ReportsView() {
               {item.supportsXlsx && (
                 <Button
                   size="sm"
-                  variant="default"
+                  className="bg-[#5a0e19] text-white hover:bg-[#480a13]"
                   onClick={() =>
                     exportMutation.mutate({
                       reportType: item.id,
@@ -268,77 +231,6 @@ export function ReportsView() {
         ))}
       </div>
 
-      {/* Phase 7: ISO/IEC 25010 Three-Stage Evaluation Evidence Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <ClipboardCheck className="h-5 w-5 text-[var(--ordiq-maroon)]" />
-              <div>
-                <CardTitle className="text-sm">
-                  Phase 7 · ISO/IEC 25010 Three-Stage Evaluation Evidence
-                </CardTitle>
-                <CardDescription>
-                  Stage 1 (Functional Performance), Stage 2 (1st Sem A.Y.
-                  2026–2027 Historical Data Test), and Stage 3 (Dean Pilot)
-                </CardDescription>
-              </div>
-            </div>
-            <Badge variant="success">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Stage 1 & 2 Verified · Stage 3 Pilot Ready
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3 text-xs">
-          {evalData?.baselineCarePolicy && (
-            <div className="rounded-lg border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] p-3 text-[11px] text-[var(--ordiq-muted)]">
-              {evalData.baselineCarePolicy}
-            </div>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="border-b border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] text-[11px] font-semibold uppercase text-[var(--ordiq-muted)]">
-                  <th className="px-3 py-2">ID</th>
-                  <th className="px-3 py-2">ISO/IEC 25010 Quality</th>
-                  <th className="px-3 py-2">Stage</th>
-                  <th className="px-3 py-2">Test Case</th>
-                  <th className="px-3 py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(evalData?.iso25010TestCases ?? []).map((tc) => (
-                  <tr
-                    key={tc.id}
-                    className="border-b border-[var(--ordiq-border)]"
-                  >
-                    <td className="px-3 py-2 font-mono">{tc.id}</td>
-                    <td className="px-3 py-2">{tc.qualityCharacteristic}</td>
-                    <td className="px-3 py-2">{tc.stage}</td>
-                    <td className="px-3 py-2">
-                      <div className="font-medium">{tc.title}</div>
-                      <div className="text-[11px] text-[var(--ordiq-muted)]">
-                        {tc.verificationTarget}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <Badge
-                        variant={
-                          tc.status === "PASSED" ? "success" : "warning"
-                        }
-                      >
-                        {tc.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

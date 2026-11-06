@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
   attachSessionCookie,
+  getTotpEnrollmentForSession,
   loginStep1Password,
 } from "@/server/platform/auth";
 import { withErrorHandler } from "@/server/platform/errors";
@@ -23,13 +24,22 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     userAgent,
   });
 
+  let totpEnrollment = step1.totpEnrollment ?? null;
+  if (!totpEnrollment && step1.stage === "VERIFY_TOTP") {
+    totpEnrollment = await getTotpEnrollmentForSession({
+      sessionToken: step1.sessionToken,
+    }).catch(() => null);
+  }
+
   const response = NextResponse.json(
     {
       stage: step1.stage,
-      totpEnrollment: step1.totpEnrollment ?? null,
+      totpEnrollment,
     },
     { status: 200 },
   );
+  // The response can carry the authenticator secret; never cache it.
+  response.headers.set("Cache-Control", "no-store");
 
   return attachSessionCookie(response, step1.sessionToken);
 });

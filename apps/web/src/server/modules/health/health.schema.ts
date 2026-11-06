@@ -5,7 +5,7 @@ export const systemHealthResponseSchema = z.object({
   web: z.object({
     status: z.literal("ok"),
     version: z.string(),
-    llmProvider: z.enum(["openai", "anthropic", "ollama"]),
+    llmProvider: z.enum(["openai", "anthropic", "gemini", "ollama"]),
   }),
   engine: z.object({
     connected: z.boolean(),

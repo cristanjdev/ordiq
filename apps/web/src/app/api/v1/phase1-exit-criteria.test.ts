@@ -4,7 +4,6 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it } from "vitest";
 import * as facultyRoute from "@/app/api/v1/faculty/route";
 import * as fixedBlocksRoute from "@/app/api/v1/fixed-blocks/route";
-import * as fixturesRoute from "@/app/api/v1/fixtures/route";
 import * as importsRoute from "@/app/api/v1/imports/route";
 import * as offeringsRoute from "@/app/api/v1/offerings/route";
 import * as programsRoute from "@/app/api/v1/programs/route";
@@ -197,11 +196,6 @@ describe("Phase 1: Secure Data Layer Exit Criteria", () => {
         method: "GET",
         handler: readinessRoute.GET,
       },
-      {
-        name: "POST /api/v1/fixtures",
-        method: "POST",
-        handler: fixturesRoute.POST,
-      },
     ];
 
     for (const route of protectedRoutes) {
@@ -279,7 +273,16 @@ describe("Phase 1: Secure Data Layer Exit Criteria", () => {
     const generatedCodes = step2.recoveryCodes ?? [];
     expect(generatedCodes).toHaveLength(8);
 
-    const authedCtx = await requireDeanSession(preTotpRequest);
+    // The password-only token is retired; only the rotated token is authenticated.
+    expect(step2.sessionToken).not.toBe(step1.sessionToken);
+    await expect(requireDeanSession(preTotpRequest)).rejects.toMatchObject({
+      statusCode: 401,
+    });
+    const authedCtx = await requireDeanSession(
+      new NextRequest("http://localhost:3000/api/v1/faculty", {
+        headers: { Authorization: `Bearer ${step2.sessionToken}` },
+      }),
+    );
     expect(authedCtx.user.id).toBe(user.id);
     expect(
       decryptSecret(authedCtx.user.totpSecretEncrypted ?? ""),
@@ -309,7 +312,9 @@ describe("Phase 1: Secure Data Layer Exit Criteria", () => {
       }),
     ).rejects.toMatchObject({ code: "INVALID_TOTP_CODE" });
 
-    for (let i = 0; i < 4; i++) {
+    // The rejected recovery code above already counts as failure 1 of 5:
+    // password and second-factor failures share one lockout counter.
+    for (let i = 0; i < 3; i++) {
       await expect(
         loginStep1Password({
           identifier: "dean",

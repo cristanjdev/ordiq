@@ -5,7 +5,7 @@ import {
   runScheduleGeneration,
 } from "../../../../server/modules/generation/generation.service";
 import { getMasterDataState } from "../../../../server/modules/master-data/master-data.store";
-import { withAuth } from "../../../../server/platform/auth";
+import { withDeanRoute } from "@/server/http/dean-route";
 import { toErrorResponse } from "../../../../server/platform/errors";
 
 const generationActionSchema = z.discriminatedUnion("action", [
@@ -24,7 +24,7 @@ const generationActionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-export const GET = withAuth(async (request) => {
+export const GET = withDeanRoute(async (request) => {
   const { searchParams } = new URL(request.url);
   const termCode = searchParams.get("termCode") ?? "AY2026-2027-S1";
   const store = getMasterDataState();
@@ -38,7 +38,7 @@ export const GET = withAuth(async (request) => {
   return NextResponse.json({ runs, schedules }, { status: 200 });
 });
 
-export const POST = withAuth(async (request, { user }) => {
+export const POST = withDeanRoute(async (request, { user }) => {
   try {
     const body = await request.json();
     const parsed = generationActionSchema.parse(body);

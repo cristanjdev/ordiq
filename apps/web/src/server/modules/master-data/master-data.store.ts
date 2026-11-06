@@ -419,21 +419,62 @@ export function createEmptyMasterDataState(): MasterDataState {
   };
 }
 
-let state: MasterDataState = createEmptyMasterDataState();
+/**
+ * The live state is pinned on `globalThis` so every route bundle and every
+ * hot-reloaded module in `next dev` shares one instance (a module-level
+ * variable would be duplicated per bundle). It is a working copy of the
+ * database: `src/server/repo/state-sync.ts` reloads it from PostgreSQL whenever
+ * another instance has saved, and saves every change before a request returns.
+ */
+const globalForState = globalThis as unknown as {
+  ordiqMasterDataState?: MasterDataState;
+};
 
 export function getMasterDataState(): MasterDataState {
-  return state;
+  globalForState.ordiqMasterDataState ??= createEmptyMasterDataState();
+  return globalForState.ordiqMasterDataState;
 }
 
 export function resetMasterDataState(): void {
-  state = createEmptyMasterDataState();
+  globalForState.ordiqMasterDataState = createEmptyMasterDataState();
+}
+
+/** Swap in a state loaded from the database (repository use only). */
+export function replaceMasterDataState(next: MasterDataState): void {
+  globalForState.ordiqMasterDataState = next;
 }
 
 export function allocateNextFacultyAlias(
-  current: MasterDataState = state,
+  current: MasterDataState = getMasterDataState(),
 ): string {
   current.aliasCounter += 1;
   return `ALIAS-${String(current.aliasCounter).padStart(3, "0")}`;
+}
+
+// Natural keys used as Map keys for the keyed sub-collections. The repository
+// stores them in each table's `natural_key` column, which is unique.
+export function fixedBlockKey(
+  r: Pick<FixedBlockRecord, "termCode" | "sectionCode" | "weekday" | "startMin">,
+): string {
+  return `${r.termCode}:${r.sectionCode}:${r.weekday}:${r.startMin}`;
+}
+
+export function facultyAvailabilityKey(
+  r: Pick<FacultyAvailabilityRecord, "termCode" | "facultyCode" | "weekday" | "startMin">,
+): string {
+  return `${r.termCode}:${r.facultyCode}:${r.weekday}:${r.startMin}`;
+}
+
+export function facultyQualificationKey(
+  r: Pick<FacultyQualificationRecord, "facultyCode" | "subjectCode">,
+): string {
+  return `${r.facultyCode}:${r.subjectCode}`;
+}
+
+export function facultyPreferenceKey(
+  r: Pick<FacultyPreferenceRecord, "termCode" | "facultyCode" | "type" | "value">,
+): string {
+  return `${r.termCode}:${r.facultyCode}:${r.type}:${r.value}`;
 }
 
 /**
@@ -441,6 +482,7 @@ export function allocateNextFacultyAlias(
  * affected schedules are marked recheckNeeded = true.
  */
 export function flagSchedulesForRecheck(termCode?: string): void {
+  const state = getMasterDataState();
   for (const [id, sched] of state.schedules.entries()) {
     if (!termCode || sched.termCode === termCode) {
       state.schedules.set(id, { ...sched, recheckNeeded: true });

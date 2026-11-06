@@ -5,7 +5,9 @@ from __future__ import annotations
 import time
 import uuid
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from itertools import pairwise
 from typing import Literal
 
 from ortools.sat.python import cp_model
@@ -16,11 +18,16 @@ from engine.domain.models import (
     AlternativeSlot,
     AlternativesRequest,
     AlternativesResponse,
+    AvailabilityWindow,
     ConstraintHardness,
     DirectiveType,
+    FacultyModel,
+    FacultyPreferenceModel,
     OfferingModel,
     Problem,
+    RoomModel,
     ScheduledMeetingEntry,
+    SectionModel,
     SoftConstraintCode,
     Solution,
     SolveJobResponse,
@@ -28,9 +35,11 @@ from engine.domain.models import (
     UnscheduledReasonCode,
     Weekday,
 )
+from engine.domain.spread import SPREAD_PENALTY_FACTOR, daytime_peak_target
 from engine.validator.validator import validate_schedule
 
 UNSCHEDULED_PENALTY = 100_000
+DAY_MINUTES = 1440
 
 
 def _overlaps(start_a: int, end_a: int, start_b: int, end_b: int) -> bool:
@@ -50,14 +59,15 @@ def map_to_week_axis(
     return day_idx * slots_per_day + slot_in_day
 
 
+def _week_minute(weekday: Weekday, minute_of_day: int) -> int:
+    """Exact minute offset on a single week axis (no slot rounding)."""
+    return WEEKDAY_ORDER.index(weekday) * DAY_MINUTES + minute_of_day
+
+
 def _allowed_weekdays_for_offering(problem: Problem, off: OfferingModel) -> list[Weekday]:
     allowed = list(problem.term.allowed_weekdays)
     if off.meeting_pattern == "MWF":
-        return [
-            d
-            for d in allowed
-            if d in (Weekday.MONDAY, Weekday.WEDNESDAY, Weekday.FRIDAY)
-        ]
+        return [d for d in allowed if d in (Weekday.MONDAY, Weekday.WEDNESDAY, Weekday.FRIDAY)]
     if off.meeting_pattern == "TTH":
         return [d for d in allowed if d in (Weekday.TUESDAY, Weekday.THURSDAY)]
     return allowed
@@ -75,11 +85,34 @@ def _candidate_start_mins(problem: Problem, duration_min: int) -> list[int]:
     return starts
 
 
-def _is_faculty_available_at(
-    problem: Problem, fac_code: str, day: Weekday, start_min: int, end_min: int
-) -> bool:
-    windows = [w for w in problem.faculty_availability if w.entity_code == fac_code]
-    if windows:
+class _AvailabilityIndex:
+    """Pre-indexed, memoized hard-availability checks for faculty, rooms and sections.
+
+    The decomposed model asks the same (entity, day, start, end) questions for every
+    meeting, so windows and directives are grouped once and answers are cached.
+    """
+
+    def __init__(self, problem: Problem) -> None:
+        self._problem = problem
+        self._fac_windows: dict[str, list[AvailabilityWindow]] = defaultdict(list)
+        for w in problem.faculty_availability:
+            self._fac_windows[w.entity_code].append(w)
+        self._room_windows: dict[str, list[AvailabilityWindow]] = defaultdict(list)
+        for w in problem.room_availability:
+            self._room_windows[w.entity_code].append(w)
+        self._hard_directives = [
+            d for d in problem.directives if d.hardness == ConstraintHardness.HARD and d.approved
+        ]
+        self._fac_cache: dict[tuple[str, Weekday, int, int], bool] = {}
+        self._room_cache: dict[tuple[str, str, Weekday, int, int], bool] = {}
+        self._sec_cache: dict[tuple[str, Weekday, int, int], bool] = {}
+
+    @staticmethod
+    def _windows_allow(
+        windows: list[AvailabilityWindow], day: Weekday, start_min: int, end_min: int
+    ) -> bool:
+        if not windows:
+            return True
         if any(
             w.weekday == day
             and w.status == "UNAVAILABLE"
@@ -87,111 +120,113 @@ def _is_faculty_available_at(
             for w in windows
         ):
             return False
-        pos = [w for w in windows if w.status in ("AVAILABLE", "PREFERRED")]
-        if pos and not any(
-            w.weekday == day and w.start_min <= start_min and end_min <= w.end_min
-            for w in pos
-        ):
-            return False
+        positive = [w for w in windows if w.status in ("AVAILABLE", "PREFERRED")]
+        return not positive or any(
+            w.weekday == day and w.start_min <= start_min and end_min <= w.end_min for w in positive
+        )
 
-    for d in problem.directives:
-        if d.hardness != ConstraintHardness.HARD or not d.approved:
-            continue
-        if (
-            d.type == DirectiveType.FACULTY_NOT_ON_DAY
-            and d.faculty_code == fac_code
-            and d.weekday == day
-        ):
-            return False
-        if (
-            d.type == DirectiveType.FACULTY_TIME_WINDOW
-            and d.faculty_code == fac_code
-            and (d.weekday is None or d.weekday == day)
-            and d.start_min is not None
-            and d.end_min is not None
-            and (start_min < d.start_min or end_min > d.end_min)
-        ):
-            return False
-    return True
+    def faculty(self, fac_code: str, day: Weekday, start_min: int, end_min: int) -> bool:
+        key = (fac_code, day, start_min, end_min)
+        cached = self._fac_cache.get(key)
+        if cached is not None:
+            return cached
+        ok = self._windows_allow(self._fac_windows.get(fac_code, []), day, start_min, end_min)
+        if ok:
+            for d in self._hard_directives:
+                if d.faculty_code != fac_code:
+                    continue
+                if d.type == DirectiveType.FACULTY_NOT_ON_DAY and d.weekday == day:
+                    ok = False
+                    break
+                if (
+                    d.type == DirectiveType.FACULTY_TIME_WINDOW
+                    and (d.weekday is None or d.weekday == day)
+                    and d.start_min is not None
+                    and d.end_min is not None
+                    and (start_min < d.start_min or end_min > d.end_min)
+                ):
+                    ok = False
+                    break
+        self._fac_cache[key] = ok
+        return ok
 
+    def room(
+        self, room_code: str, off_code: str, day: Weekday, start_min: int, end_min: int
+    ) -> bool:
+        """Room availability independent of the faculty choice.
 
-def _is_room_available_at(
-    problem: Problem,
-    room_code: str,
-    off_code: str,
-    fac_code: str | None,
-    day: Weekday,
-    start_min: int,
-    end_min: int,
-) -> bool:
-    windows = [w for w in problem.room_availability if w.entity_code == room_code]
-    if windows:
-        if any(
-            w.weekday == day
-            and w.status == "UNAVAILABLE"
-            and _overlaps(start_min, end_min, w.start_min, w.end_min)
-            for w in windows
-        ):
-            return False
-        pos = [w for w in windows if w.status in ("AVAILABLE", "PREFERRED")]
-        if pos and not any(
-            w.weekday == day and w.start_min <= start_min and end_min <= w.end_min
-            for w in pos
-        ):
-            return False
+        Faculty-scoped AVOID_ROOM directives are handled separately as
+        (faculty, room) exclusion clauses; see `faculty_room_exclusions`.
+        """
+        key = (room_code, off_code, day, start_min, end_min)
+        cached = self._room_cache.get(key)
+        if cached is not None:
+            return cached
+        ok = self._windows_allow(self._room_windows.get(room_code, []), day, start_min, end_min)
+        if ok:
+            ok = not any(
+                (r.room_code is None or r.room_code == room_code)
+                and r.weekday == day
+                and _overlaps(start_min, end_min, r.start_min, r.end_min)
+                for r in self._problem.calendar_restrictions
+            )
+        if ok:
+            for d in self._hard_directives:
+                if (
+                    d.type == DirectiveType.AVOID_ROOM
+                    and d.faculty_code is None
+                    and d.room_code == room_code
+                    and (d.offering_code is None or d.offering_code == off_code)
+                ):
+                    ok = False
+                    break
+                if (
+                    d.type == DirectiveType.REQUIRE_ROOM
+                    and d.offering_code == off_code
+                    and d.room_code is not None
+                    and d.room_code != room_code
+                ):
+                    ok = False
+                    break
+        self._room_cache[key] = ok
+        return ok
 
-    for r in problem.calendar_restrictions:
-        if (
-            (r.room_code is None or r.room_code == room_code)
-            and r.weekday == day
-            and _overlaps(start_min, end_min, r.start_min, r.end_min)
-        ):
-            return False
-
-    for d in problem.directives:
-        if d.hardness != ConstraintHardness.HARD or not d.approved:
-            continue
-        if (
-            d.type == DirectiveType.AVOID_ROOM
-            and d.room_code == room_code
-            and (d.offering_code is None or d.offering_code == off_code)
-            and (d.faculty_code is None or fac_code is None or d.faculty_code == fac_code)
-        ):
-            return False
-        if (
-            d.type == DirectiveType.REQUIRE_ROOM
-            and d.offering_code == off_code
+    def faculty_room_exclusions(self, off_code: str) -> list[tuple[str, str]]:
+        """(faculty, room) pairs forbidden for an offering by faculty-scoped AVOID_ROOM."""
+        return [
+            (d.faculty_code, d.room_code)
+            for d in self._hard_directives
+            if d.type == DirectiveType.AVOID_ROOM
+            and d.faculty_code is not None
             and d.room_code is not None
-            and d.room_code != room_code
-        ):
-            return False
-    return True
+            and (d.offering_code is None or d.offering_code == off_code)
+        ]
 
-
-def _is_section_available_at(
-    problem: Problem, sec_code: str, day: Weekday, start_min: int, end_min: int
-) -> bool:
-    for fb in problem.fixed_blocks:
-        if (
+    def section(self, sec_code: str, day: Weekday, start_min: int, end_min: int) -> bool:
+        key = (sec_code, day, start_min, end_min)
+        cached = self._sec_cache.get(key)
+        if cached is not None:
+            return cached
+        ok = not any(
             fb.section_code == sec_code
             and fb.weekday == day
             and _overlaps(start_min, end_min, fb.start_min, fb.end_min)
-        ):
-            return False
-
-    for d in problem.directives:
-        if d.hardness != ConstraintHardness.HARD or not d.approved:
-            continue
-        if (
-            d.type == DirectiveType.SECTION_TIME_WINDOW
-            and d.section_code == sec_code
-            and (d.weekday is None or d.weekday == day)
-            and d.start_min is not None
-            and d.end_min is not None
-            and (start_min < d.start_min or end_min > d.end_min)
-        ):
-            return False
-    return True
+            for fb in self._problem.fixed_blocks
+        )
+        if ok:
+            for d in self._hard_directives:
+                if (
+                    d.type == DirectiveType.SECTION_TIME_WINDOW
+                    and d.section_code == sec_code
+                    and (d.weekday is None or d.weekday == day)
+                    and d.start_min is not None
+                    and d.end_min is not None
+                    and (start_min < d.start_min or end_min > d.end_min)
+                ):
+                    ok = False
+                    break
+        self._sec_cache[key] = ok
+        return ok
 
 
 def _diagnose_unscheduled_reason(
@@ -255,87 +290,121 @@ def _diagnose_unscheduled_reason(
     )
 
 
-def _soft_option_penalty(
+def _time_penalty(
     problem: Problem,
     off: OfferingModel,
-    meeting_index: int,
-    fac_code: str,
-    room_code: str,
+    sec: SectionModel | None,
     day: Weekday,
     start_min: int,
     end_min: int,
-    prior_lookup: dict[tuple[str, int], ScheduledMeetingEntry],
+    prior_entry: ScheduledMeetingEntry | None,
 ) -> int:
-    """Compute integer soft-constraint penalty for a candidate choice."""
+    """Soft penalty that depends only on the chosen (day, start) of a meeting."""
     weights = problem.soft_weights.weights
-    sec_map = {s.code: s for s in problem.sections}
-    room_map = {r.code: r for r in problem.rooms}
-    sec = sec_map.get(off.section_code)
-    room = room_map.get(room_code)
-
     pen = 0.0
-    # SC-01 & SC-04: Faculty preferences
-    w_sc01 = weights.get(SoftConstraintCode.SC_01, 10.0)
-    w_sc04 = weights.get(SoftConstraintCode.SC_04, 5.0)
-    for pref in problem.faculty_preferences:
-        if not pref.approved or pref.faculty_code != fac_code:
-            continue
-        if pref.type == "AVOID_DAY" and pref.value.upper() == day.value:
-            pen += w_sc01 * max(pref.weight, 1.0)
-        elif pref.type == "PREFERRED_TIME":
-            val = pref.value.upper()
-            if ("MORNING" in val and start_min >= 720) or (
-                "AFTERNOON" in val and start_min < 720
-            ):
-                pen += w_sc01 * 0.5
-        elif pref.type == "PREFERRED_ROOM" and room_code != pref.value:
-            pen += w_sc04 * 0.5
+    # SC-06: Stability against prior schedule (time component)
+    if prior_entry is not None and (
+        prior_entry.weekday != day or prior_entry.start_min != start_min
+    ):
+        pen += weights.get(SoftConstraintCode.SC_06, 12.0) * 2.0
+    # SC-09: Avoid evening for lower-year sections
+    if sec and sec.year_level <= 2 and end_min > 1080:
+        pen += weights.get(SoftConstraintCode.SC_09, 10.0) * 1.5
+    # SC-10: Lower-year priority for mid-day slots
+    if sec and sec.year_level <= 2 and end_min > 990:
+        pen += weights.get(SoftConstraintCode.SC_10, 7.0) * 0.4
+    # SC-11: Keep labs away from late hours
+    if off.component.value == "LAB" and end_min > 1050:
+        pen += weights.get(SoftConstraintCode.SC_11, 8.0) * 1.2
+    # SC-16: Very early starts
+    if start_min <= 450:
+        pen += weights.get(SoftConstraintCode.SC_16, 7.0) * 0.25
+    return round(pen * 10)
 
-    # SC-06: Stability against prior schedule on regeneration
-    w_sc06 = weights.get(SoftConstraintCode.SC_06, 12.0)
-    pe = prior_lookup.get((off.code, meeting_index))
-    if pe is not None:
-        if pe.weekday != day or pe.start_min != start_min:
-            pen += w_sc06 * 2.0
-        if pe.room_code != room_code:
-            pen += w_sc06 * 1.0
-        if pe.faculty_code != fac_code:
-            pen += w_sc06 * 1.5
 
-    # SC-07: ML fit score
-    w_sc07 = weights.get(SoftConstraintCode.SC_07, 8.0)
-    fit = problem.ml_fit_scores.get(f"{fac_code}:{off.subject_code}")
-    if fit is not None:
-        pen += max(0.0, (1.0 - fit)) * w_sc07
-
+def _room_penalty(
+    problem: Problem,
+    sec: SectionModel | None,
+    room: RoomModel | None,
+    prior_entry: ScheduledMeetingEntry | None,
+) -> int:
+    """Soft penalty that depends only on the chosen room of a meeting."""
+    weights = problem.soft_weights.weights
+    pen = 0.0
+    # SC-06: Stability against prior schedule (room component)
+    if prior_entry is not None and room is not None and prior_entry.room_code != room.code:
+        pen += weights.get(SoftConstraintCode.SC_06, 12.0) * 1.0
     # SC-08: Room seat waste
-    w_sc08 = weights.get(SoftConstraintCode.SC_08, 6.0)
     if sec and room and room.capacity > sec.student_count:
         excess = room.capacity - sec.student_count
         if excess > 20:
-            pen += ((excess - 20) / 10.0) * (w_sc08 * 0.4)
-
-    # SC-09: Avoid evening for lower-year sections
-    w_sc09 = weights.get(SoftConstraintCode.SC_09, 10.0)
-    if sec and sec.year_level <= 2 and end_min > 1080:
-        pen += w_sc09 * 1.5
-
-    # SC-10: Lower-year priority for mid-day slots
-    w_sc10 = weights.get(SoftConstraintCode.SC_10, 7.0)
-    if sec and sec.year_level <= 2 and end_min > 990:
-        pen += w_sc10 * 0.4
-
-    # SC-11: Keep labs away from late hours
-    w_sc11 = weights.get(SoftConstraintCode.SC_11, 8.0)
-    if off.component.value == "LAB" and end_min > 1050:
-        pen += w_sc11 * 1.2
-
-    # SC-16: Very early starts
-    w_sc16 = weights.get(SoftConstraintCode.SC_16, 7.0)
-    if start_min <= 450:
-        pen += w_sc16 * 0.25
-
+            pen += ((excess - 20) / 10.0) * (weights.get(SoftConstraintCode.SC_08, 6.0) * 0.4)
     return round(pen * 10)
+
+
+def _faculty_penalty(
+    problem: Problem,
+    off: OfferingModel,
+    fac_code: str,
+    prior_entry: ScheduledMeetingEntry | None,
+) -> int:
+    """Soft penalty that depends only on the chosen faculty of a meeting."""
+    weights = problem.soft_weights.weights
+    pen = 0.0
+    # SC-06: Stability against prior schedule (faculty component)
+    if prior_entry is not None and prior_entry.faculty_code != fac_code:
+        pen += weights.get(SoftConstraintCode.SC_06, 12.0) * 1.5
+    # SC-07: ML fit score
+    fit = problem.ml_fit_scores.get(f"{fac_code}:{off.subject_code}")
+    if fit is not None:
+        pen += max(0.0, 1.0 - fit) * weights.get(SoftConstraintCode.SC_07, 8.0)
+    return round(pen * 10)
+
+
+@dataclass
+class _MeetingVars:
+    """CP-SAT variables for one weekly meeting of an offering.
+
+    The model is decomposed: a meeting chooses ONE time option, ONE room and ONE
+    faculty member through three independent groups of booleans, instead of one
+    boolean per (faculty x room x day x start) combination. Combined-class
+    followers share their leader's time/room/faculty variables but keep their own
+    `sched` literal and section interval.
+    """
+
+    off: OfferingModel
+    m_idx: int
+    sched: cp_model.IntVar
+    times: list[tuple[Weekday, int, int]]
+    t_vars: list[cp_model.IntVar]
+    y_vars: dict[str, cp_model.IntVar]
+    x_vars: dict[str, cp_model.IntVar]
+    start: cp_model.IntVar | None
+    day_expr: cp_model.LinearExpr | int = 0
+    day_bools: dict[Weekday, list[cp_model.IntVar]] = field(default_factory=dict)
+    # (penalty literal z, faculty literal x, violating literals); z = x AND any(hits)
+    pref_terms: list[tuple[cp_model.IntVar, cp_model.IntVar, list[cp_model.IntVar]]] = field(
+        default_factory=list
+    )
+
+
+@dataclass
+class _GreedyState:
+    fac_busy: dict[tuple[str, Weekday], list[tuple[int, int]]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+    room_busy: dict[tuple[str, Weekday], list[tuple[int, int]]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+    sec_busy: dict[tuple[str, Weekday], list[tuple[int, int]]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+    fac_minutes: dict[str, int] = field(default_factory=lambda: defaultdict(int))
+    fac_units: dict[str, float] = field(default_factory=lambda: defaultdict(float))
+
+
+def _free(busy: list[tuple[int, int]], start_min: int, end_min: int) -> bool:
+    return not any(_overlaps(start_min, end_min, s, e) for (s, e) in busy)
 
 
 def solve_problem(
@@ -346,15 +415,25 @@ def solve_problem(
     """Solve a scheduling Problem snapshot with OR-Tools CP-SAT and validate the result."""
     t0 = time.perf_counter()
     model = cp_model.CpModel()
+    avail = _AvailabilityIndex(problem)
+    weights = problem.soft_weights.weights
+    w_sc01 = weights.get(SoftConstraintCode.SC_01, 10.0)
+    w_sc04 = weights.get(SoftConstraintCode.SC_04, 5.0)
 
     sec_map = {s.code: s for s in problem.sections}
     fac_map = {f.code: f for f in problem.faculty if f.status == "ACTIVE"}
     room_map = {r.code: r for r in problem.rooms if r.status == "ACTIVE"}
     subj_map = {s.code: s for s in problem.subjects}
+    off_by_code = {o.code: o for o in problem.offerings}
     qual_by_subj: dict[str, list[str]] = defaultdict(list)
     for q in problem.qualifications:
         if q.faculty_code in fac_map:
             qual_by_subj[q.subject_code].append(q.faculty_code)
+
+    prefs_by_fac: dict[str, list[FacultyPreferenceModel]] = defaultdict(list)
+    for pref in problem.faculty_preferences:
+        if pref.approved:
+            prefs_by_fac[pref.faculty_code].append(pref)
 
     prior_lookup: dict[tuple[str, int], ScheduledMeetingEntry] = {}
     by_off_prior: dict[str, list[ScheduledMeetingEntry]] = defaultdict(list)
@@ -366,24 +445,32 @@ def solve_problem(
             m_idx = item.meeting_index if item.meeting_index > 0 else idx
             prior_lookup[(off_code, m_idx)] = item
 
-    slot_step = max(15, problem.term.slot_step_minutes)
-    slots_per_day = max(
-        1, (problem.term.day_end_min - problem.term.day_start_min) // slot_step + 4
-    )
+    def units_of(off: OfferingModel) -> float:
+        if off.units_override is not None:
+            return off.units_override
+        subj = subj_map.get(off.subject_code)
+        return subj.units if subj else 3.0
+
+    # Combined-class group total student counts and leaders
+    combined_group_students: dict[str, int] = defaultdict(int)
+    combined_group_leader: dict[str, str] = {}
+    for off in problem.offerings:
+        sec = sec_map.get(off.section_code)
+        if off.combined_class_group:
+            if sec:
+                combined_group_students[off.combined_class_group] += sec.student_count
+            combined_group_leader.setdefault(off.combined_class_group, off.code)
+
+    def leader_of(off: OfferingModel) -> OfferingModel | None:
+        if not off.combined_class_group:
+            return None
+        leader_code = combined_group_leader[off.combined_class_group]
+        return None if leader_code == off.code else off_by_code[leader_code]
 
     # Pre-analyze qualified faculty and fitting rooms per offering
     qualified_fac_by_off: dict[str, list[str]] = {}
     fitting_rooms_by_off: dict[str, list[str]] = {}
-
-    # Combined-class group total student counts
-    combined_group_students: dict[str, int] = defaultdict(int)
     for off in problem.offerings:
-        sec = sec_map.get(off.section_code)
-        if off.combined_class_group and sec:
-            combined_group_students[off.combined_class_group] += sec.student_count
-
-    for off in problem.offerings:
-        # Qualified faculty
         q_facs = list(dict.fromkeys(qual_by_subj.get(off.subject_code, [])))
         if off.preassigned_faculty_code:
             q_facs = [f for f in q_facs if f == off.preassigned_faculty_code]
@@ -398,304 +485,334 @@ def solve_problem(
                 q_facs = [f for f in q_facs if f == d.faculty_code]
         qualified_fac_by_off[off.code] = q_facs
 
-        # Fitting rooms
         sec = sec_map.get(off.section_code)
         req_cap = sec.student_count if sec else 0
         if off.combined_class_group:
             req_cap = max(req_cap, combined_group_students[off.combined_class_group])
-        f_rooms = [
+        fitting_rooms_by_off[off.code] = [
             r.code
             for r in room_map.values()
             if r.type == off.required_room_type and r.capacity >= req_cap
         ]
-        fitting_rooms_by_off[off.code] = f_rooms
 
-    # Build candidate options for each (offering, meeting_index)
-    # Option tuple: (fac_code, room_code, weekday, start_min, end_min, soft_penalty)
-    options_by_meeting: dict[
-        tuple[str, int], list[tuple[str, str, Weekday, int, int, int]]
-    ] = {}
-    option_vars: dict[tuple[str, int, int], cp_model.IntVar] = {}
-    scheduled_vars: dict[tuple[str, int], cp_model.IntVar] = {}
-
+    horizon = len(WEEKDAY_ORDER) * DAY_MINUTES
+    objective_terms: list[cp_model.LinearExpr | int] = []
+    meetings: dict[tuple[str, int], _MeetingVars] = {}
+    # Meetings with their own time choice (combined-class followers share their
+    # leader's), for the SC-05 time-of-day spread.
+    spread_meetings: list[_MeetingVars] = []
+    fac_choice: dict[str, dict[str, cp_model.IntVar]] = {}
     fac_intervals: dict[str, list[cp_model.IntervalVar]] = defaultdict(list)
     room_intervals: dict[str, list[cp_model.IntervalVar]] = defaultdict(list)
     sec_intervals: dict[str, list[cp_model.IntervalVar]] = defaultdict(list)
+    fac_minute_terms: dict[str, list[cp_model.LinearExpr]] = defaultdict(list)
+    fac_unit_terms: dict[str, list[cp_model.LinearExpr]] = defaultdict(list)
 
-    # Track combined-class group leader so combined classes share identical slot/room/faculty
-    combined_group_leader: dict[str, str] = {}
-    for off in problem.offerings:
-        if off.combined_class_group and off.combined_class_group not in combined_group_leader:
-            combined_group_leader[off.combined_class_group] = off.code
+    def build_meeting(
+        off: OfferingModel,
+        m_idx: int,
+        base_times: list[tuple[Weekday, int, int]],
+        f_vars: dict[str, cp_model.IntVar],
+    ) -> _MeetingVars:
+        key = (off.code, m_idx)
+        sched = model.new_bool_var(f"sched_{off.code}_{m_idx}")
+        prior = prior_lookup.get(key)
+        sec = sec_map.get(off.section_code)
 
-    objective_terms: list[cp_model.LinearExpr | int] = []
+        times = base_times
+        rooms = fitting_rooms_by_off[off.code]
+        facs = list(f_vars)
+        if prior is not None and prior.pinned:
+            times = [t for t in times if t[0] == prior.weekday and t[1] == prior.start_min]
+            rooms = [r for r in rooms if r == prior.room_code]
+            facs = [f for f in facs if f == prior.faculty_code]
 
-    for off in problem.offerings:
-        q_facs = qualified_fac_by_off[off.code]
-        f_rooms = fitting_rooms_by_off[off.code]
-        allowed_days = _allowed_weekdays_for_offering(problem, off)
-        starts = _candidate_start_mins(problem, off.minutes_per_meeting)
-        duration_slots = max(1, off.minutes_per_meeting // slot_step)
+        # Rooms that are never usable at any candidate time are dropped up front.
+        room_ok = {r: [avail.room(r, off.code, d, s, e) for (d, s, e) in times] for r in rooms}
+        rooms = [r for r in rooms if any(room_ok[r])]
+        fac_ok = {f: [avail.faculty(f, d, s, e) for (d, s, e) in times] for f in facs}
+        facs = [f for f in facs if any(fac_ok[f])]
 
-        for m_idx in range(off.meetings_per_week):
-            m_key = (off.code, m_idx)
-            sched_var = model.new_bool_var(f"sched_{off.code}_{m_idx}")
-            scheduled_vars[m_key] = sched_var
+        objective_terms.append(UNSCHEDULED_PENALTY * (1 - sched))
+        if not times or not rooms or not facs:
+            model.add(sched == 0)
+            return _MeetingVars(off, m_idx, sched, [], [], {}, {}, None)
 
-            pinned_entry = prior_lookup.get(m_key)
-            is_pinned = bool(pinned_entry and pinned_entry.pinned)
+        t_vars = [model.new_bool_var(f"t_{off.code}_{m_idx}_{i}") for i in range(len(times))]
+        y_vars = {r: model.new_bool_var(f"y_{off.code}_{m_idx}_{r}") for r in rooms}
+        x_vars = {f: model.new_bool_var(f"x_{off.code}_{m_idx}_{f}") for f in facs}
+        model.add_exactly_one([*t_vars, ~sched])
+        model.add_exactly_one([*y_vars.values(), ~sched])
+        model.add_exactly_one([*x_vars.values(), ~sched])
+        for f, x in x_vars.items():
+            # x == f_var AND sched  (faculty is per offering, so all meetings agree)
+            model.add_implication(x, f_vars[f])
+            model.add_bool_or([~f_vars[f], ~sched, x])
 
-            opts: list[tuple[str, str, Weekday, int, int, int]] = []
-            for fac_code in q_facs:
-                for room_code in f_rooms:
-                    for day in allowed_days:
-                        for s_min in starts:
-                            e_min = s_min + off.minutes_per_meeting
-                            if is_pinned and pinned_entry is not None and (
-                                fac_code != pinned_entry.faculty_code
-                                or room_code != pinned_entry.room_code
-                                or day != pinned_entry.weekday
-                                or s_min != pinned_entry.start_min
-                            ):
-                                continue
-                            if not _is_section_available_at(
-                                problem, off.section_code, day, s_min, e_min
-                            ):
-                                continue
-                            if not _is_faculty_available_at(
-                                problem, fac_code, day, s_min, e_min
-                            ):
-                                continue
-                            if not _is_room_available_at(
-                                problem, room_code, off.code, fac_code, day, s_min, e_min
-                            ):
-                                continue
-                            soft_pen = _soft_option_penalty(
-                                problem,
-                                off,
-                                m_idx,
-                                fac_code,
-                                room_code,
-                                day,
-                                s_min,
-                                e_min,
-                                prior_lookup,
-                            )
-                            opts.append((fac_code, room_code, day, s_min, e_min, soft_pen))
-
-            options_by_meeting[m_key] = opts
-            if not opts:
-                model.add(sched_var == 0)
-            else:
-                choice_bools: list[cp_model.IntVar] = []
-                is_follower = (
-                    off.combined_class_group is not None
-                    and combined_group_leader.get(off.combined_class_group) != off.code
+        start = model.new_int_var(0, horizon, f"start_{off.code}_{m_idx}")
+        model.add(
+            start
+            == sum(_week_minute(d, s) * t for (d, s, _e), t in zip(times, t_vars, strict=True))
+        )
+        dur = off.minutes_per_meeting
+        sec_intervals[off.section_code].append(
+            model.new_optional_fixed_size_interval_var(start, dur, sched, f"sec_{off.code}_{m_idx}")
+        )
+        for f, x in x_vars.items():
+            fac_intervals[f].append(
+                model.new_optional_fixed_size_interval_var(
+                    start, dur, x, f"fac_{off.code}_{m_idx}_{f}"
                 )
-                for o_idx, (fac_code, room_code, day, s_min, _e_min, soft_pen) in enumerate(
-                    opts
-                ):
-                    b_var = model.new_bool_var(f"opt_{off.code}_{m_idx}_{o_idx}")
-                    option_vars[(off.code, m_idx, o_idx)] = b_var
-                    choice_bools.append(b_var)
+            )
+            fac_minute_terms[f].append(dur * x)
+            bad = [t for t, ok in zip(t_vars, fac_ok[f], strict=True) if not ok]
+            if bad:
+                model.add(sum(bad) == 0).only_enforce_if(x)
+        for r, y in y_vars.items():
+            room_intervals[r].append(
+                model.new_optional_fixed_size_interval_var(
+                    start, dur, y, f"room_{off.code}_{m_idx}_{r}"
+                )
+            )
+            bad = [t for t, ok in zip(t_vars, room_ok[r], strict=True) if not ok]
+            if bad:
+                model.add(sum(bad) == 0).only_enforce_if(y)
+        for fac_code, room_code in avail.faculty_room_exclusions(off.code):
+            if fac_code in x_vars and room_code in y_vars:
+                model.add_bool_or([~x_vars[fac_code], ~y_vars[room_code]])
 
-                    axis_start = map_to_week_axis(
-                        day,
-                        s_min,
-                        problem.term.day_start_min,
-                        slots_per_day,
-                        slot_step,
-                    )
-                    sec_iv = model.new_optional_fixed_size_interval_var(
-                        axis_start,
-                        duration_slots,
-                        b_var,
-                        f"sec_iv_{off.code}_{m_idx}_{o_idx}",
-                    )
-                    sec_intervals[off.section_code].append(sec_iv)
+        # Separable soft penalties
+        for (d, s, e), t in zip(times, t_vars, strict=True):
+            pen = _time_penalty(problem, off, sec, d, s, e, prior)
+            if pen:
+                objective_terms.append(pen * t)
+        for r, y in y_vars.items():
+            pen = _room_penalty(problem, sec, room_map.get(r), prior)
+            if pen:
+                objective_terms.append(pen * y)
+        for f, x in x_vars.items():
+            pen = _faculty_penalty(problem, off, f, prior)
+            if pen:
+                objective_terms.append(pen * x)
 
-                    if not is_follower:
-                        fac_iv = model.new_optional_fixed_size_interval_var(
-                            axis_start,
-                            duration_slots,
-                            b_var,
-                            f"fac_iv_{off.code}_{m_idx}_{o_idx}",
-                        )
-                        fac_intervals[fac_code].append(fac_iv)
-
-                        room_iv = model.new_optional_fixed_size_interval_var(
-                            axis_start,
-                            duration_slots,
-                            b_var,
-                            f"room_iv_{off.code}_{m_idx}_{o_idx}",
-                        )
-                        room_intervals[room_code].append(room_iv)
-
-                    if soft_pen > 0:
-                        objective_terms.append(soft_pen * b_var)
-
-                    prior_hint = prior_lookup.get(m_key)
-                    if (
-                        prior_hint is not None
-                        and prior_hint.faculty_code == fac_code
-                        and prior_hint.room_code == room_code
-                        and prior_hint.weekday == day
-                        and prior_hint.start_min == s_min
-                    ):
-                        model.add_hint(b_var, 1)
-                        model.add_hint(sched_var, 1)
-
-                model.add(sum(choice_bools) == sched_var)
-
-            # Unscheduled penalty (D-07)
-            objective_terms.append(UNSCHEDULED_PENALTY * (1 - sched_var))
-
-        # HC-13: Distinct weekdays and consistent faculty across meetings of the same offering
-        if off.meetings_per_week > 1:
-            for allowed_day in allowed_days:
-                day_vars: list[cp_model.IntVar] = []
-                for m_idx in range(off.meetings_per_week):
-                    opts = options_by_meeting[(off.code, m_idx)]
-                    for o_idx, (_fc, _rc, opt_day, _sm, _em, _sp) in enumerate(opts):
-                        if opt_day == allowed_day:
-                            day_vars.append(option_vars[(off.code, m_idx, o_idx)])
-                if day_vars:
-                    model.add(sum(day_vars) <= 1)
-
-            # Enforce ordering of weekdays across meeting_index (m_idx=0 earlier than m_idx=1)
-            for m_idx in range(off.meetings_per_week - 1):
-                opts_cur = options_by_meeting[(off.code, m_idx)]
-                opts_nxt = options_by_meeting[(off.code, m_idx + 1)]
-                if opts_cur and opts_nxt:
-                    cur_day_expr = sum(
-                        WEEKDAY_ORDER.index(opt[2]) * option_vars[(off.code, m_idx, o_idx)]
-                        for o_idx, opt in enumerate(opts_cur)
-                    )
-                    nxt_day_expr = sum(
-                        WEEKDAY_ORDER.index(opt[2]) * option_vars[(off.code, m_idx + 1, o_idx)]
-                        for o_idx, opt in enumerate(opts_nxt)
-                    )
-                    # Only enforce when both meetings are scheduled
-                    s_cur = scheduled_vars[(off.code, m_idx)]
-                    s_nxt = scheduled_vars[(off.code, m_idx + 1)]
-                    model.add(cur_day_expr + 1 <= nxt_day_expr).only_enforce_if(
-                        [s_cur, s_nxt]
-                    )
-
-            # Consistent faculty across meetings of the same offering
-            if len(q_facs) > 1:
-                for f_code in q_facs:
-                    for m_idx in range(off.meetings_per_week - 1):
-                        f_cur = [
-                            option_vars[(off.code, m_idx, o_idx)]
-                            for o_idx, opt in enumerate(options_by_meeting[(off.code, m_idx)])
-                            if opt[0] == f_code
-                        ]
-                        f_nxt = [
-                            option_vars[(off.code, m_idx + 1, o_idx)]
-                            for o_idx, opt in enumerate(
-                                options_by_meeting[(off.code, m_idx + 1)]
-                            )
-                            if opt[0] == f_code
-                        ]
-                        s_cur = scheduled_vars[(off.code, m_idx)]
-                        s_nxt = scheduled_vars[(off.code, m_idx + 1)]
-                        model.add(sum(f_cur) == sum(f_nxt)).only_enforce_if([s_cur, s_nxt])
-
-    # Synchronize combined-class followers with their leader
-    for off in problem.offerings:
-        if not off.combined_class_group:
-            continue
-        leader_code = combined_group_leader[off.combined_class_group]
-        if off.code == leader_code:
-            continue
-        leader_off = next(o for o in problem.offerings if o.code == leader_code)
-        for m_idx in range(min(off.meetings_per_week, leader_off.meetings_per_week)):
-            l_opts = options_by_meeting.get((leader_code, m_idx), [])
-            f_opts = options_by_meeting.get((off.code, m_idx), [])
-            l_map = {
-                (fc, rc, day, sm, em): option_vars[(leader_code, m_idx, o_idx)]
-                for o_idx, (fc, rc, day, sm, em, _sp) in enumerate(l_opts)
-            }
-            for o_idx, (fc, rc, day, sm, em, _sp) in enumerate(f_opts):
-                f_var = option_vars[(off.code, m_idx, o_idx)]
-                l_var = l_map.get((fc, rc, day, sm, em))
-                if l_var is not None:
-                    model.add(f_var == l_var)
+        # SC-01 / SC-04: faculty preferences interact with time or room choice
+        pref_terms: list[tuple[cp_model.IntVar, cp_model.IntVar, list[cp_model.IntVar]]] = []
+        for f, x in x_vars.items():
+            for pref in prefs_by_fac.get(f, []):
+                if pref.type == "AVOID_DAY":
+                    hits = [
+                        t
+                        for (d, _s, _e), t in zip(times, t_vars, strict=True)
+                        if d.value == pref.value.upper()
+                    ]
+                    pen = round(w_sc01 * max(pref.weight, 1.0) * 10)
+                elif pref.type == "PREFERRED_TIME":
+                    val = pref.value.upper()
+                    hits = [
+                        t
+                        for (_d, s, _e), t in zip(times, t_vars, strict=True)
+                        if ("MORNING" in val and s >= 720) or ("AFTERNOON" in val and s < 720)
+                    ]
+                    pen = round(w_sc01 * 0.5 * 10)
+                elif pref.type == "PREFERRED_ROOM":
+                    hits = [y for r, y in y_vars.items() if r != pref.value]
+                    pen = round(w_sc04 * 0.5 * 10)
                 else:
-                    model.add(f_var == 0)
+                    continue
+                if not hits or not pen:
+                    continue
+                z = model.new_bool_var(f"pref_{off.code}_{m_idx}_{f}_{pref.type}")
+                model.add(z >= x + sum(hits) - 1)
+                objective_terms.append(pen * z)
+                pref_terms.append((z, x, hits))
+
+        day_bools: dict[Weekday, list[cp_model.IntVar]] = defaultdict(list)
+        for (d, _s, _e), t in zip(times, t_vars, strict=True):
+            day_bools[d].append(t)
+        day_expr = sum(
+            WEEKDAY_ORDER.index(d) * t for (d, _s, _e), t in zip(times, t_vars, strict=True)
+        )
+        return _MeetingVars(
+            off,
+            m_idx,
+            sched,
+            times,
+            t_vars,
+            y_vars,
+            x_vars,
+            start,
+            day_expr,
+            dict(day_bools),
+            pref_terms,
+        )
+
+    def build_follower_meeting(off: OfferingModel, m_idx: int, lead: _MeetingVars) -> _MeetingVars:
+        """Combined-class follower: shares the leader's slot, room and faculty."""
+        sched = model.new_bool_var(f"sched_{off.code}_{m_idx}")
+        objective_terms.append(UNSCHEDULED_PENALTY * (1 - sched))
+        if lead.start is None or off.minutes_per_meeting != lead.off.minutes_per_meeting:
+            # A follower can only share the leader's slot if the durations match (HC-13).
+            model.add(sched == 0)
+            return _MeetingVars(off, m_idx, sched, [], [], {}, {}, None)
+        model.add_implication(sched, lead.sched)
+        follower_days = set(_allowed_weekdays_for_offering(problem, off))
+        bad_t = [
+            t
+            for (d, s, e), t in zip(lead.times, lead.t_vars, strict=True)
+            if d not in follower_days or not avail.section(off.section_code, d, s, e)
+        ]
+        if bad_t:
+            model.add(sum(bad_t) == 0).only_enforce_if(sched)
+        allowed_facs = set(qualified_fac_by_off[off.code])
+        for f, x in lead.x_vars.items():
+            if f not in allowed_facs:
+                model.add_implication(sched, ~x)
+        allowed_rooms = set(fitting_rooms_by_off[off.code])
+        for r, y in lead.y_vars.items():
+            if r not in allowed_rooms:
+                model.add_implication(sched, ~y)
+        sec_intervals[off.section_code].append(
+            model.new_optional_fixed_size_interval_var(
+                lead.start, lead.off.minutes_per_meeting, sched, f"sec_{off.code}_{m_idx}"
+            )
+        )
+        return _MeetingVars(
+            off,
+            m_idx,
+            sched,
+            lead.times,
+            lead.t_vars,
+            lead.y_vars,
+            lead.x_vars,
+            lead.start,
+            lead.day_expr,
+            lead.day_bools,
+        )
+
+    # Leaders and independent offerings first so followers can reference them.
+    ordered = sorted(problem.offerings, key=lambda o: leader_of(o) is not None)
+    for off in ordered:
+        leader = leader_of(off)
+        shared = min(off.meetings_per_week, leader.meetings_per_week) if leader else 0
+        own_meetings = range(shared, off.meetings_per_week)
+
+        f_vars = {
+            f: model.new_bool_var(f"fac_{off.code}_{f}") for f in qualified_fac_by_off[off.code]
+        }
+        fac_choice[off.code] = f_vars
+        allowed_days = _allowed_weekdays_for_offering(problem, off)
+        base_times = [
+            (d, s, s + off.minutes_per_meeting)
+            for d in allowed_days
+            for s in _candidate_start_mins(problem, off.minutes_per_meeting)
+            if avail.section(off.section_code, d, s, s + off.minutes_per_meeting)
+        ]
+
+        for m_idx in range(shared):
+            assert leader is not None
+            meetings[(off.code, m_idx)] = build_follower_meeting(
+                off, m_idx, meetings[(leader.code, m_idx)]
+            )
+        own: list[_MeetingVars] = []
+        for m_idx in own_meetings:
+            mv = build_meeting(off, m_idx, base_times, f_vars)
+            meetings[(off.code, m_idx)] = mv
+            own.append(mv)
+            spread_meetings.append(mv)
+
+        # One faculty per offering, assigned exactly when any own meeting runs.
+        if f_vars:
+            model.add(sum(f_vars.values()) <= 1)
+            model.add(sum(f_vars.values()) <= sum(mv.sched for mv in own))
+            for mv in own:
+                model.add(sum(f_vars.values()) >= mv.sched)
+            units_tenths = round(units_of(off) * 10)
+            for f, v in f_vars.items():
+                fac_unit_terms[f].append(units_tenths * v)
+
+        # HC-13: distinct, ordered weekdays across meetings of the same offering
+        all_mv = [meetings[(off.code, m)] for m in range(off.meetings_per_week)]
+        if len(all_mv) > 1 and leader is None:
+            for day in allowed_days:
+                same_day = [t for mv in all_mv for t in mv.day_bools.get(day, [])]
+                if len(same_day) > 1:
+                    model.add(sum(same_day) <= 1)
+            for cur, nxt in pairwise(all_mv):
+                if cur.start is not None and nxt.start is not None:
+                    model.add(cur.day_expr + 1 <= nxt.day_expr).only_enforce_if(
+                        [cur.sched, nxt.sched]
+                    )
 
     # HC-01, HC-02, HC-03: NoOverlap per faculty, room, and section
-    for ivs in fac_intervals.values():
-        if len(ivs) > 1:
-            model.add_no_overlap(ivs)
-    for ivs in room_intervals.values():
-        if len(ivs) > 1:
-            model.add_no_overlap(ivs)
-    for ivs in sec_intervals.values():
+    for ivs in (*fac_intervals.values(), *room_intervals.values(), *sec_intervals.values()):
         if len(ivs) > 1:
             model.add_no_overlap(ivs)
 
-    # HC-07: Faculty max teaching load (hours and units)
+    # HC-07: Faculty max teaching load (minutes and tenths of a unit)
     for f_code, fac in fac_map.items():
-        # Hours load (scaled by 60 to integer minutes)
-        max_minutes = round(fac.max_load_hours * 60)
-        min_terms: list[cp_model.LinearExpr | int] = []
-        unit_terms: list[cp_model.LinearExpr | int] = []
+        if fac_minute_terms.get(f_code):
+            model.add(sum(fac_minute_terms[f_code]) <= round(fac.max_load_hours * 60))
+        if fac_unit_terms.get(f_code):
+            model.add(sum(fac_unit_terms[f_code]) <= round(fac.max_load_units * 10))
 
-        for off in problem.offerings:
-            if (
-                off.combined_class_group
-                and combined_group_leader.get(off.combined_class_group) != off.code
-            ):
+    # SC-05 (time of day): penalize classes beyond an even daytime spread that
+    # run in the same period, so free slots are used instead of every class
+    # starting at the first slot of the day.
+    w_sc05 = weights.get(SoftConstraintCode.SC_05, 6.0)
+    slot = max(15, problem.term.slot_step_minutes)
+    peak_target = daytime_peak_target(
+        problem.term, sum(mv.off.minutes_per_meeting for mv in spread_meetings)
+    )
+    slot_unit = round(w_sc05 * SPREAD_PENALTY_FACTOR * (slot / 60.0) * 10)
+    covering: dict[tuple[Weekday, int], list[cp_model.IntVar]] = defaultdict(list)
+    for mv in spread_meetings:
+        for (day, start, end), t in zip(mv.times, mv.t_vars, strict=True):
+            pos = start - (start - problem.term.day_start_min) % slot
+            while pos < end:
+                covering[(day, pos)].append(t)
+                pos += slot
+    if slot_unit > 0:
+        for (day, slot_start), lits in covering.items():
+            if len(lits) <= peak_target:
                 continue
-            for m_idx in range(off.meetings_per_week):
-                opts = options_by_meeting[(off.code, m_idx)]
-                f_vars = [
-                    option_vars[(off.code, m_idx, o_idx)]
-                    for o_idx, opt in enumerate(opts)
-                    if opt[0] == f_code
-                ]
-                if f_vars:
-                    min_terms.append(off.minutes_per_meeting * sum(f_vars))
+            excess = model.new_int_var(
+                0, len(lits) - peak_target, f"peak_{day.value}_{slot_start}"
+            )
+            model.add(excess >= sum(lits) - peak_target)
+            objective_terms.append(slot_unit * excess)
 
-            # Units load per offering (scaled by 10 to integer tenths of a unit)
-            opts_m0 = options_by_meeting.get((off.code, 0), [])
-            f_vars_m0 = [
-                option_vars[(off.code, 0, o_idx)]
-                for o_idx, opt in enumerate(opts_m0)
-                if opt[0] == f_code
-            ]
-            if f_vars_m0:
-                subj = subj_map.get(off.subject_code)
-                u_val = (
-                    off.units_override
-                    if off.units_override is not None
-                    else (subj.units if subj else 3.0)
-                )
-                unit_terms.append(round(u_val * 10) * sum(f_vars_m0))
-
-        if min_terms:
-            model.add(sum(min_terms) <= max_minutes)
-        if unit_terms:
-            model.add(sum(unit_terms) <= round(fac.max_load_units * 10))
+    hints = _add_greedy_hints(
+        model, problem, ordered, meetings, fac_choice, fac_map, units_of, prior_lookup, avail
+    )
 
     model.minimize(sum(objective_terms))
 
     cfg = get_settings()
     solver = cp_model.CpSolver()
+    elapsed_build = time.perf_counter() - t0
     limit_sec = (
-        time_limit_seconds
-        if time_limit_seconds is not None
-        else cfg.solver_time_limit_seconds
+        time_limit_seconds if time_limit_seconds is not None else cfg.solver_time_limit_seconds
     )
-    solver.parameters.max_time_in_seconds = float(limit_sec)
-    solver.parameters.num_search_workers = cfg.solver_workers
+    # The time limit covers model building too, so the caller's budget is honored.
+    solver.parameters.max_time_in_seconds = max(1.0, float(limit_sec) - elapsed_build)
+    solver.parameters.num_workers = cfg.solver_workers
+    # Presolve probing scales badly with the many optional intervals of a full term
+    # (it consumed the whole budget at ~300 meetings); search works better without it.
+    solver.parameters.cp_model_probing_level = 0
 
     raw_status = solver.solve(model)
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
 
-    if raw_status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+    solved = raw_status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+    hint_values = {idx: value for idx, (_var, value) in hints.items()}
+    # If CP-SAT stops without any solution (e.g. time limit hit during presolve), fall
+    # back to the greedy first-fit schedule, which already satisfies every hard rule.
+    use_greedy = not solved and any(hint_values.get(mv.sched.index) for mv in meetings.values())
+
+    def on(var: cp_model.IntVar) -> bool:
+        return solver.boolean_value(var) if solved else bool(hint_values.get(var.index, 0))
+
+    if not solved and not use_greedy:
         return Solution(
             status="INFEASIBLE",
             profile_name=profile_name,
@@ -707,72 +824,67 @@ def solve_problem(
     entries: list[ScheduledMeetingEntry] = []
     scheduled_hours_by_fac: dict[str, float] = defaultdict(float)
     scheduled_units_by_fac: dict[str, float] = defaultdict(float)
-    seen_fac_off: set[tuple[str, str]] = set()
-
     for off in problem.offerings:
         for m_idx in range(off.meetings_per_week):
-            m_key = (off.code, m_idx)
-            if solver.value(scheduled_vars[m_key]) == 1:
-                opts = options_by_meeting[m_key]
-                for o_idx, (fac_code, room_code, day, s_min, e_min, _sp) in enumerate(
-                    opts
-                ):
-                    if solver.value(option_vars[(off.code, m_idx, o_idx)]) == 1:
-                        prior_item = prior_lookup.get(m_key)
-                        entries.append(
-                            ScheduledMeetingEntry(
-                                id=f"ENT-{off.code}-{m_idx}",
-                                offering_code=off.code,
-                                meeting_index=m_idx,
-                                faculty_code=fac_code,
-                                room_code=room_code,
-                                weekday=day,
-                                start_min=s_min,
-                                end_min=e_min,
-                                pinned=bool(prior_item and prior_item.pinned),
-                            )
-                        )
-                        scheduled_hours_by_fac[fac_code] += (e_min - s_min) / 60.0
-                        if (fac_code, off.code) not in seen_fac_off:
-                            seen_fac_off.add((fac_code, off.code))
-                            subj = subj_map.get(off.subject_code)
-                            u_val = (
-                                off.units_override
-                                if off.units_override is not None
-                                else (subj.units if subj else 3.0)
-                            )
-                            scheduled_units_by_fac[fac_code] += u_val
-                        break
+            mv = meetings[(off.code, m_idx)]
+            if mv.start is None or not on(mv.sched):
+                continue
+            day, s_min, e_min = next(tm for tm, t in zip(mv.times, mv.t_vars, strict=True) if on(t))
+            room_code = next(r for r, y in mv.y_vars.items() if on(y))
+            fac_code = next(f for f, x in mv.x_vars.items() if on(x))
+            prior_item = prior_lookup.get((off.code, m_idx))
+            entries.append(
+                ScheduledMeetingEntry(
+                    id=f"ENT-{off.code}-{m_idx}",
+                    offering_code=off.code,
+                    meeting_index=m_idx,
+                    faculty_code=fac_code,
+                    room_code=room_code,
+                    weekday=day,
+                    start_min=s_min,
+                    end_min=e_min,
+                    pinned=bool(prior_item and prior_item.pinned),
+                )
+            )
+            lead = leader_of(off)
+            if lead is None or m_idx >= min(off.meetings_per_week, lead.meetings_per_week):
+                scheduled_hours_by_fac[fac_code] += (e_min - s_min) / 60.0
+    for off in problem.offerings:
+        for f, v in fac_choice.get(off.code, {}).items():
+            if on(v):
+                scheduled_units_by_fac[f] += units_of(off)
 
     unscheduled: list[UnscheduledMeetingResult] = []
     for off in problem.offerings:
         for m_idx in range(off.meetings_per_week):
-            m_key = (off.code, m_idx)
-            if solver.value(scheduled_vars[m_key]) == 0:
-                r_code, r_detail = _diagnose_unscheduled_reason(
-                    problem,
-                    off,
-                    qualified_fac_by_off[off.code],
-                    fitting_rooms_by_off[off.code],
-                    scheduled_hours_by_fac,
-                    scheduled_units_by_fac,
+            mv = meetings[(off.code, m_idx)]
+            if mv.start is not None and on(mv.sched):
+                continue
+            r_code, r_detail = _diagnose_unscheduled_reason(
+                problem,
+                off,
+                qualified_fac_by_off[off.code],
+                fitting_rooms_by_off[off.code],
+                scheduled_hours_by_fac,
+                scheduled_units_by_fac,
+            )
+            unscheduled.append(
+                UnscheduledMeetingResult(
+                    offering_code=off.code,
+                    meeting_index=m_idx,
+                    reason_code=r_code,
+                    reason_detail=r_detail,
                 )
-                unscheduled.append(
-                    UnscheduledMeetingResult(
-                        offering_code=off.code,
-                        meeting_index=m_idx,
-                        reason_code=r_code,
-                        reason_detail=r_detail,
-                    )
-                )
+            )
 
-    obj_val = float(solver.objective_value)
-    bound_val = float(solver.best_objective_bound)
-    gap_pct = (
-        0.0
-        if raw_status == cp_model.OPTIMAL or abs(obj_val) < 1e-6
-        else round(max(0.0, (obj_val - bound_val) / max(1.0, abs(obj_val)) * 100.0), 2)
-    )
+    obj_val = float(solver.objective_value) if solved else 0.0
+    bound_val = float(solver.best_objective_bound) if solved else 0.0
+    if not solved:
+        gap_pct = 100.0  # greedy fallback: optimality unknown
+    elif raw_status == cp_model.OPTIMAL or abs(obj_val) < 1e-6:
+        gap_pct = 0.0
+    else:
+        gap_pct = round(max(0.0, (obj_val - bound_val) / max(1.0, abs(obj_val)) * 100.0), 2)
     validation = validate_schedule(problem, entries)
 
     return Solution(
@@ -786,6 +898,180 @@ def solve_problem(
         solve_time_ms=elapsed_ms,
         validation=validation,
     )
+
+
+def _add_greedy_hints(
+    model: cp_model.CpModel,
+    problem: Problem,
+    ordered: list[OfferingModel],
+    meetings: dict[tuple[str, int], _MeetingVars],
+    fac_choice: dict[str, dict[str, cp_model.IntVar]],
+    fac_map: dict[str, FacultyModel],
+    units_of: Callable[[OfferingModel], float],
+    prior_lookup: dict[tuple[str, int], ScheduledMeetingEntry],
+    avail: _AvailabilityIndex,
+) -> dict[int, tuple[cp_model.IntVar, int]]:
+    """Seed CP-SAT with a fast first-fit schedule so it starts from a full solution.
+
+    Without a hint the empty schedule is the first feasible point the search finds,
+    and on larger terms it can run out of time before placing most meetings.
+    Hints never constrain the model; CP-SAT repairs or discards them freely.
+    """
+    state = _GreedyState()
+    hints: dict[int, tuple[cp_model.IntVar, int]] = {}
+
+    def own_meetings(off: OfferingModel) -> list[_MeetingVars]:
+        return [
+            mv
+            for m in range(off.meetings_per_week)
+            if (mv := meetings[(off.code, m)]).start is not None
+            and mv.x_vars
+            and fac_choice.get(off.code)
+            and all(f in fac_choice[off.code] for f in mv.x_vars)
+        ]
+
+    def flexibility(off: OfferingModel) -> tuple[int, int]:
+        mvs = own_meetings(off)
+        pinned = any(
+            (p := prior_lookup.get((off.code, mv.m_idx))) is not None and p.pinned for mv in mvs
+        )
+        size = min((len(mv.times) * len(mv.x_vars) * len(mv.y_vars) for mv in mvs), default=0)
+        return (0 if pinned else 1, size)
+
+    def try_place(
+        off: OfferingModel, fac_code: str, mvs: list[_MeetingVars]
+    ) -> list[tuple[_MeetingVars, int, str]]:
+        fac = fac_map.get(fac_code)
+        if fac is None:
+            return []
+        minutes_cap = round(fac.max_load_hours * 60) - state.fac_minutes[fac_code]
+        if state.fac_units[fac_code] + units_of(off) > fac.max_load_units + 1e-6:
+            return []
+        placed: list[tuple[_MeetingVars, int, str]] = []
+        used_days: set[Weekday] = set()
+        last_day_idx = -1
+        exclusions = set(avail.faculty_room_exclusions(off.code))
+        for mv in mvs:
+            if minutes_cap < off.minutes_per_meeting:
+                break
+            prior = prior_lookup.get((off.code, mv.m_idx))
+            order = list(range(len(mv.times)))
+            if prior is not None:
+                order.sort(
+                    key=lambda i: (
+                        mv.times[i][0] != prior.weekday or mv.times[i][1] != prior.start_min
+                    )
+                )
+            choice: tuple[int, str] | None = None
+            for i in order:
+                day, s_min, e_min = mv.times[i]
+                d_idx = WEEKDAY_ORDER.index(day)
+                if day in used_days or d_idx <= last_day_idx:
+                    continue
+                if not avail.faculty(fac_code, day, s_min, e_min):
+                    continue
+                if not _free(state.fac_busy[(fac_code, day)], s_min, e_min):
+                    continue
+                if not _free(state.sec_busy[(off.section_code, day)], s_min, e_min):
+                    continue
+                for room_code in mv.y_vars:
+                    if (fac_code, room_code) in exclusions:
+                        continue
+                    if not avail.room(room_code, off.code, day, s_min, e_min):
+                        continue
+                    if _free(state.room_busy[(room_code, day)], s_min, e_min):
+                        choice = (i, room_code)
+                        break
+                if choice:
+                    break
+            if choice is None:
+                continue
+            i, room_code = choice
+            day, s_min, e_min = mv.times[i]
+            placed.append((mv, i, room_code))
+            used_days.add(day)
+            last_day_idx = WEEKDAY_ORDER.index(day)
+            minutes_cap -= off.minutes_per_meeting
+            # Tentatively book so later meetings of this offering see it.
+            state.fac_busy[(fac_code, day)].append((s_min, e_min))
+            state.sec_busy[(off.section_code, day)].append((s_min, e_min))
+            state.room_busy[(room_code, day)].append((s_min, e_min))
+        for mv, i, room_code in placed:  # roll back the tentative bookings
+            day, s_min, e_min = mv.times[i]
+            state.fac_busy[(fac_code, day)].remove((s_min, e_min))
+            state.sec_busy[(off.section_code, day)].remove((s_min, e_min))
+            state.room_busy[(room_code, day)].remove((s_min, e_min))
+        return placed
+
+    for off in sorted((o for o in ordered if own_meetings(o)), key=flexibility):
+        mvs = own_meetings(off)
+        f_vars = fac_choice[off.code]
+        prior_fac = next(
+            (p.faculty_code for mv in mvs if (p := prior_lookup.get((off.code, mv.m_idx)))),
+            None,
+        )
+        candidates = sorted(
+            f_vars,
+            key=lambda f: (
+                f != prior_fac,
+                state.fac_minutes[f] / max(1.0, fac_map[f].max_load_hours * 60)
+                if f in fac_map
+                else 1.0,
+            ),
+        )
+        best: tuple[str, list[tuple[_MeetingVars, int, str]]] | None = None
+        for fac_code in candidates:
+            placed = try_place(off, fac_code, mvs)
+            if best is None or len(placed) > len(best[1]):
+                best = (fac_code, placed)
+            if len(placed) == len(mvs):
+                break
+        if best is None or not best[1]:
+            continue
+
+        fac_code, placed = best
+        state.fac_units[fac_code] += units_of(off)
+        for f, v in f_vars.items():
+            hints[v.index] = (v, 1 if f == fac_code else 0)
+        placed_by_mv = {id(mv): (i, room_code) for mv, i, room_code in placed}
+        for mv in mvs:
+            pick = placed_by_mv.get(id(mv))
+            hints[mv.sched.index] = (mv.sched, 1 if pick else 0)
+            for f, x in mv.x_vars.items():
+                hints[x.index] = (x, 1 if pick and f == fac_code else 0)
+            for idx, t in enumerate(mv.t_vars):
+                hints[t.index] = (t, 1 if pick and idx == pick[0] else 0)
+            for r, y in mv.y_vars.items():
+                hints[y.index] = (y, 1 if pick and r == pick[1] else 0)
+            if pick:
+                day, s_min, e_min = mv.times[pick[0]]
+                assert mv.start is not None
+                hints[mv.start.index] = (mv.start, _week_minute(day, s_min))
+                state.fac_busy[(fac_code, day)].append((s_min, e_min))
+                state.sec_busy[(off.section_code, day)].append((s_min, e_min))
+                state.room_busy[(pick[1], day)].append((s_min, e_min))
+                state.fac_minutes[fac_code] += off.minutes_per_meeting
+
+    # Complete the hint: CP-SAT discards hints it cannot complete, so every model
+    # variable gets a value. Anything not placed above defaults to "unscheduled".
+    def value_of(var: cp_model.IntVar) -> int:
+        return hints[var.index][1] if var.index in hints else 0
+
+    for f_vars in fac_choice.values():
+        for v in f_vars.values():
+            hints.setdefault(v.index, (v, 0))
+    for mv in meetings.values():
+        hints.setdefault(mv.sched.index, (mv.sched, 0))
+        for var in (*mv.t_vars, *mv.x_vars.values(), *mv.y_vars.values()):
+            hints.setdefault(var.index, (var, 0))
+        if mv.start is not None:
+            hints.setdefault(mv.start.index, (mv.start, 0))
+    for mv in meetings.values():
+        for z, x, hits in mv.pref_terms:
+            hints[z.index] = (z, 1 if value_of(x) and any(value_of(h) for h in hits) else 0)
+    for var, value in hints.values():
+        model.add_hint(var, value)
+    return hints
 
 
 def find_alternative_slots(req: AlternativesRequest) -> AlternativesResponse:
@@ -805,16 +1091,13 @@ def find_alternative_slots(req: AlternativesRequest) -> AlternativesResponse:
     other_entries = [
         e
         for e in req.current_entries
-        if not (
-            e.offering_code == req.offering_code and e.meeting_index == req.meeting_index
-        )
+        if not (e.offering_code == req.offering_code and e.meeting_index == req.meeting_index)
     ]
     current_target = next(
         (
             e
             for e in req.current_entries
-            if e.offering_code == req.offering_code
-            and e.meeting_index == req.meeting_index
+            if e.offering_code == req.offering_code and e.meeting_index == req.meeting_index
         ),
         None,
     )
@@ -826,14 +1109,10 @@ def find_alternative_slots(req: AlternativesRequest) -> AlternativesResponse:
     cand_rooms = [
         r.code
         for r in problem.rooms
-        if r.status == "ACTIVE"
-        and r.type == off.required_room_type
-        and r.capacity >= req_cap
+        if r.status == "ACTIVE" and r.type == off.required_room_type and r.capacity >= req_cap
     ]
     qual_facs = [
-        q.faculty_code
-        for q in problem.qualifications
-        if q.subject_code == off.subject_code
+        q.faculty_code for q in problem.qualifications if q.subject_code == off.subject_code
     ]
     if current_target and current_target.faculty_code in qual_facs:
         # Prioritize keeping the same faculty member first
@@ -871,9 +1150,7 @@ def find_alternative_slots(req: AlternativesRequest) -> AlternativesResponse:
                     trial_res = validate_schedule(problem, [*other_entries, trial_entry])
                     # Must introduce zero new hard violations (ignoring HC-08 if partial schedule)
                     non_hc08 = [
-                        v
-                        for v in trial_res.violations
-                        if not v.waived and v.code.value != "HC-08"
+                        v for v in trial_res.violations if not v.waived and v.code.value != "HC-08"
                     ]
                     if not non_hc08:
                         new_score = trial_res.quality.quality_score

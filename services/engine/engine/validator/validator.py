@@ -9,6 +9,7 @@ from collections import defaultdict
 
 from engine.domain.models import (
     NEVER_WAIVABLE_CODES,
+    WEEKDAY_ORDER,
     ConstraintHardness,
     DirectiveType,
     HardConstraintCode,
@@ -22,6 +23,7 @@ from engine.domain.models import (
     Violation,
     Weekday,
 )
+from engine.domain.spread import SPREAD_PENALTY_FACTOR, daytime_peak_target
 
 
 def _overlaps(start_a: int, end_a: int, start_b: int, end_b: int) -> bool:
@@ -993,6 +995,50 @@ def compute_quality_report(
                     section_code=sec_code,
                 )
             )
+
+    # SC-05 (time of day): classes concentrated in the same period instead of
+    # spread over the teaching day. A combined class counts once.
+    meetings: dict[tuple[str, Weekday, int, int], None] = {}
+    for e in entries:
+        off = offering_map.get(e.offering_code)
+        key = off.combined_class_group if off and off.combined_class_group else e.offering_code
+        meetings[(key, e.weekday, e.start_min, e.end_min)] = None
+    peak_target = daytime_peak_target(
+        problem.term, sum(end - start for (_k, _d, start, end) in meetings)
+    )
+    slot = max(15, problem.term.slot_step_minutes)
+    concurrent: dict[tuple[Weekday, int], int] = defaultdict(int)
+    for _key, day, start, end in meetings:
+        cur = start - (start - problem.term.day_start_min) % slot
+        while cur < end:
+            concurrent[(day, cur)] += 1
+            cur += slot
+    worst_by_day: dict[Weekday, tuple[int, int]] = {}
+    pen_by_day: dict[Weekday, float] = defaultdict(float)
+    for (day, slot_start), count in concurrent.items():
+        if count <= peak_target:
+            continue
+        pen = (count - peak_target) * (slot / 60.0) * w_sc05 * SPREAD_PENALTY_FACTOR
+        penalties_by_code[SoftConstraintCode.SC_05] += pen
+        pen_by_day[day] += pen
+        best = worst_by_day.get(day)
+        if best is None or (count, -slot_start) > (best[0], -best[1]):
+            worst_by_day[day] = (count, slot_start)
+    for day in WEEKDAY_ORDER:
+        if day not in worst_by_day:
+            continue
+        count, slot_start = worst_by_day[day]
+        unmet.append(
+            UnmetPreference(
+                code=SoftConstraintCode.SC_05,
+                description=(
+                    f"{count} classes run at the same time on {day.value} at "
+                    f"{slot_start // 60:02d}:{slot_start % 60:02d}; an even spread "
+                    f"needs about {peak_target}."
+                ),
+                penalty=round(pen_by_day[day], 2),
+            )
+        )
 
     # SC-06: Minimize changes from prior schedule on regeneration
     w_sc06 = weights.get(SoftConstraintCode.SC_06, 12.0)

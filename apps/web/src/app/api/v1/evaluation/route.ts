@@ -5,7 +5,7 @@ import {
   getEvaluationEvidenceExport,
   startEvaluationSession,
 } from "../../../../server/modules/evaluation/evaluation.service";
-import { withAuth } from "../../../../server/platform/auth";
+import { withDeanRoute } from "@/server/http/dean-route";
 import { toErrorResponse } from "../../../../server/platform/errors";
 
 const evaluationActionSchema = z.discriminatedUnion("action", [
@@ -40,7 +40,7 @@ const evaluationActionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-export const GET = withAuth(async (req) => {
+export const GET = withDeanRoute(async (req) => {
   try {
     const url = new URL(req.url);
     const termCode = url.searchParams.get("termCode") ?? "AY2026-2027-S1";
@@ -51,7 +51,7 @@ export const GET = withAuth(async (req) => {
   }
 });
 
-export const POST = withAuth(async (req, ctx) => {
+export const POST = withDeanRoute(async (req, ctx) => {
   try {
     const body = evaluationActionSchema.parse(await req.json());
     if (body.action === "start") {

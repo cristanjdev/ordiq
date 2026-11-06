@@ -4,9 +4,9 @@ import {
   listOfferings,
   upsertOffering,
 } from "@/server/modules/master-data/master-data.service";
-import { withAuth } from "@/server/platform/auth";
+import { withDeanRoute } from "@/server/http/dean-route";
 
-export const GET = withAuth(async (request: NextRequest) => {
+export const GET = withDeanRoute(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const termCode = searchParams.get("termCode") ?? undefined;
   return NextResponse.json(
@@ -15,7 +15,7 @@ export const GET = withAuth(async (request: NextRequest) => {
   );
 });
 
-export const POST = withAuth(async (request: NextRequest, auth) => {
+export const POST = withDeanRoute(async (request: NextRequest, auth) => {
   const body = await request.json();
   const item = await upsertOffering(body, {
     actor: auth.user.username,
@@ -24,7 +24,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
   return NextResponse.json({ item }, { status: 200 });
 });
 
-export const DELETE = withAuth(async (request: NextRequest, auth) => {
+export const DELETE = withDeanRoute(async (request: NextRequest, auth) => {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code") ?? "";
   await deleteOffering(code, {

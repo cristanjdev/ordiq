@@ -20,7 +20,11 @@ export interface Iso25010TestCaseItem {
   stage: "STAGE_1_BASELINE" | "STAGE_2_CONFLICT_CHECK" | "STAGE_3_GENERATION";
   title: string;
   verificationTarget: string;
-  status: "PASSED" | "READY_FOR_PILOT";
+  /**
+   * Results are recorded by the proponents who run the evaluation (Q-21 criteria pending);
+   * ORDIQ never pre-asserts a pass.
+   */
+  status: "NOT_RECORDED";
 }
 
 export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
@@ -31,7 +35,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "Independent Hard Constraint Validator (HC-01 to HC-15)",
     verificationTarget:
       "Plain-Python validator catches injected violations across all 15 hard constraint families.",
-    status: "PASSED",
+    status: "NOT_RECORDED",
   },
   {
     id: "TC-FS-02",
@@ -40,7 +44,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "CP-SAT Multi-Profile Candidate Generation (D-19)",
     verificationTarget:
       "Produces BALANCED, FACULTY_FIRST, and STUDENT_FIRST candidates with 0 unwaived hard conflicts.",
-    status: "PASSED",
+    status: "NOT_RECORDED",
   },
   {
     id: "TC-FS-03",
@@ -49,7 +53,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "1st Semester A.Y. 2026-2027 Manual Schedule Conflict Audit",
     verificationTarget:
       "Detects room/faculty/section overlaps and capacity violations on imported baseline schedule.",
-    status: "PASSED",
+    status: "NOT_RECORDED",
   },
   {
     id: "TC-PE-01",
@@ -58,7 +62,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "Medium College Fixture Solve Time (< 120s Target)",
     verificationTarget:
       "7-program, 44-faculty, 24-section (903-student) college snapshot solves within configured time limit.",
-    status: "PASSED",
+    status: "NOT_RECORDED",
   },
   {
     id: "TC-PE-02",
@@ -67,7 +71,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "Interactive Workspace Edit Re-Validation Latency",
     verificationTarget:
       "Each manual edit or drag-and-drop triggers POST /v1/validate with immediate conflict feedback.",
-    status: "PASSED",
+    status: "NOT_RECORDED",
   },
   {
     id: "TC-US-01",
@@ -76,7 +80,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "English, Filipino, and Taglish Conversational Assistant",
     verificationTarget:
       "32-prompt golden evaluation set handles natural instructions, directives, and change proposals.",
-    status: "PASSED",
+    status: "NOT_RECORDED",
   },
   {
     id: "TC-US-02",
@@ -85,7 +89,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "Dean Pilot Effort & Correction Burden Tracking",
     verificationTarget:
       "Tracks session duration and derives correctionCount automatically from ScheduleChange history.",
-    status: "READY_FOR_PILOT",
+    status: "NOT_RECORDED",
   },
   {
     id: "TC-RE-01",
@@ -94,7 +98,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "Optimistic Locking & Partial Candidate Diagnostics (D-07)",
     verificationTarget:
       "Prevents concurrent tab overwrites (409) and classifies unscheduled meetings with exact reason codes.",
-    status: "PASSED",
+    status: "NOT_RECORDED",
   },
   {
     id: "TC-SE-01",
@@ -103,7 +107,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "Dean-Only Argon2id + Mandatory TOTP 2FA & Route Protection",
     verificationTarget:
       "Every unauthenticated request to any data/schedule/AI route returns 401; public signup disabled.",
-    status: "PASSED",
+    status: "NOT_RECORDED",
   },
   {
     id: "TC-SE-02",
@@ -112,7 +116,7 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     title: "Privacy Gateway Faculty.alias Egress Protection",
     verificationTarget:
       "Zero faculty names appear in any outgoing LLM request payload across all 32 golden prompts.",
-    status: "PASSED",
+    status: "NOT_RECORDED",
   },
 ] as const;
 
@@ -230,14 +234,8 @@ export async function completeEvaluationSession(
         durationMinutes,
         correctionCount,
         conflictCountAfter,
-        iso25010Ratings: input.iso25010Ratings ?? {
-          functionalSuitability: 5,
-          performanceEfficiency: 5,
-          usability: 5,
-          reliability: 5,
-          security: 5,
-          maintainability: 5,
-        },
+        // Ratings come only from the participant; never fill in a default score.
+        iso25010Ratings: input.iso25010Ratings ?? existing.iso25010Ratings,
         notes: input.notes ?? existing.notes,
       };
       state.evaluationSessions.set(completed.id, completed);
@@ -257,7 +255,7 @@ export function getEvaluationEvidenceExport(termCode = "AY2026-2027-S1") {
     termCode,
     generatedAt: new Date().toISOString(),
     baselineCarePolicy:
-      "Baseline care (Phase 7): The manuscript's 22-day rework figure includes portal encoding and cannot be split. The 16.6% survey figure and the 70% estimate of student change requests are not comparable. ORDIQ reports exact counts and never implies a measured percentage reduction for either.",
+      "Baseline care: The manuscript's 22-day rework figure includes portal encoding and cannot be split. The 16.6% survey figure and the 70% estimate of student change requests are not comparable. ORDIQ reports exact counts and never implies a measured percentage reduction for either.",
     iso25010TestCases: ISO_25010_TEST_CASE_CATALOGUE,
     stage2HistoricalComparison: analytics.manualComparison,
     currentAnalyticsSummary: analytics.metrics,

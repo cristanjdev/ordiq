@@ -288,6 +288,9 @@ The OpenAPI document from FastAPI is the contract. `packages/contracts` generate
 | D-22 | AI Assistant is a persistent side panel in the app shell, plus a full-page view. Data pages are editable grids | Matches Fig. 4 and the "spreadsheet-based workspace" | Decided |
 | D-23 | Classes the college does not control are stored as locked section blocks | General education, PATHFIT and classes in other buildings still occupy a section's time | Follow-up with client |
 | D-24 | Evaluation evidence is built into the product | Effort, corrections and test records are needed for the paper and are hard to rebuild later | Decided |
+| D-25 | Persistence is one state repository with a unit of work per request (`src/server/repo/state.repository.ts`, `state-sync.ts`), not a `*.repo.ts` per module. Services keep working on the in-memory domain state. `withDeanRoute` loads it from PostgreSQL, saves only changed records in one transaction, and uses `system_state.version` for optimistic concurrency (409 `CONCURRENT_MODIFICATION`). PostgreSQL (Supabase) is the only store; memory is used only by the automated tests |\|memory` | Keeps every service synchronous and testable in memory, and makes one write path the only place that touches the database. One Dean and college-sized data make whole-state reloads cheap. See ADR 0001 | Implemented |
+| D-26 | The CP-SAT model is decomposed: per meeting, separate time, room and faculty choices with optional intervals and NoOverlap per faculty, room and section. A complete greedy hint is always supplied and returned if the solver finds nothing in time | The single-option model grew too large and placed under half of the medium fixture. The decomposed model places all meetings of 576-meeting terms in the time limit with no hard violations | Implemented |
+| D-27 | The privacy gateway for live providers is AI SDK middleware on the model (`createPrivacyMiddleware`). Every request, including each step of the tool loop and every tool result, is pseudonymized and captured there. Refusals stay deterministic and run before any provider call. Without a usable provider, under tests, or when a call fails, the built-in deterministic assistant answers | Code above the model cannot forget to scrub a field. The assistant keeps working offline, and tests never spend tokens | Implemented |
 
 Record larger decisions as short ADRs in `docs/adr/`.
 
@@ -417,6 +420,13 @@ erDiagram
 | `ScheduleChange` | schedule, entry, before, after, actor (`DEAN`, `AI_PROPOSAL`), reason. Append-only |
 | `ScheduleException` | schedule, entry, constraint code, reason, accepted by, timestamp |
 | `ChangeProposal` | schedule, operations JSON, impact JSON, status, conversation, expiry |
+
+**As implemented (D-25):**
+- The Prisma schema mirrors the in-memory domain records one to one.
+- Chat-driven rules are stored as `Directive` rows (the closed set from D-16). The constraint catalogue itself lives in the engine validator.
+- Unscheduled meetings, the change log and exceptions are JSON columns on `Schedule`. Each one is always read and written with its schedule.
+- `RoomAvailability` and `CalendarRestriction` have no tables yet, because nothing in the app records them. Add them together with their UI and validator support.
+- The schema is applied with `prisma db push`. Switch to `prisma migrate` before the production deployment so that later changes are versioned.
 
 ### AI, ML and platform
 

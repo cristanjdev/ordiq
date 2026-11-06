@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTermReadinessReport } from "@/server/modules/readiness/readiness.service";
-import { withAuth } from "@/server/platform/auth";
+import { withDeanRoute } from "@/server/http/dean-route";
 
-export const GET = withAuth(async (request: NextRequest) => {
+export const GET = withDeanRoute(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const termCode = searchParams.get("termCode") ?? "AY2026-2027-S1";
   const report = getTermReadinessReport(termCode);

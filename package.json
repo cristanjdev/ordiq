@@ -9,6 +9,8 @@
   },
   "scripts": {
     "dev": "pnpm --filter @ordiq/web dev",
+    "dev:web": "pnpm --filter @ordiq/web dev",
+    "dev:engine": "uv run --directory services/engine uvicorn engine.main:app --host 127.0.0.1 --port 8000 --reload",
     "build": "pnpm --filter @ordiq/contracts build && pnpm --filter @ordiq/web build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
@@ -16,7 +18,8 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "contracts:generate": "pnpm --filter @ordiq/contracts generate",
-    "contracts:check": "pnpm --filter @ordiq/contracts check"
+    "contracts:check": "pnpm --filter @ordiq/contracts check",
+    "seed:dean": "pnpm --filter @ordiq/web seed:dean"
   },
   "devDependencies": {
     "prettier": "^3.4.2",

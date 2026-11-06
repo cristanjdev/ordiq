@@ -1,8 +1,11 @@
+import type { LanguageModelMiddleware } from "ai";
 import {
   type FacultyRecord,
   getMasterDataState,
   type LlmUsageRecord,
 } from "../master-data/master-data.store";
+import { estimateCostPhp, type LlmProvider, resolveLlmConfig } from "./llm-provider";
+import { currentSystemSettings } from "../../platform/system-settings";
 
 export interface PseudonymMapEntry {
   facultyCode: string;
@@ -27,7 +30,16 @@ export interface CapturedLlmEgressPayload {
   }>;
 }
 
+/** Recent outgoing payloads, kept for the privacy egress audit (bounded). */
 const capturedEgressPayloads: CapturedLlmEgressPayload[] = [];
+const MAX_CAPTURED_PAYLOADS = 500;
+
+function captureEgressPayload(payload: CapturedLlmEgressPayload): void {
+  capturedEgressPayloads.push(payload);
+  if (capturedEgressPayloads.length > MAX_CAPTURED_PAYLOADS) {
+    capturedEgressPayloads.splice(0, capturedEgressPayloads.length - MAX_CAPTURED_PAYLOADS);
+  }
+}
 
 export function getCapturedLlmEgressPayloads(): CapturedLlmEgressPayload[] {
   return [...capturedEgressPayloads];
@@ -543,29 +555,6 @@ export function serializeToolResultForLlm(
   return sanitizeNode(value);
 }
 
-export interface LlmGatewayRequest {
-  provider?: "openai" | "anthropic" | "ollama";
-  model?: string;
-  systemPrompt: string;
-  messages: Array<{
-    role: "user" | "assistant" | "tool";
-    content: string;
-    toolName?: string;
-  }>;
-  synthesizedAssistantReply: string;
-}
-
-export interface LlmGatewayResponse {
-  provider: "openai" | "anthropic" | "ollama";
-  model: string;
-  restoredReply: string;
-  streamedChunks: string[];
-  tokensIn: number;
-  tokensOut: number;
-  estimatedCostPhp: number;
-  egressPayloadId: string;
-}
-
 /**
  * Check whether the monthly token budget has been exceeded.
  */
@@ -574,7 +563,8 @@ export function checkMonthlyTokenBudget(): {
   usedTokens: number;
   budgetTokens: number;
 } {
-  const budgetTokens = Number(process.env.LLM_MONTHLY_TOKEN_BUDGET ?? "500000");
+  // Settings page value (defaults to LLM_MONTHLY_TOKEN_BUDGET).
+  const budgetTokens = currentSystemSettings().ai.monthlyTokenBudget;
   const state = getMasterDataState();
   const now = new Date();
   const currentMonthPrefix = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -590,36 +580,189 @@ export function checkMonthlyTokenBudget(): {
   };
 }
 
-/**
- * Single LLM egress gateway.
- * - Pseudonymizes system prompt and all message/tool contents.
- * - Records the outgoing payload in `capturedEgressPayloads` for privacy egress auditing.
- * - Logs token counts ONLY (never message content) in `LlmUsageRecord`.
- * - Streams the assistant reply through `DePseudonymizerStream` so split `ALIAS-XXX` tokens
- *   are restored to real faculty names.
- */
-export async function invokeLlmThroughPrivacyGateway(
-  request: LlmGatewayRequest,
-): Promise<LlmGatewayResponse> {
-  const provider =
-    request.provider ??
-    ((process.env.LLM_PROVIDER as "openai" | "anthropic" | "ollama" | undefined) ??
-      "openai");
-  const model =
-    request.model ??
-    process.env.LLM_MODEL ??
-    (provider === "anthropic"
-      ? "claude-3-5-haiku-latest"
-      : provider === "ollama"
-        ? "qwen2.5:7b"
-        : "gpt-4o-mini");
-
+/** Refuse a provider call once the monthly token budget is spent. */
+export function assertWithinTokenBudget(): void {
   const budget = checkMonthlyTokenBudget();
   if (!budget.withinBudget) {
     throw new Error(
       `Monthly AI token budget exceeded (${budget.usedTokens}/${budget.budgetTokens} tokens).`,
     );
   }
+}
+
+/** Log token counts only (never message content) as an `LlmUsageRecord`. */
+export function recordLlmUsage(
+  provider: LlmProvider,
+  model: string,
+  tokensIn: number,
+  tokensOut: number,
+): LlmUsageRecord {
+  const usageRecord: LlmUsageRecord = {
+    id: crypto.randomUUID(),
+    provider,
+    model,
+    tokensIn,
+    tokensOut,
+    estimatedCostPhp: estimateCostPhp(provider, tokensIn, tokensOut),
+    createdAt: new Date().toISOString(),
+  };
+  getMasterDataState().llmUsage.push(usageRecord);
+  return usageRecord;
+}
+
+/**
+ * Restore an aliased reply through `DePseudonymizerStream`, in small chunks
+ * so that `ALIAS-XXX` tokens split across chunk boundaries are exercised the
+ * same way a streamed provider reply would be.
+ */
+export function restoreAliasedReply(aliasedText: string, chunkSize = 7): string[] {
+  const dePseudonymizer = new DePseudonymizerStream();
+  const chunks: string[] = [];
+  for (let i = 0; i < aliasedText.length; i += chunkSize) {
+    const restored = dePseudonymizer.pushChunk(aliasedText.slice(i, i + chunkSize));
+    if (restored.length > 0) chunks.push(restored);
+  }
+  const tail = dePseudonymizer.flush();
+  if (tail.length > 0) chunks.push(tail);
+  return chunks;
+}
+
+// ---------------------------------------------------------------------------
+// Live provider egress (AI SDK middleware)
+// ---------------------------------------------------------------------------
+
+type TransformParams = NonNullable<LanguageModelMiddleware["transformParams"]>;
+type CallParams = Parameters<TransformParams>[0]["params"];
+type ModelPrompt = CallParams["prompt"];
+
+/** Prompt keys that carry structure or identifiers, never free text. */
+const PROMPT_STRUCTURAL_KEYS = new Set([
+  "type",
+  "role",
+  "toolCallId",
+  "toolName",
+  "approvalId",
+  "mediaType",
+  "providerOptions",
+  "providerExecuted",
+]);
+
+function pseudonymizeDeep(
+  node: unknown,
+  faculty: FacultyRecord[],
+  cache: Map<string, string>,
+): unknown {
+  if (typeof node === "string") {
+    let out = cache.get(node);
+    if (out === undefined) {
+      out = pseudonymizeText(node, faculty);
+      cache.set(node, out);
+    }
+    return out;
+  }
+  if (Array.isArray(node)) return node.map((item) => pseudonymizeDeep(item, faculty, cache));
+  if (node && typeof node === "object" && !(node instanceof Uint8Array) && !(node instanceof URL)) {
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(node)) {
+      out[key] = PROMPT_STRUCTURAL_KEYS.has(key) ? value : pseudonymizeDeep(value, faculty, cache);
+    }
+    return out;
+  }
+  return node;
+}
+
+function flattenPromptForAudit(
+  prompt: ModelPrompt,
+): Pick<CapturedLlmEgressPayload, "systemPrompt" | "messages"> {
+  const system: string[] = [];
+  const messages: CapturedLlmEgressPayload["messages"] = [];
+  for (const message of prompt) {
+    if (message.role === "system") {
+      system.push(message.content);
+      continue;
+    }
+    const content = message.content
+      .map((part) => (part.type === "text" ? part.text : JSON.stringify(part)))
+      .join("\n");
+    const toolName = message.content.find((part) => "toolName" in part)?.toolName;
+    messages.push({
+      role: message.role,
+      content,
+      ...(message.role === "tool" && typeof toolName === "string" ? { toolName } : {}),
+    });
+  }
+  return { systemPrompt: system.join("\n\n"), messages };
+}
+
+/**
+ * The single egress point for live provider calls. Wrapping the model with
+ * this middleware means every request the AI SDK sends — instructions, chat
+ * history, tool calls and tool results, on every step of a tool loop — is
+ * pseudonymized just before it leaves ORDIQ, and recorded for the egress
+ * audit. Code above this layer cannot forget to scrub a field.
+ */
+export function createPrivacyMiddleware(meta: {
+  provider: LlmProvider;
+  model: string;
+}): LanguageModelMiddleware {
+  return {
+    specificationVersion: "v4",
+    transformParams: async ({ params }) => {
+      const faculty = Array.from(getMasterDataState().faculty.values());
+      const prompt = pseudonymizeDeep(params.prompt, faculty, new Map()) as ModelPrompt;
+      captureEgressPayload({
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        provider: meta.provider,
+        model: meta.model,
+        ...flattenPromptForAudit(prompt),
+      });
+      return { ...params, prompt };
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Offline gateway (deterministic replies; used in tests and without a provider)
+// ---------------------------------------------------------------------------
+
+export interface LlmGatewayRequest {
+  provider?: LlmProvider;
+  model?: string;
+  systemPrompt: string;
+  messages: Array<{
+    role: "user" | "assistant" | "tool";
+    content: string;
+    toolName?: string;
+  }>;
+  synthesizedAssistantReply: string;
+}
+
+export interface LlmGatewayResponse {
+  provider: LlmProvider;
+  model: string;
+  restoredReply: string;
+  streamedChunks: string[];
+  tokensIn: number;
+  tokensOut: number;
+  estimatedCostPhp: number;
+  egressPayloadId: string;
+}
+
+/**
+ * Offline counterpart of a provider call: the reply is the deterministic
+ * `synthesizedAssistantReply`, but the request goes through the same privacy
+ * steps as a live call — pseudonymization, egress capture, budget check,
+ * usage logging (estimated tokens), and streamed de-pseudonymization.
+ */
+export async function invokeLlmThroughPrivacyGateway(
+  request: LlmGatewayRequest,
+): Promise<LlmGatewayResponse> {
+  const config = resolveLlmConfig(request.provider);
+  const provider = config.provider;
+  const model = request.model ?? config.model;
+
+  assertWithinTokenBudget();
 
   // Pseudonymize every outgoing string
   const sanitizedSystemPrompt = pseudonymizeText(request.systemPrompt);
@@ -637,9 +780,9 @@ export async function invokeLlmThroughPrivacyGateway(
     systemPrompt: sanitizedSystemPrompt,
     messages: sanitizedMessages,
   };
-  capturedEgressPayloads.push(egressPayload);
+  captureEgressPayload(egressPayload);
 
-  // Pseudonymize the synthesized LLM reply first (representing the raw LLM output in ALIAS codes)
+  // The deterministic reply, in ALIAS-XXX form as a provider would return it
   const rawAliasedReply = pseudonymizeText(request.synthesizedAssistantReply);
 
   // Estimate token counts (approx 4 chars per token)
@@ -648,50 +791,18 @@ export async function invokeLlmThroughPrivacyGateway(
     sanitizedMessages.reduce((acc, m) => acc + m.content.length, 0);
   const tokensIn = Math.max(1, Math.ceil(totalInputChars / 4));
   const tokensOut = Math.max(1, Math.ceil(rawAliasedReply.length / 4));
+  const usage = recordLlmUsage(provider, model, tokensIn, tokensOut);
 
-  // Cost estimation in PHP (assuming ~₱0.009 per 1k input tokens & ~₱0.035 per 1k output tokens for mini models; 0 for local ollama)
-  const estimatedCostPhp =
-    provider === "ollama"
-      ? 0
-      : Number(((tokensIn * 0.009 + tokensOut * 0.035) / 1000).toFixed(4));
-
-  const usageRecord: LlmUsageRecord = {
-    id: crypto.randomUUID(),
-    provider,
-    model,
-    tokensIn,
-    tokensOut,
-    estimatedCostPhp,
-    createdAt: new Date().toISOString(),
-  };
-  getMasterDataState().llmUsage.push(usageRecord);
-
-  // Stream through DePseudonymizerStream using deliberate small chunks (including splitting ALIAS tokens)
-  const dePseudonymizer = new DePseudonymizerStream();
-  const streamedChunks: string[] = [];
-  const chunkSize = 7;
-  for (let i = 0; i < rawAliasedReply.length; i += chunkSize) {
-    const rawSlice = rawAliasedReply.slice(i, i + chunkSize);
-    const restoredSlice = dePseudonymizer.pushChunk(rawSlice);
-    if (restoredSlice.length > 0) {
-      streamedChunks.push(restoredSlice);
-    }
-  }
-  const tail = dePseudonymizer.flush();
-  if (tail.length > 0) {
-    streamedChunks.push(tail);
-  }
-
-  const restoredReply = streamedChunks.join("");
+  const streamedChunks = restoreAliasedReply(rawAliasedReply);
 
   return {
     provider,
     model,
-    restoredReply,
+    restoredReply: streamedChunks.join(""),
     streamedChunks,
     tokensIn,
     tokensOut,
-    estimatedCostPhp,
+    estimatedCostPhp: usage.estimatedCostPhp,
     egressPayloadId: egressPayload.id,
   };
 }

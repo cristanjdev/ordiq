@@ -1,12 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  buildWorkbookBuffer,
   importWorkbookPayload,
   parseWorkbookBuffer,
   type WorkbookSheetsPayload,
 } from "@/server/modules/imports/imports.service";
-import { withAuth } from "@/server/platform/auth";
+import { withDeanRoute } from "@/server/http/dean-route";
+import { AppError } from "@/server/platform/errors";
 
-export const POST = withAuth(async (request: NextRequest, auth) => {
+/** `GET ?template=1&termCode=...`: an empty workbook with every sheet and column header. */
+export const GET = withDeanRoute(async (request: NextRequest) => {
+  const params = new URL(request.url).searchParams;
+  if (params.get("template") !== "1") {
+    throw new AppError("UNSUPPORTED", "Only ?template=1 is supported.", 400);
+  }
+  const termCode = params.get("termCode") ?? "AY2026-2027-S1";
+  const buffer = await buildWorkbookBuffer({ termCode });
+  return new NextResponse(new Uint8Array(buffer), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="ordiq-import-template-${termCode}.xlsx"`,
+    },
+  });
+});
+
+export const POST = withDeanRoute(async (request: NextRequest, auth) => {
   const body = (await request.json()) as {
     dryRun?: boolean;
     termCode?: string;

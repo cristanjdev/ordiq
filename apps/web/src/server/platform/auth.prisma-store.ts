@@ -10,6 +10,7 @@ function mapUser(u: {
   passwordHash: string;
   totpSecretEncrypted: string | null;
   totpEnrolled: boolean;
+  totpLastUsedStep: number | null;
   recoveryCodesHashes: unknown;
   failedLoginAttempts: number;
   lockedUntil: Date | null;
@@ -22,6 +23,7 @@ function mapUser(u: {
     passwordHash: u.passwordHash,
     totpSecretEncrypted: u.totpSecretEncrypted,
     totpEnrolled: u.totpEnrolled,
+    totpLastUsedStep: u.totpLastUsedStep,
     recoveryCodesHashes: Array.isArray(u.recoveryCodesHashes)
       ? (u.recoveryCodesHashes as string[])
       : [],
@@ -93,6 +95,7 @@ export const prismaAuthStore: AuthStore = {
         passwordHash: data.passwordHash,
         totpSecretEncrypted: data.totpSecretEncrypted,
         totpEnrolled: data.totpEnrolled,
+        totpLastUsedStep: data.totpLastUsedStep,
         recoveryCodesHashes: data.recoveryCodesHashes,
         failedLoginAttempts: data.failedLoginAttempts,
         lockedUntil: data.lockedUntil,
@@ -114,6 +117,9 @@ export const prismaAuthStore: AuthStore = {
           : {}),
         ...(patch.totpEnrolled !== undefined
           ? { totpEnrolled: patch.totpEnrolled }
+          : {}),
+        ...(patch.totpLastUsedStep !== undefined
+          ? { totpLastUsedStep: patch.totpLastUsedStep }
           : {}),
         ...(patch.recoveryCodesHashes !== undefined
           ? { recoveryCodesHashes: patch.recoveryCodesHashes }
@@ -147,6 +153,14 @@ export const prismaAuthStore: AuthStore = {
     const found = await prisma.session.findUnique({ where: { tokenHash } });
     return found ? mapSession(found) : null;
   },
+  async findSessionWithUserByTokenHash(tokenHash) {
+    const found = await prisma.session.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+    if (!found) return null;
+    return { session: mapSession(found), user: mapUser(found.user) };
+  },
   async updateSession(id, patch) {
     const updated = await prisma.session.update({
       where: { id },
@@ -164,6 +178,19 @@ export const prismaAuthStore: AuthStore = {
   },
   async deleteSessionByTokenHash(tokenHash) {
     await prisma.session.deleteMany({ where: { tokenHash } });
+  },
+  async purgeStaleSessions(userId, now) {
+    const { count } = await prisma.session.deleteMany({
+      where: {
+        userId,
+        OR: [
+          { stage: { not: "ACTIVE" } },
+          { idleExpiresAt: { lte: now } },
+          { absoluteExpiresAt: { lte: now } },
+        ],
+      },
+    });
+    return count;
   },
 };
 
