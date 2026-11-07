@@ -18,6 +18,12 @@ import {
   pseudonymizeText,
 } from "./privacy-gateway";
 import {
+  focusExcerpt,
+  isDocumentationQuestion,
+  type KnowledgeHit,
+  searchKnowledge,
+} from "./knowledge/knowledge.service";
+import {
   type AiToolExecutionResult,
   type AiToolName,
   executeAiTool,
@@ -69,13 +75,20 @@ export function detectRefusalIntent(prompt: string): {
   reply?: string;
 } {
   const lower = prompt.toLowerCase();
-
-  // 1. Prompt injection / override rules / accept schedule / apply proposal / delete data / edit master data
-  if (
+  // "How do I accept a schedule?" asks for instructions, not for the
+  // assistant to act; it is answered from the documentation. The assistant
+  // has no tool that could accept, apply or delete anything either way.
+  const informational = isDocumentationQuestion(prompt);
+  const injection =
     lower.includes("ignore your rules") ||
     lower.includes("ignore previous instructions") ||
     lower.includes("bypass validation") ||
-    lower.includes("system prompt override") ||
+    lower.includes("system prompt override");
+
+  // 1. Prompt injection / override rules / accept schedule / apply proposal / delete data / edit master data
+  if (
+    injection ||
+    (!informational && (
     /\b(?:accept|approve|finalize|publish|release)\s+(?:the\s+|this\s+|candidate\s+)?schedule\b/i.test(
       prompt,
     ) ||
@@ -95,7 +108,7 @@ export function detectRefusalIntent(prompt: string): {
     /\b(?:edit|update|modify|change)\s+master\s+data\b/i.test(prompt) ||
     /\b(?:create|add|register)\s+(?:a\s+)?(?:new\s+)?(?:user|coordinator|student|faculty)\s+account\b/i.test(
       prompt,
-    )
+    )))
   ) {
     return {
       refused: true,
@@ -107,6 +120,7 @@ export function detectRefusalIntent(prompt: string): {
 
   // 2. Out-of-scope capabilities (enrollment forecasting, individual student records, portal integration)
   if (
+    !informational && (
     /\b(?:forecast|predict)\s+(?:next\s+year'?s?\s+|future\s+)?enrollment\b/i.test(
       prompt,
     ) ||
@@ -116,7 +130,7 @@ export function detectRefusalIntent(prompt: string): {
     /\b(?:student\s+number|student\s+id)\b/i.test(prompt) ||
     /\bconnect\s+(?:directly\s+)?to\s+(?:the\s+)?(?:mseuf\s+|university\s+)?portal\b/i.test(
       prompt,
-    )
+    ))
   ) {
     return {
       refused: true,
@@ -710,11 +724,13 @@ export async function runAiAssistantTurn(
         scheduleId: input.scheduleId,
         actor,
       });
-      const assistantMsg = appendAssistantMessage(
-        conv,
-        live.text,
-        live.toolResults.map((r) => r.structuredPart),
-      );
+      const assistantMsg = appendAssistantMessage(conv, live.text, [
+        ...live.toolResults.map((r) => r.structuredPart),
+        // Name the documents behind a how-to answer (not for data answers).
+        ...(live.toolResults.length === 0 && isDocumentationQuestion(input.prompt)
+          ? live.knowledgeHits.slice(0, 2).map(knowledgeSourcePart)
+          : []),
+      ]);
       const firstCall = live.toolCalls[0];
       return {
         conversationId: conv.id,
@@ -780,6 +796,10 @@ async function runOfflineTurn(
   actor: string,
   note?: string,
 ): Promise<ChatTurnResponse> {
+  if (isDocumentationQuestion(input.prompt)) {
+    const [best] = searchKnowledge(input.prompt, { limit: 1, minScore: 4 });
+    if (best) return runOfflineKnowledgeTurn(input, conv, userMsg, best, note);
+  }
   const { toolName, args } = selectToolAndArgsForPrompt(
     input.prompt,
     input.termCode,
@@ -821,6 +841,48 @@ async function runOfflineTurn(
     refused: false,
     invokedTool: toolName,
     invokedToolArgs: args,
+    provider: gwRes.provider,
+    model: gwRes.model,
+    mode: note ? "offline-fallback" : "offline",
+    streamedChunks: note ? [...gwRes.streamedChunks, note] : gwRes.streamedChunks,
+    tokensIn: gwRes.tokensIn,
+    tokensOut: gwRes.tokensOut,
+    estimatedCostPhp: gwRes.estimatedCostPhp,
+    egressPayloadId: gwRes.egressPayloadId,
+  };
+}
+
+/** Message part that names the document a reply is based on. */
+export function knowledgeSourcePart(hit: Pick<KnowledgeHit, "source" | "section">) {
+  const last = hit.section.split(" › ").pop() ?? hit.section;
+  return { kind: "doc_source", title: `Source: ${last}`, data: { source: hit.source, section: hit.section } };
+}
+
+/** Built-in answer to a how-to question: the best documentation passage. */
+async function runOfflineKnowledgeTurn(
+  input: ChatTurnInput,
+  conv: ConversationRecord,
+  userMsg: MessageRecord,
+  hit: KnowledgeHit,
+  note?: string,
+): Promise<ChatTurnResponse> {
+  const reply = `From the ${hit.source} (${hit.section}):\n\n${focusExcerpt(hit.text, input.prompt)}`;
+  const gwRes = await invokeLlmThroughPrivacyGateway({
+    provider: input.provider,
+    model: note ? "offline-fallback" : undefined,
+    systemPrompt: SYSTEM_PROMPT_V1,
+    messages: conv.messages.map((m) => ({ role: m.role, content: m.content })),
+    synthesizedAssistantReply: reply,
+  });
+  const content = note ? `${gwRes.restoredReply}${note}` : gwRes.restoredReply;
+  const assistantMsg = appendAssistantMessage(conv, content, [knowledgeSourcePart(hit)]);
+  return {
+    conversationId: conv.id,
+    userMessage: userMsg,
+    assistantMessage: assistantMsg,
+    refused: false,
+    invokedTool: null,
+    invokedToolArgs: null,
     provider: gwRes.provider,
     model: gwRes.model,
     mode: note ? "offline-fallback" : "offline",

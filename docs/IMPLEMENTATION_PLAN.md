@@ -779,6 +779,7 @@ This is the only module that may call an LLM.
 - [x] Write the versioned system prompt: role, boundaries, Taglish behavior, refusal rules
 - [x] Trim history to control cost, and enforce the monthly token budget
 - [x] Handle provider failure: the rest of the system keeps working without chat
+- [x] Ground how-to answers in the project documents: `pnpm --filter @ordiq/web knowledge:build` turns curated `docs/` sections and the in-app guide into passages, and each turn adds the best-matching ones (local BM25 search) to the instructions. Retrieval, not fine-tuning; no new tool and no write path. Rebuild after editing the docs. Sources include a curated FAQ (`knowledge/faq.md`). Evaluation: `knowledge/golden-doc-questions.ts` (tuning set plus a held-out set) must retrieve the right section in the top three, and `knowledge-live.eval.test.ts` grades real provider answers when run with `LLM_LIVE_TESTS=1`.
 
 ### 4C. Tools
 

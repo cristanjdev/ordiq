@@ -1,6 +1,12 @@
 import { generateText, isStepCount, type ModelMessage, tool, type ToolSet, wrapLanguageModel } from "ai";
 import type { z } from "zod";
 import { getMasterDataState, type MessageRecord } from "../master-data/master-data.store";
+import {
+  formatKnowledgeForPrompt,
+  isDocumentationQuestion,
+  type KnowledgeHit,
+  searchKnowledge,
+} from "./knowledge/knowledge.service";
 import { createLanguageModel, type LlmConfig, type ProviderLanguageModel } from "./llm-provider";
 import {
   assertWithinTokenBudget,
@@ -52,8 +58,23 @@ const TOOL_DESCRIPTIONS: Record<AiToolName, string> = {
 
 function liveInstructions(
   basePrompt: string,
-  context: { termCode: string; scheduleId?: string },
+  context: { termCode: string; scheduleId?: string; knowledge: string },
 ): string {
+  const reference = context.knowledge
+    ? `
+
+Reference documentation (excerpts from the ORDIQ project documents, chosen for this question):
+"""
+${context.knowledge}
+"""
+How to use the reference documentation:
+- Answer questions about how ORDIQ works (screens, steps, rules HC-01 to HC-15 and SC-01 to SC-16, settings, privacy, reports, the study itself) from these excerpts only. Do not add steps, buttons, limits or features that the excerpts do not state.
+- Name where to go using the page and section, for example "Settings › Sign-in security" or "Rules & Preferences › Dean Directives".
+- When excerpts disagree, follow the "ORDIQ In-App Guide" and the "ORDIQ FAQ"; they describe the current screens.
+- Never take this term's figures from the documents; call the tools for any count, name or metric of the term.
+- If the excerpts and the tools do not cover the question, say that ORDIQ's documents do not cover it and suggest who or where to ask, instead of guessing.
+- Answer naturally; do not mention "excerpts", "reference documentation" or numbered sources.`
+    : "";
   return `${basePrompt}
 
 Working context:
@@ -65,9 +86,29 @@ Working context:
 
 How to answer:
 - Call tools for any figure you report. Never estimate or invent schedule metrics, counts or names.
-- Reply in the Dean's language (English, Filipino or Taglish), briefly, in plain sentences or short lists.
+- Reply in the Dean's language (English, Filipino or Taglish). Use a professional, respectful and calm tone, as a capable staff assistant would; no slang, emojis or exclamation marks.
+- Lead with the direct answer in one sentence. For a how-to question, follow with short numbered steps. Keep most replies under about 120 words unless the Dean asks for detail.
+- If a question is ambiguous (for example which faculty member, section or candidate), ask one short clarifying question instead of guessing.
+- When you are not certain, say so and point to the page where the Dean can confirm.
 - After propose_change, say the Dean must Apply or Reject the proposal card. After generate_schedule, say the candidates are ready to review in the Schedule Workspace.
-- If a request needs a write you cannot do, say so and point to the workspace.`;
+- If a request needs a write you cannot do, say so and point to the workspace.${reference}`;
+}
+
+/**
+ * Documentation passages for the latest question. A short follow-up ("and
+ * where is that?") is searched together with the previous question.
+ */
+export function retrieveKnowledgeForTurn(history: MessageRecord[]): KnowledgeHit[] {
+  const asked = history.filter((m) => m.role === "user");
+  const latest = asked[asked.length - 1]?.content ?? "";
+  if (!latest.trim()) return [];
+  const previous = asked[asked.length - 2]?.content ?? "";
+  const query = latest.trim().split(/\s+/).length < 5 && previous ? `${previous} ${latest}` : latest;
+  // How-to questions get more reference text; data questions only a little,
+  // since their answers come from the tools.
+  return isDocumentationQuestion(latest)
+    ? searchKnowledge(query, { limit: 4, minScore: 3 })
+    : searchKnowledge(query, { limit: 2, minScore: 6 });
 }
 
 function resolveFacultyRef(value: unknown): unknown {
@@ -88,6 +129,8 @@ export interface LiveTurnResult {
   tokensOut: number;
   estimatedCostPhp: number;
   egressPayloadId: string;
+  /** Documentation passages given to the model for this turn. */
+  knowledgeHits: KnowledgeHit[];
 }
 
 export async function runLiveAssistantTurn(input: {
@@ -141,9 +184,16 @@ export async function runLiveAssistantTurn(input: {
     content: m.content,
   }));
 
+  const latestQuestion = input.history.filter((m) => m.role === "user").pop()?.content ?? "";
+  const knowledgeHits = retrieveKnowledgeForTurn(input.history);
+  const knowledge = formatKnowledgeForPrompt(
+    knowledgeHits,
+    isDocumentationQuestion(latestQuestion) ? 6000 : 2500,
+  );
+
   const result = await generateText({
     model,
-    instructions: liveInstructions(input.systemPrompt, input),
+    instructions: liveInstructions(input.systemPrompt, { ...input, knowledge }),
     messages,
     tools,
     stopWhen: isStepCount(6),
@@ -168,5 +218,6 @@ export async function runLiveAssistantTurn(input: {
     tokensOut,
     estimatedCostPhp: usage.estimatedCostPhp,
     egressPayloadId: egress[egress.length - 1]?.id ?? "none",
+    knowledgeHits,
   };
 }

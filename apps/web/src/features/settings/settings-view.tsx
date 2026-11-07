@@ -286,6 +286,9 @@ export function SettingsView() {
 
   const [draft, setDraft] = React.useState<SystemSettings>(saved);
   const [password, setPassword] = React.useState("");
+  // Set when Save is pressed without the password; highlights the field.
+  const [passwordMissing, setPasswordMissing] = React.useState(false);
+  const passwordRef = React.useRef<HTMLInputElement>(null);
   const [saving, setSaving] = React.useState(false);
   const [message, setMessage] = React.useState<{ kind: "ok" | "error"; text: string } | null>(null);
 
@@ -319,7 +322,8 @@ export function SettingsView() {
   const save = async () => {
     if (!dirty || saving) return;
     if (needsPassword && !password) {
-      setMessage({ kind: "error", text: "Enter the current password to save sign-in and session changes." });
+      setPasswordMissing(true);
+      passwordRef.current?.focus();
       return;
     }
     setSaving(true);
@@ -353,6 +357,7 @@ export function SettingsView() {
   const discard = () => {
     setDraft(saved);
     setPassword("");
+    setPasswordMissing(false);
     setMessage(null);
   };
 
@@ -578,9 +583,9 @@ export function SettingsView() {
             aria-label="Unsaved settings"
             className="pointer-events-auto w-full max-w-4xl rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)]/95 shadow-xl shadow-black/10 backdrop-blur-md animate-info-pop"
           >
-            <div className="flex flex-col gap-3 p-3 sm:pl-4 xl:flex-row xl:items-center xl:gap-4">
+            <div className="flex flex-col gap-3 p-3 sm:pl-4 lg:flex-row lg:items-center lg:gap-4">
               {/* Status */}
-              <div className="flex min-w-0 items-center gap-2.5 xl:flex-1 xl:shrink-0">
+              <div className="flex min-w-0 items-center gap-2.5 lg:flex-1">
                 {message && (message.kind === "ok" || !dirty) ? (
                   <p
                     role={message.kind === "error" ? "alert" : "status"}
@@ -609,15 +614,19 @@ export function SettingsView() {
                     <p
                       role={message?.kind === "error" ? "alert" : undefined}
                       className={cn(
-                        "mt-0.5 text-[11px] leading-snug sm:whitespace-nowrap",
-                        message?.kind === "error" ? "text-red-700 dark:text-red-300" : "text-[var(--ordiq-muted)]",
+                        "mt-0.5 text-[11px] leading-snug xl:whitespace-nowrap",
+                        message?.kind === "error" || (passwordMissing && needsPassword && !password)
+                          ? "text-red-700 dark:text-red-300"
+                          : "text-[var(--ordiq-muted)]",
                       )}
                     >
                       {message?.kind === "error"
                         ? message.text
-                        : needsPassword
-                          ? "Sign-in and session changes need the current password."
-                          : "Changes take effect once saved."}
+                        : passwordMissing && needsPassword && !password
+                          ? "Enter the current password to save these changes."
+                          : needsPassword
+                            ? "Sign-in and session changes need the current password."
+                            : "Changes take effect once saved."}
                     </p>
                   </div>
                 )}
@@ -625,21 +634,32 @@ export function SettingsView() {
 
               {/* Password + actions */}
               {dirty && (
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center xl:shrink-0">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:shrink-0">
                   {needsPassword && (
-                    <div className="relative sm:flex-1 xl:w-52 xl:flex-none">
+                    <div className="relative sm:flex-1 lg:w-52 lg:flex-none">
                       <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--ordiq-muted)]" />
                       <input
+                        ref={passwordRef}
                         type="password"
                         autoComplete="current-password"
                         placeholder="Current password"
                         aria-label="Current password"
+                        aria-invalid={passwordMissing && !password}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setPasswordMissing(false);
+                          if (message?.kind === "error") setMessage(null);
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") void save();
                         }}
-                        className="h-9 w-full rounded-lg border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] pl-8 pr-3 text-xs text-[var(--ordiq-ink)] placeholder:text-[var(--ordiq-muted)] focus:border-[var(--ordiq-maroon)] focus:outline-none focus:ring-2 focus:ring-[var(--ordiq-maroon)]/15"
+                        className={cn(
+                          "h-9 w-full rounded-lg border bg-[var(--ordiq-surface)] pl-8 pr-3 text-xs text-[var(--ordiq-ink)] transition-colors placeholder:text-[var(--ordiq-muted)] focus:outline-none focus:ring-2",
+                          passwordMissing && !password
+                            ? "border-red-400 ring-2 ring-red-500/15 focus:border-red-500 focus:ring-red-500/20"
+                            : "border-[var(--ordiq-border)] focus:border-[var(--ordiq-maroon)] focus:ring-[var(--ordiq-maroon)]/15",
+                        )}
                       />
                     </div>
                   )}
@@ -657,7 +677,7 @@ export function SettingsView() {
                       size="sm"
                       className="h-9 flex-1 rounded-lg px-4 sm:flex-none"
                       onClick={() => void save()}
-                      disabled={saving || (needsPassword && !password)}
+                      disabled={saving}
                     >
                       {saving ? (
                         <>

@@ -11,7 +11,8 @@
     "test": "vitest run",
     "db:generate": "prisma generate",
     "seed:dean": "node --env-file=.env --experimental-strip-types prisma/seed-dean.ts",
-    "seed:test-data": "node prisma/seed-test-data.mjs"
+    "seed:test-data": "node prisma/seed-test-data.mjs",
+    "knowledge:build": "node scripts/build-knowledge.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.94",

@@ -1,0 +1,1427 @@
+{
+ "generatedAt": "2026-11-07T01:20:11.565Z",
+ "passageCount": 203,
+ "passages": [
+  {
+   "id": "40b66530325b",
+   "source": "ORDIQ In-App Guide",
+   "section": "ORDIQ In-App Guide",
+   "priority": 1.35,
+   "text": "This guide describes the ORDIQ screens as they are in the current release. When an older document describes a screen differently, this guide is the current one."
+  },
+  {
+   "id": "6a47d4b40c3d",
+   "source": "ORDIQ In-App Guide",
+   "section": "Layout of the app",
+   "priority": 1.35,
+   "text": "The top bar shows the MSEUF logo, the term selector, the light/dark theme switch, the notifications bell, the Dean's name and the sign-out button. Every page shows data for the term chosen in the term selector.\n\nThe left sidebar has: Dashboard, Faculty, Courses & Sections, Rooms & Laboratories, Schedules, Rules & Preferences, Reports, AI Assistant and Settings. On phones the sidebar opens from the menu button at the top left.\n\nThe AI chat panel opens from the round ORDIQ button at the bottom right of the screen. On very wide screens it docks beside the page; on smaller screens it slides in as a drawer."
+  },
+  {
+   "id": "71752934356b",
+   "source": "ORDIQ In-App Guide",
+   "section": "Signing in and signing out",
+   "priority": 1.35,
+   "text": "1. Open the sign-in page and enter the Dean username or email and the password.\n2. If two-factor authentication is on, enter the 6-digit code from Google Authenticator (or another authenticator app). The first sign-in shows a QR code to scan and a set of single-use recovery codes to keep offline.\n3. If two-factor authentication is turned off in Settings, the password alone signs in.\n\nAfter too many wrong attempts the account locks for a while (by default 5 attempts and 15 minutes; both are set in Settings). Only one Dean account exists; there is no sign-up page.\n\nTo sign out, press the sign-out icon at the top right and confirm. ORDIQ also signs the Dean out automatically after a period of inactivity and after the maximum session length (see Settings)."
+  },
+  {
+   "id": "c3b6d8e96336",
+   "source": "ORDIQ In-App Guide",
+   "section": "Settings page",
+   "priority": 1.35,
+   "text": "Settings holds the system-wide switches. Every saved change is recorded in the audit log.\n\n- Sign-in security: two-factor authentication (Google Authenticator) on or off; failed attempts before the account locks (3 to 10); lock duration (1 to 1,440 minutes). Turning two-factor off keeps the authenticator setup, so turning it back on needs no new QR scan.\n- Session & automatic sign-out: sign out after inactivity (auto-expire) on or off; inactivity limit (5 to 480 minutes, default 30); maximum session length (1 to 72 hours, default 12).\n- AI Assistant: turn the assistant on or off, and set the monthly token budget. When it is off, the chat button, the AI Assistant page and the AI menu item are hidden and nothing is sent to the AI provider.\n- Server configuration: read-only status of the web app, the scheduling engine and the AI provider.\n\nChanges appear in a save bar at the bottom of the page. Sign-in and session changes need the current password before they can be saved; the password box turns red if Save is pressed without it. \"Discard\" undoes unsaved edits and \"Restore recommended values\" resets the switches to the defaults."
+  },
+  {
+   "id": "85c2e3f387f9",
+   "source": "ORDIQ In-App Guide",
+   "section": "Dashboard",
+   "priority": 1.35,
+   "text": "The Dashboard shows four figures for the selected term: Classes Scheduled (out of the total meetings), Conflicts Detected, Faculty Load Balance (out of 100) and Room Utilization (percent). Hovering a figure shows how it is calculated. Below them are tabs for the schedule, faculty data, courses and sections, and rooms and labs."
+  },
+  {
+   "id": "e3eeb8420e3b",
+   "source": "ORDIQ In-App Guide",
+   "section": "Faculty page",
+   "priority": 1.35,
+   "text": "The Faculty page lists the engineering faculty with their employment type (Full-Time Permanent, Full-Time Contract, Part-Time or Visiting) and load limits. Opening a faculty member shows three areas:\n\n- Availability: days and time windows when the faculty member is available or unavailable, with a reason.\n- Qualifications: the subjects the faculty member can teach and whether they have taught them before.\n- Preferences: preferred days, times or rooms, with a weight and a source (faculty survey, set by the Dean, or learned from history)."
+  },
+  {
+   "id": "4647746966ac",
+   "source": "ORDIQ In-App Guide",
+   "section": "Courses & Sections page",
+   "priority": 1.35,
+   "text": "This page has three tabs: Subjects Catalog (subject codes, units, lecture and laboratory hours), Student Sections (section codes and their student counts only; ORDIQ keeps no individual student records) and Course Offerings (which subject is offered to which section this term). Programs and terms are managed here too."
+  },
+  {
+   "id": "25b9a93276a9",
+   "source": "ORDIQ In-App Guide",
+   "section": "Rooms & Laboratories page",
+   "priority": 1.35,
+   "text": "This page lists lecture rooms and laboratories with their type, capacity and availability, including maintenance periods when a room cannot be used."
+  },
+  {
+   "id": "f098391d8984",
+   "source": "ORDIQ In-App Guide",
+   "section": "Importing data",
+   "priority": 1.35,
+   "text": "Master data can be typed in on each page or imported from the official Excel workbook. An import is checked first (a dry run) and every row or column problem is reported in plain words before anything is saved."
+  },
+  {
+   "id": "c4c286eadc86",
+   "source": "ORDIQ In-App Guide",
+   "section": "Schedules page",
+   "priority": 1.35,
+   "text": "The Schedules page is the schedule workspace.\n\n- Generate (CP-SAT): creates three candidate schedules for the term: Candidate A (Balanced), Candidate B (Faculty First) and Candidate C (Student First). Every candidate is checked again by the independent validator against hard rules HC-01 to HC-15.\n- Views: an hourly schedule grid and day column cards, filterable by section, faculty, room and weekday.\n- Editing: a meeting can be moved to another day, time, room or faculty member. Each edit is validated right away and conflicts are shown with the rule explained in plain words. \"Undo Edit\" reverses the last change.\n- Check Schedule: runs the validator again on the open schedule.\n- Compare: shows the candidates side by side (quality score, conflicts, unscheduled meetings).\n- Waived exceptions: a waivable rule (HC-04 to HC-15) can be overridden with a written reason. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.\n- Accept Candidate: makes a candidate the official schedule. ORDIQ only accepts a candidate with zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives the previously accepted schedule for the term.\n- Start Schedule Revision: creates a new draft from the accepted schedule so it can be edited without touching the accepted version.\n- Import / Export: bring in an existing schedule or export the open one."
+  },
+  {
+   "id": "74729afca0f2",
+   "source": "ORDIQ In-App Guide",
+   "section": "Rules & Preferences page",
+   "priority": 1.35,
+   "text": "This page has five tabs:\n\n- Hard Constraints: the fixed rules HC-01 to HC-15 that every schedule must meet. The rules themselves cannot be edited; the \"Adjust In\" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).\n- Objective Weights: how much each soft preference (SC-01 to SC-16) counts when the solver builds candidates.\n- Dean Directives: extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is hard or soft.\n- Locked Fixed Blocks: time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.\n- Readiness Gate: the data readiness check (ISO/IEC 25012: completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed."
+  },
+  {
+   "id": "b7602d3fd2b3",
+   "source": "ORDIQ In-App Guide",
+   "section": "Reports page",
+   "priority": 1.35,
+   "text": "Reports can be downloaded as PDF or Excel (.xlsx): College Schedule Summary, Class Schedule per Section, per Faculty and per Room, Faculty Load Report, Room Utilization Report, Conflict and Exception Report, Validation & Unmet Preferences Report, Candidate Comparison, Revision History, and the Portal Encoding Export. The Portal Encoding Export is an Excel sheet laid out for the scheduling officer to encode manually; ORDIQ never connects to the university portal itself."
+  },
+  {
+   "id": "ac1bb1318e65",
+   "source": "ORDIQ In-App Guide",
+   "section": "AI Assistant page",
+   "priority": 1.35,
+   "text": "The AI Assistant page has four tabs:\n\n- Briefing: the term's figures (Scheduled, Conflicts, Unscheduled, Pending proposals), an optional AI summary, and a \"Needs attention\" list with links to where each issue is fixed.\n- Proposals: changes the assistant proposed. Each shows the meeting now and the proposed slot, the quality change and whether it creates a conflict. Only the Dean can Apply or Reject a proposal.\n- History: past conversations for the term, with search; a conversation can be continued in the chat panel or deleted.\n- Usage: the AI provider and model in use, the tokens used against the monthly budget, the estimated cost, and the faculty matching model with its accuracy and a Retrain button."
+  },
+  {
+   "id": "e9590a73f639",
+   "source": "ORDIQ In-App Guide",
+   "section": "Chat panel",
+   "priority": 1.35,
+   "text": "The chat panel answers questions about the selected term in English, Filipino or Taglish, using the live schedule data. The menu (three dots) starts a new conversation or opens a recent one. The assistant can check conflicts, summarize loads and room use, explain unscheduled classes, find alternative slots, recommend faculty, add directives, generate new candidates and propose a change. It cannot apply a proposal, accept a schedule, delete records, edit master data or create accounts; those stay with the Dean in the workspace. Faculty names are replaced with codes before anything is sent to the AI provider and restored in the reply."
+  },
+  {
+   "id": "5be195b61043",
+   "source": "ORDIQ In-App Guide",
+   "section": "Notifications",
+   "priority": 1.35,
+   "text": "The bell at the top shows how many urgent or warning items need attention for the selected term: data problems that block generation, no schedule yet, conflicts, unscheduled classes, faculty overloads and proposals waiting for review. Opening the bell lists each item with a link to fix it. \"Mark all as read\" clears the count; an item comes back as unread if it changes, and disappears once the problem is resolved. Read status is kept per browser."
+  },
+  {
+   "id": "c992cb08cd1d",
+   "source": "ORDIQ FAQ",
+   "section": "ORDIQ FAQ",
+   "priority": 1.3,
+   "text": "Short answers to the questions the Dean asks most. Each entry lists other ways the question is asked, in English, Filipino and Taglish."
+  },
+  {
+   "id": "1c5b2e90c8ea",
+   "source": "ORDIQ FAQ",
+   "section": "How do I sign in to ORDIQ?",
+   "priority": 1.3,
+   "text": "Also asked: paano mag-login, how to log in, sign in steps.\n\nEnter the Dean username or email and the password on the sign-in page. If two-factor authentication is on, enter the 6-digit code from the authenticator app next. Only the Dean has an account; there is no sign-up page."
+  },
+  {
+   "id": "66ffbf5c9a74",
+   "source": "ORDIQ FAQ",
+   "section": "What if I lose my phone with Google Authenticator?",
+   "priority": 1.3,
+   "text": "Also asked: nawala ang phone, lost authenticator, cannot get the 6-digit code, recovery code.\n\nOn the code step of sign-in, choose \"Use a recovery code\" and enter one of the single-use recovery codes shown when two-factor was first set up. Each recovery code works once. If no recovery codes are left, the system administrator can reset the Dean account with the seed script described in the Operations manual."
+  },
+  {
+   "id": "b3b692b4801e",
+   "source": "ORDIQ FAQ",
+   "section": "How do I turn two-factor authentication on or off?",
+   "priority": 1.3,
+   "text": "Also asked: paano i-off ang 2FA, i-on ang Google Authenticator, disable TOTP, enable authenticator.\n\nOpen Settings, go to Sign-in security, and switch \"Two-factor authentication (Google Authenticator)\". Saving needs the current password. Turning it off keeps the authenticator setup, so turning it back on later needs no new QR scan. With it off, anyone who learns the password can sign in."
+  },
+  {
+   "id": "de4be08ef448",
+   "source": "ORDIQ FAQ",
+   "section": "Why is the account locked?",
+   "priority": 1.3,
+   "text": "Also asked: na-lock ang account, locked out, too many attempts, maling password.\n\nAfter a number of wrong sign-in attempts in a row the account locks for a set time. The defaults are 5 attempts and 15 minutes. Wait for the lock to end and try again. Both numbers are set in Settings › Sign-in security (3 to 10 attempts, 1 to 1,440 minutes)."
+  },
+  {
+   "id": "30ec10900eda",
+   "source": "ORDIQ FAQ",
+   "section": "Why was I signed out automatically?",
+   "priority": 1.3,
+   "text": "Also asked: bakit na-logout, auto logout, session expired, auto-expire, kusang nag-sign out.\n\nORDIQ signs the Dean out after a period of inactivity (default 30 minutes) and after the maximum session length (default 12 hours). Both are set in Settings › Session & automatic sign-out, where the inactivity sign-out can also be turned off."
+  },
+  {
+   "id": "ad2157440680",
+   "source": "ORDIQ FAQ",
+   "section": "Why does saving settings ask for my password?",
+   "priority": 1.3,
+   "text": "Also asked: bakit hinihingi ang password sa settings, current password required.\n\nChanges to sign-in security and automatic sign-out protect the account, so ORDIQ asks for the current password before saving them. AI Assistant settings save without it. Every saved change is recorded in the audit log."
+  },
+  {
+   "id": "c2e85fae3845",
+   "source": "ORDIQ FAQ",
+   "section": "How do I turn off the AI Assistant?",
+   "priority": 1.3,
+   "text": "Also asked: i-disable ang AI, patayin ang chatbot, turn off chat.\n\nOpen Settings › AI Assistant and switch it off, then save. The chat button, the AI Assistant page and its sidebar item disappear and nothing is sent to the AI provider. The rest of ORDIQ keeps working."
+  },
+  {
+   "id": "cb4324382114",
+   "source": "ORDIQ FAQ",
+   "section": "What is the monthly token budget?",
+   "priority": 1.3,
+   "text": "Also asked: token limit, AI budget, gaano karami ang tokens.\n\nIt caps how much the AI Assistant can use each month. When it is used up, the assistant falls back to ORDIQ's built-in answers until the next month. The budget is set in Settings › AI Assistant and usage is shown on AI Assistant › Usage."
+  },
+  {
+   "id": "8fd7c8c945c4",
+   "source": "ORDIQ FAQ",
+   "section": "How do I create a schedule for the term?",
+   "priority": 1.3,
+   "text": "Also asked: paano gumawa ng schedule, generate schedule steps, saan magsisimula, where do I start for a new term, first steps.\n\n1. Make sure the term's data is complete: faculty, subjects, sections, offerings and rooms. The Readiness Gate on Rules & Preferences shows what is missing.\n2. Open Schedules and press Generate (CP-SAT). ORDIQ creates three candidates: Balanced, Faculty First and Student First.\n3. Review and compare them, fix any conflicts or unscheduled meetings, then accept one."
+  },
+  {
+   "id": "df1f7f9f771f",
+   "source": "ORDIQ FAQ",
+   "section": "What is the difference between Balanced, Faculty First and Student First?",
+   "priority": 1.3,
+   "text": "Also asked: candidate A B C, ano ang pinagkaiba ng candidates, weight profiles.\n\nThey are three candidate schedules built from the same data with different weights on the soft preferences. Candidate A (Balanced) keeps the weights moderate across faculty and student preferences. Candidate B (Faculty First) weighs faculty preferred days and times (SC-01), load balance (SC-02), preferred rooms (SC-04) and faculty fit (SC-07) more heavily. Candidate C (Student First) weighs fewer gaps (SC-03), an even spread across the week (SC-05), no evening classes for lower years (SC-09), lower-year priority (SC-10), no late laboratories (SC-11) and spreading major subjects (SC-12) more heavily. All three must meet the same hard rules."
+  },
+  {
+   "id": "7ef0be77a777",
+   "source": "ORDIQ FAQ",
+   "section": "Why are some classes unscheduled?",
+   "priority": 1.3,
+   "text": "Also asked: bakit may unscheduled, hindi nailagay na klase, unplaced meetings.\n\nWhen a meeting cannot be placed without breaking a hard rule, ORDIQ leaves it unscheduled and states the reason instead of failing the whole schedule. Common reasons are no qualified faculty available, no free room of the right type or size, or the section's time already taken. The Schedules page and the assistant list each unscheduled meeting with its reason."
+  },
+  {
+   "id": "1a8588ab31b3",
+   "source": "ORDIQ FAQ",
+   "section": "How do I fix a conflict?",
+   "priority": 1.3,
+   "text": "Also asked: paano ayusin ang conflict, resolve violation, may banggaan sa schedule.\n\nOpen the schedule on the Schedules page and move the meeting to another day, time, room or faculty member; each edit is checked right away. The assistant can also find conflict-free alternative slots or propose a change for the Dean to apply. If the rule is waivable (HC-04 to HC-15) and the situation is intended, record a waived exception with a written reason."
+  },
+  {
+   "id": "32217f978911",
+   "source": "ORDIQ FAQ",
+   "section": "How do I accept a schedule?",
+   "priority": 1.3,
+   "text": "Also asked: paano i-accept ang schedule, approve the candidate, gawing official.\n\nOn the Schedules page, open the candidate and press Accept Candidate, then confirm. ORDIQ accepts it only when it has zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives any previously accepted schedule for the term. \"Accepted\" means approved for portal encoding; university approval happens outside ORDIQ."
+  },
+  {
+   "id": "9a2de855f165",
+   "source": "ORDIQ FAQ",
+   "section": "Why can't I accept the schedule?",
+   "priority": 1.3,
+   "text": "Also asked: ayaw ma-accept, hindi ma-accept ang candidate, accept failed.\n\nORDIQ blocks acceptance while the candidate still has unwaived hard conflicts or unscheduled meetings. Fix or waive the conflicts (only HC-04 to HC-15 can be waived) and place the remaining meetings, then accept again."
+  },
+  {
+   "id": "03f3f4ad460d",
+   "source": "ORDIQ FAQ",
+   "section": "Can the AI Assistant accept a schedule or apply a change?",
+   "priority": 1.3,
+   "text": "Also asked: kaya ba ng chatbot mag-accept, can the AI apply proposals.\n\nNo. The assistant can check, explain, generate candidates, add directives and propose a change, but it has no way to apply a proposal, accept a schedule, delete records or edit master data. The Dean does those in the workspace, and proposals are applied or rejected on AI Assistant › Proposals."
+  },
+  {
+   "id": "c787c5b7ad3f",
+   "source": "ORDIQ FAQ",
+   "section": "How do I change an accepted schedule?",
+   "priority": 1.3,
+   "text": "Also asked: paano mag-revise, edit accepted schedule, may babaguhin sa accepted.\n\nOpen the accepted schedule and press Start Schedule Revision. ORDIQ creates a new draft version from it, so edits never change the accepted version. Accept the revision when it is ready."
+  },
+  {
+   "id": "bca1295f0bf1",
+   "source": "ORDIQ FAQ",
+   "section": "How do I undo an edit?",
+   "priority": 1.3,
+   "text": "Also asked: i-undo, balik sa dati, revert change.\n\nOn the Schedules page, press Undo Edit to reverse the last change to the open schedule."
+  },
+  {
+   "id": "44df9d0ec182",
+   "source": "ORDIQ FAQ",
+   "section": "What is a waived exception?",
+   "priority": 1.3,
+   "text": "Also asked: waive, documented exception, override a rule.\n\nA waived exception lets a waivable hard rule (HC-04 to HC-15) be broken on purpose, with a written reason that is kept in the record and shown in the Conflict and Exception Report. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived."
+  },
+  {
+   "id": "80773d704c8b",
+   "source": "ORDIQ FAQ",
+   "section": "What is a Dean directive?",
+   "priority": 1.3,
+   "text": "Also asked: ano ang directive, add a rule for the next run.\n\nA directive is an extra rule the Dean adds for the next generation run. The types are: keep a faculty member off a day, a time window for a faculty member or a section, avoid a room, require a room, pin a meeting, assign a faculty member, and change a preference weight. Each is hard (must hold) or soft (preferred). Directives are on Rules & Preferences › Dean Directives, and the assistant can add one from a chat request. They do not change existing schedules until candidates are generated again."
+  },
+  {
+   "id": "e239ca98ab53",
+   "source": "ORDIQ FAQ",
+   "section": "What are locked fixed blocks?",
+   "priority": 1.3,
+   "text": "Also asked: fixed blocks, GenEd, PATHFIT, NSTP, klase ng ibang department.\n\nFixed blocks are time slots a section already uses for classes the college does not schedule, such as General Education, PATHFIT, NSTP or classes in other buildings. ORDIQ keeps those sections free at those times (HC-15). They are managed on Rules & Preferences › Locked Fixed Blocks."
+  },
+  {
+   "id": "8892f317030f",
+   "source": "ORDIQ FAQ",
+   "section": "What does the Readiness Gate check?",
+   "priority": 1.3,
+   "text": "Also asked: data readiness, kulang na data, ready na ba mag-generate, ISO 25012.\n\nIt checks the term's data for completeness, accuracy, consistency and currentness (ISO/IEC 25012) before generation. Critical gaps block generation until they are fixed, for example a term with no offerings, a subject with no qualified faculty, a section larger than every suitable room, or more required hours than the faculty or rooms can cover. Warnings, such as missing faculty availability or an outdated curriculum record, do not block."
+  },
+  {
+   "id": "1c87e3593255",
+   "source": "ORDIQ FAQ",
+   "section": "How do I import data from Excel?",
+   "priority": 1.3,
+   "text": "Also asked: paano mag-import, upload workbook, Excel template.\n\nUse the Import button on the data page and choose the completed ORDIQ data-gathering workbook (.xlsx). ORDIQ checks the file first and lists every problem by row and column in plain words; nothing is saved until the check passes."
+  },
+  {
+   "id": "405c22c19b06",
+   "source": "ORDIQ FAQ",
+   "section": "Where do I set when a faculty member is available?",
+   "priority": 1.3,
+   "text": "Also asked: availability ng faculty, hindi pwede ang guro sa araw na ito.\n\nOpen Faculty, select the faculty member and use Availability to add available or unavailable days and time windows with a reason. HC-06 keeps classes inside them."
+  },
+  {
+   "id": "b45f364ad147",
+   "source": "ORDIQ FAQ",
+   "section": "Where do I set what subjects a faculty member can teach?",
+   "priority": 1.3,
+   "text": "Also asked: qualifications, specialization, anong subject ang kaya ng guro.\n\nOpen Faculty, select the faculty member and use Qualifications to add subjects. HC-09 only assigns faculty to subjects they are qualified for. The faculty matching model also uses this to recommend faculty."
+  },
+  {
+   "id": "c463c923046f",
+   "source": "ORDIQ FAQ",
+   "section": "Where do I change room capacity or type?",
+   "priority": 1.3,
+   "text": "Also asked: kapasidad ng kwarto, room size, lecture or laboratory.\n\nOpen Rooms & Laboratories and edit the room. Capacity is checked by HC-04 and the room type (lecture or laboratory) by HC-05."
+  },
+  {
+   "id": "fe7a52d2c94e",
+   "source": "ORDIQ FAQ",
+   "section": "Does ORDIQ keep student records?",
+   "priority": 1.3,
+   "text": "Also asked: may student data ba, individual students, student ID.\n\nNo. ORDIQ stores only the number of students per section (decision D-21). There are no individual student names, IDs, grades or schedules anywhere in the system."
+  },
+  {
+   "id": "d33bff7068a7",
+   "source": "ORDIQ FAQ",
+   "section": "Are faculty names sent to the AI provider?",
+   "priority": 1.3,
+   "text": "Also asked: privacy ng faculty, pinapadala ba ang pangalan sa AI.\n\nNo. Before anything leaves ORDIQ, faculty names are replaced with codes such as ALIAS-001, and the real names are put back only in the reply shown to the Dean. Contact details, notes and raw imports are never sent."
+  },
+  {
+   "id": "a877ee82aaf7",
+   "source": "ORDIQ FAQ",
+   "section": "How do I export the schedule for the university portal?",
+   "priority": 1.3,
+   "text": "Also asked: paano i-export, portal encoding, Excel para sa portal.\n\nOpen Reports and download the Portal Encoding Export (Excel). It is laid out for the scheduling officer to encode manually. ORDIQ never connects to the university portal directly."
+  },
+  {
+   "id": "4f7bf48f3098",
+   "source": "ORDIQ FAQ",
+   "section": "What reports are available?",
+   "priority": 1.3,
+   "text": "Also asked: anong reports, download PDF, print schedule.\n\nCollege Schedule Summary; Class Schedule per Section, per Faculty and per Room; Faculty Load Report; Room Utilization Report; Conflict and Exception Report; Validation & Unmet Preferences Report; Candidate Comparison; Revision History; and the Portal Encoding Export. Each downloads as PDF or Excel from the Reports page."
+  },
+  {
+   "id": "ce1fbeeb74de",
+   "source": "ORDIQ FAQ",
+   "section": "How is Faculty Load Balance calculated?",
+   "priority": 1.3,
+   "text": "Also asked: load balance score, paano kinukuha ang faculty load balance.\n\nIt is 100 minus the spread (standard deviation) of faculty load utilization, where each faculty member's utilization is assigned units divided by their regular maximum units. 100 means every faculty member carries the same share of their limit; lower means loads are uneven. It appears on the Dashboard; hovering the figure shows the formula."
+  },
+  {
+   "id": "08d22cc95858",
+   "source": "ORDIQ FAQ",
+   "section": "What does \"optimized\" mean in ORDIQ?",
+   "priority": 1.3,
+   "text": "Also asked: best schedule ba ito, optimal, pinakamaganda ba.\n\nThe solver minimizes a weighted sum of soft-preference penalties, with a large penalty for every unscheduled meeting. \"Proven optimal\" means no better schedule exists for those weights; \"best found\" means the time limit ended the search. It does not mean a global best for every possible priority."
+  },
+  {
+   "id": "89f486819a9c",
+   "source": "ORDIQ FAQ",
+   "section": "How does the faculty recommendation work?",
+   "priority": 1.3,
+   "text": "Also asked: ML, machine learning, faculty matching model, recommended faculty.\n\nA logistic regression model scores how well each qualified faculty member fits a subject, using past assignments, qualifications and preferences. With little history it falls back to text similarity between subject and expertise. It only recommends; it never overrides a hard rule. The model can be retrained on AI Assistant › Usage."
+  },
+  {
+   "id": "d18832bae8c7",
+   "source": "ORDIQ FAQ",
+   "section": "What do the notifications mean?",
+   "priority": 1.3,
+   "text": "Also asked: bell, notification count, needs attention.\n\nThe bell counts urgent and warning items for the selected term: data problems that block generation, no schedule yet, conflicts, unscheduled classes, faculty overloads and proposals awaiting review. Each item links to where it is fixed. \"Mark all as read\" clears the count until an item changes."
+  },
+  {
+   "id": "5e9fd34b0dc5",
+   "source": "ORDIQ FAQ",
+   "section": "Who can use ORDIQ?",
+   "priority": 1.3,
+   "text": "Also asked: sino ang pwedeng gumamit, coordinator account, multiple users.\n\nOnly the Dean signs in. Program coordinators and the scheduling officer work from the exported PDF and Excel reports. There is no sign-up page; the account is created by the administrator."
+  },
+  {
+   "id": "21287f4a7cda",
+   "source": "ORDIQ FAQ",
+   "section": "What is ORDIQ?",
+   "priority": 1.3,
+   "text": "Also asked: ano ang ORDIQ, what does the system do, purpose.\n\nORDIQ (\"Order Meets Intelligence\") is the class scheduling and resource allocation system of the MSEUF College of Engineering. It builds candidate schedules with a constraint solver, checks every schedule with an independent validator, recommends faculty with machine learning, and offers a chat assistant in English, Filipino and Taglish. The Dean makes every final decision."
+  },
+  {
+   "id": "43a6e8c4e226",
+   "source": "ORDIQ FAQ",
+   "section": "What are the hard constraints?",
+   "priority": 1.3,
+   "text": "Also asked: list the hard rules, mandatory rules, HC list, ano ang mga hard constraints.\n\nEvery schedule must meet fifteen hard rules. HC-01 a faculty member teaches one class at a time. HC-02 a room hosts one class at a time. HC-03 a section attends one class at a time. HC-04 room capacity fits the section. HC-05 room type matches (lecture or laboratory). HC-06 faculty only when available. HC-07 faculty within maximum load. HC-08 all required meetings and hours scheduled. HC-09 faculty qualified for the subject. HC-10 rooms only when available. HC-11 inside allowed hours and outside official breaks. HC-12 required Dean directives respected. HC-13 required duration and meeting pattern. HC-14 calendar and maintenance restrictions. HC-15 sections clear of their fixed blocks. HC-01 to HC-03 can never be waived; the rest can be waived with a written reason. They are listed on Rules & Preferences › Hard Constraints."
+  },
+  {
+   "id": "900ec06e7c7b",
+   "source": "ORDIQ FAQ",
+   "section": "What languages does the assistant understand?",
+   "priority": 1.3,
+   "text": "Also asked: Tagalog, Filipino, Taglish, English, pwede bang mag-Tagalog.\n\nThe AI Assistant understands and replies in English, Filipino and Taglish, and answers in the language of the question."
+  },
+  {
+   "id": "95762b454fd2",
+   "source": "ORDIQ FAQ",
+   "section": "HC-01: A faculty member teaches one class at a time",
+   "priority": 1.3,
+   "text": "Also asked: faculty double booking, sabay na klase ng guro.\n\nA faculty member cannot have two classes at the same time. Never waivable. Fix it on the Schedules page by moving one meeting or assigning another faculty member."
+  },
+  {
+   "id": "eb9cc1c3838f",
+   "source": "ORDIQ FAQ",
+   "section": "HC-02: A room hosts one class at a time",
+   "priority": 1.3,
+   "text": "Also asked: room double booking, dalawang klase sa isang kwarto.\n\nA room cannot hold two classes at the same time. Never waivable. Fix it on the Schedules page by moving one meeting to another time or room."
+  },
+  {
+   "id": "24986cec46de",
+   "source": "ORDIQ FAQ",
+   "section": "HC-03: A section attends one class at a time",
+   "priority": 1.3,
+   "text": "Also asked: section double booking, sabay na klase ng section.\n\nA section cannot have two classes at the same time. Never waivable. Fix it on the Schedules page."
+  },
+  {
+   "id": "b13b863ea4da",
+   "source": "ORDIQ FAQ",
+   "section": "HC-04: Room capacity fits the section",
+   "priority": 1.3,
+   "text": "Also asked: masyadong maliit ang kwarto, capacity.\n\nThe room must seat the section's student count. Waivable with a reason. Adjust room capacity on Rooms & Laboratories or section counts on Courses & Sections."
+  },
+  {
+   "id": "bb957195793e",
+   "source": "ORDIQ FAQ",
+   "section": "HC-05: Room type matches the requirement",
+   "priority": 1.3,
+   "text": "Also asked: laboratory sa lecture room, room type.\n\nLaboratory meetings need a laboratory and lecture meetings a lecture room. Waivable with a reason. Room types are set on Rooms & Laboratories."
+  },
+  {
+   "id": "c2a27669d90a",
+   "source": "ORDIQ FAQ",
+   "section": "HC-06: Faculty are scheduled only when available",
+   "priority": 1.3,
+   "text": "Also asked: faculty availability conflict.\n\nClasses must fall inside the faculty member's available time. Waivable with a reason. Availability is set on the Faculty page."
+  },
+  {
+   "id": "5e992daa5979",
+   "source": "ORDIQ FAQ",
+   "section": "HC-07: Faculty stay within maximum teaching load",
+   "priority": 1.3,
+   "text": "Also asked: overload, sobra ang units.\n\nA faculty member's units may not exceed the maximum for their employment type. Waivable with a reason. Load limits are on the Faculty page."
+  },
+  {
+   "id": "79bc7bc8c5a1",
+   "source": "ORDIQ FAQ",
+   "section": "HC-08: All required meetings and contact hours are scheduled",
+   "priority": 1.3,
+   "text": "Also asked: kulang ang oras, missing meetings.\n\nEvery offering gets all its required meetings and contact hours. Waivable with a reason. Offerings are on Courses & Sections."
+  },
+  {
+   "id": "b8c875c5a5e8",
+   "source": "ORDIQ FAQ",
+   "section": "HC-09: Faculty specialization matches the subject",
+   "priority": 1.3,
+   "text": "Also asked: hindi qualified ang guro.\n\nFaculty teach only subjects they are qualified for. Waivable with a reason. Qualifications are on the Faculty page."
+  },
+  {
+   "id": "85c11f72fcee",
+   "source": "ORDIQ FAQ",
+   "section": "HC-10: Rooms are used only when available",
+   "priority": 1.3,
+   "text": "Also asked: room not available.\n\nClasses may use a room only during its available times. Waivable with a reason. Room availability is on Rooms & Laboratories."
+  },
+  {
+   "id": "c14b23a64b39",
+   "source": "ORDIQ FAQ",
+   "section": "HC-11: Classes stay inside allowed periods and avoid official breaks",
+   "priority": 1.3,
+   "text": "Also asked: lunch break, sobrang aga o gabi.\n\nClasses must fall within the term's allowed hours and avoid official breaks. Waivable with a reason. Term hours are on Courses & Sections."
+  },
+  {
+   "id": "3cc8d7cf8af9",
+   "source": "ORDIQ FAQ",
+   "section": "HC-12: Required Dean directives are respected",
+   "priority": 1.3,
+   "text": "Also asked: hard directive.\n\nDirectives marked hard must hold in every candidate. Waivable with a reason. Directives are on Rules & Preferences › Dean Directives."
+  },
+  {
+   "id": "9c59fba2ad23",
+   "source": "ORDIQ FAQ",
+   "section": "HC-13: Each class follows its required duration and meeting pattern",
+   "priority": 1.3,
+   "text": "Also asked: meeting pattern, duration.\n\nEach meeting keeps its required length and day pattern. Waivable with a reason. Patterns come from the offering on Courses & Sections."
+  },
+  {
+   "id": "eaecd9d053ca",
+   "source": "ORDIQ FAQ",
+   "section": "HC-14: Calendar and maintenance restrictions are respected",
+   "priority": 1.3,
+   "text": "Also asked: maintenance, holiday.\n\nRooms under maintenance and restricted calendar periods are not used. Waivable with a reason. Maintenance periods are on Rooms & Laboratories."
+  },
+  {
+   "id": "dc290adbb687",
+   "source": "ORDIQ FAQ",
+   "section": "HC-15: Sections stay clear of their fixed blocks",
+   "priority": 1.3,
+   "text": "Also asked: GenEd conflict, PATHFIT conflict.\n\nA section's locked fixed blocks (classes run by other departments) stay free. Waivable with a reason. Fixed blocks are on Rules & Preferences › Locked Fixed Blocks."
+  },
+  {
+   "id": "627e128c68cd",
+   "source": "ORDIQ FAQ",
+   "section": "Soft preferences SC-01 to SC-08",
+   "priority": 1.3,
+   "text": "Also asked: soft constraints, preferences, objective weights.\n\nSC-01 honor faculty preferred days and times. SC-02 balance teaching loads. SC-03 minimize vacant gaps for faculty and sections. SC-04 use preferred rooms. SC-05 distribute classes evenly across the week. SC-06 minimize changes from the existing schedule when regenerating. SC-07 prefer faculty with a high ML fit score. SC-08 use rooms efficiently, such as not putting 15 students in a 40-seat room. Their weights are set on Rules & Preferences › Objective Weights; a preference counts only once it is approved."
+  },
+  {
+   "id": "48bfb8615e3c",
+   "source": "ORDIQ FAQ",
+   "section": "Soft preferences SC-09 to SC-16",
+   "priority": 1.3,
+   "text": "Also asked: student preferences, survey preferences.\n\nFrom the manuscript and student survey: SC-09 avoid evening classes for lower-year sections. SC-10 give lower-year sections priority. SC-11 keep laboratories away from late hours. SC-12 spread major and mathematics subjects across days. SC-13 keep a break between long back-to-back classes. SC-14 avoid a late class followed by an early class the next day. SC-15 place PATHFIT late in the day or before a vacant period. SC-16 limit very early starts. Each needs approval before it counts, and some pull against each other."
+  },
+  {
+   "id": "75edd77b3785",
+   "source": "Dean User Guide",
+   "section": "Dean User Guide",
+   "priority": 1.15,
+   "text": "System: ORDIQ (\"Order Meets Intelligence\")  \nTarget Users: Dean of the College of Engineering (System Operator) & Scheduling Officer (Portal Encoder)"
+  },
+  {
+   "id": "7f5b58e604ec",
+   "source": "Dean User Guide",
+   "section": "1. Logging In (Dean-Only Access)",
+   "priority": 1.15,
+   "text": "1. Navigate to `/login`.\n2. Enter your Dean email (`[email removed]`), password, and the 6-digit TOTP Authenticator code from your mobile authenticator app.\n3. Keep your single-use recovery codes in a secure offline location."
+  },
+  {
+   "id": "d9045443757b",
+   "source": "Dean User Guide",
+   "section": "2. Step-by-Step Scheduling Workflow › Step 1: Import or Update Term Master Data",
+   "priority": 1.15,
+   "text": "1. Open Faculty, Courses & Sections, Rooms & Laboratories, or Rules & Preferences from the left sidebar.\n2. Download the official template (`templates/ordiq-data-gathering-workbook.xlsx`) or upload your completed `.xlsx` workbook.\n3. ORDIQ runs a dry-run validation first, reporting any row/column errors in plain language before committing atomically.\n4. Review the ISO/IEC 25012 Data Readiness Card (Completeness, Accuracy, Consistency, Currentness). Critical gaps block schedule generation until resolved."
+  },
+  {
+   "id": "969987d58b8b",
+   "source": "Dean User Guide",
+   "section": "2. Step-by-Step Scheduling Workflow › Step 2: Check Existing Schedule or Generate Candidates",
+   "priority": 1.15,
+   "text": "1. Open Schedules (`/schedules`).\n2. Click Generate 3 Candidates (CP-SAT) to produce three optimized candidate schedules:\n   - Candidate A — Balanced (`BALANCED`)\n   - Candidate B — Faculty First (`FACULTY_FIRST`)\n   - Candidate C — Student First (`STUDENT_FIRST`)\n3. Every candidate is independently re-validated by the Python validator against `HC-01` through `HC-15`."
+  },
+  {
+   "id": "2633c880a108",
+   "source": "Dean User Guide",
+   "section": "2. Step-by-Step Scheduling Workflow › Step 3: Review, Edit, Waive, or Compare",
+   "priority": 1.15,
+   "text": "1. Switch between the Spreadsheet Grid, Weekly Timetable Calendar (filtered by Section, Faculty, or Room), and Side-by-Side Candidate Comparison.\n2. Click Pin/Unpin on any entry you want to lock in place before regenerating.\n3. If a waivable rule (`HC-04` to `HC-15`) requires an administrative override, record a Documented Exception (`D-18`) with a written justification. Core double-booking rules (`HC-01` Faculty, `HC-02` Room, `HC-03` Section) can never be waived.\n4. Click Accept Candidate for Portal Encoding once `0` unwaived hard conflicts and `0` unscheduled meetings remain."
+  },
+  {
+   "id": "6f4b595df58a",
+   "source": "Dean User Guide",
+   "section": "3. Using the Conversational AI Assistant (English, Filipino & Taglish)",
+   "priority": 1.15,
+   "text": "Open the persistent right panel or `/assistant` to give instructions in English, Filipino, or Taglish:\n- *\"Check schedule conflicts for Engr. Maria Clara Santos\"*\n- *\"Kumusta ang room utilization at lab usage natin?\"*\n- *\"Sino ang bagay magturo ng CPE-101 ayon sa specialization?\"*\n- *\"Huwag bigyan ng early class si Engr. Maria Clara Santos tuwing Lunes\"*\n- *\"Propose a change to move offering OFF-CPE-1A-CPE101 to Wednesday\"*\n\n> Important Boundary: The AI Assistant can never apply a proposal, accept a schedule, or delete data on its own. When it creates a Change Proposal Card, click Apply or Reject to confirm."
+  },
+  {
+   "id": "9d834ccb80eb",
+   "source": "Dean User Guide",
+   "section": "4. Exporting Reports & Manual Portal Encoding (`Q-14`)",
+   "priority": 1.15,
+   "text": "1. Open Reports (`/reports`).\n2. Export printable PDF or Excel (`.xlsx`) reports per Section, Faculty, Room, Load Summary, Conflicts & Exceptions, or Candidate Comparison.\n3. For the Scheduling Officer: export Portal Encoding Export (`.xlsx`), which formats `TermCode`, `SectionCode`, `SubjectCode`, `Component`, `DayCode`, `StartTime`, `EndTime`, `RoomCode`, and `FacultyName` for manual encoding into the MSEUF portal."
+  },
+  {
+   "id": "43fd64ebedea",
+   "source": "Architecture, Constraints & Known Limitations",
+   "section": "2. Technology Stack",
+   "priority": 1.1,
+   "text": "| Layer | Technology | Purpose |\n|---|---|---|\n| Web Frontend & API | Next.js 15 (App Router), React 19, TypeScript 5.8 (strict), Tailwind CSS v4, shadcn/ui, TanStack Query | Workspace grids, timetable calendar, dashboard, reports, auth & API routes |\n| Database & ORM | PostgreSQL 16 + Prisma ORM | Relational persistence, optimistic locking (`Schedule.version`), append-only `AuditLog` |\n| Optimization & Validation Engine | Python 3.12, FastAPI, Pydantic v2, Google OR-Tools CP-SAT (`>=9.11`) | Stateless constraint validation (`POST /v1/validate`), multi-profile solving (`POST /v1/solve`), alternative slot search (`POST /v1/alternatives`) |\n| Machine Learning | Python `scikit-learn` (`LogisticRegression`) + local token/character 3-gram embeddings (`D-11`, `D-12`) | Faculty–subject fit ranking (`POST /v1/ml/recommend`) and Laplace-smoothed preference learning |\n| Security & Exports | Argon2id, `otpauth` (TOTP 2FA), AES-256-GCM, ExcelJS, PDF 1.4 generator | Dean-only security, `.xlsx` import/export pipeline, printable PDF reports |"
+  },
+  {
+   "id": "4275472ff366",
+   "source": "Architecture, Constraints & Known Limitations",
+   "section": "3. Implemented Constraint Catalogue › Hard Constraints (`HC-01` to `HC-15`)",
+   "priority": 1.1,
+   "text": "- Never Waivable (`D-18`):\n  - `HC-01`: No faculty double-booking\n  - `HC-02`: No room double-booking\n  - `HC-03`: No student section double-booking\n- Waivable Only With Documented Reason (`D-18`):\n  - `HC-04`: Room capacity >= section student count\n  - `HC-05`: Room type matches lecture/lab requirement\n  - `HC-06`: Faculty is qualified for the assigned subject\n  - `HC-07`: Faculty and room are available during the scheduled slot\n  - `HC-08`: Offering weekly meeting count and duration match subject contact hours\n  - `HC-09`: Faculty total teaching load within regular/overload limit\n  - `HC-10`: Meeting falls within official daily teaching window and respects lunch/break rules\n  - `HC-11`: Section respects external `FixedBlock` commitments (PATHFIT, GenEd, `D-23`)\n  - `HC-12`: Hard Dean directives (`Directive.hardness == HARD`) are satisfied\n  - `HC-13`: Paired lecture/lab or MWF/TTh pattern consistency\n  - `HC-14`: Room maintenance/calendar restrictions respected\n  - `HC-15`: Combined-class sections synchronized to identical faculty, room, day, and time"
+  },
+  {
+   "id": "e9d49ee9a4f2",
+   "source": "Architecture, Constraints & Known Limitations",
+   "section": "3. Implemented Constraint Catalogue › Soft Objectives (`SC-01` to `SC-16`)",
+   "priority": 1.1,
+   "text": "- `SC-01` Approved faculty day/time/room preferences, `SC-02` Compact section schedules, `SC-03` Faculty teaching load balance, `SC-04` Preferred room assignment, `SC-05` Balanced daily distribution, `SC-06` Regeneration stability (minimal perturbation from prior schedule), `SC-07` ML faculty–subject fit score, `SC-08` Avoid late evening classes, `SC-09` Soft Dean directives, `SC-10` Lab immediately following lecture, `SC-11` Distinct preparations cap, `SC-12` Part-time faculty day consolidation, `SC-13` Room Utilization balance, `SC-14` Avoid 3+ consecutive lecture hours without break, `SC-15` Year-level cohort alignment, `SC-16` Minimize section room-switching."
+  },
+  {
+   "id": "fef478144c5b",
+   "source": "Architecture, Constraints & Known Limitations",
+   "section": "4. Known Limitations & Future Enhancements (For Thesis Manuscript)",
+   "priority": 1.1,
+   "text": "1. Section-Level Representation (`D-21`): ORDIQ models student cohorts at the block/section level (`Section.studentCount`). Individual irregular students taking cross-year subjects are outside scope and are recommended under *Future Enhancements*.\n2. Single-Semester Historical Baseline: With one semester of historical data (`1st Sem A.Y. 2026–2027`), the ML module uses cold-start local text similarity combined with regularized logistic regression and improves incrementally as future semesters are accepted.\n3. Standalone Decision-Support Boundary: ORDIQ produces non-official candidate schedules and portal-ready Excel exports; official registration and student release remain in the MSEUF portal after Registrar, Audit, and OVPAR approval."
+  },
+  {
+   "id": "4c1072d39313",
+   "source": "Privacy & Security Notes",
+   "section": "Privacy & Security Notes",
+   "priority": 1.1,
+   "text": "System: ORDIQ (\"Order Meets Intelligence\")  \nQuotation Reference: `Q-2026-002`  \nCompliance Alignment: Philippine Data Privacy Act of 2012 (RA 10173), ISO/IEC 25010, ISO/IEC 25012"
+  },
+  {
+   "id": "9e45eb14f662",
+   "source": "Privacy & Security Notes",
+   "section": "1. Personal Data Minimization (`D-21`)",
+   "priority": 1.1,
+   "text": "1. Zero Individual Student Records: ORDIQ operates strictly at the section level (`Section.studentCount`, e.g., `CE-1A: 38 students`). No database table, API endpoint, or Excel import sheet accepts or stores student names, student ID numbers, or individual student schedules.\n2. Faculty Pseudonymization (`Faculty.alias`): Every faculty member is assigned a sequential pseudonym (`ALIAS-001`, `ALIAS-002`, etc.) stored in the database."
+  },
+  {
+   "id": "49c7db44e6a0",
+   "source": "Privacy & Security Notes",
+   "section": "2. AI Privacy Gateway & Egress Protection",
+   "priority": 1.1,
+   "text": "All Generative AI interactions pass through a single module (`apps/web/src/server/modules/ai/privacy-gateway.ts`), enforced by ESLint import boundaries:\n\n1. Outgoing Scrubbing: Full names, surnames, given names, honorific combinations (`Engr.`, `Dr.`, `Prof.`, `Sir`, `Ma'am`), diacritic/accent variations (`Ñ` -> `N`, `á` -> `a`), and fuzzy misspellings next to honorifics (`Prof. Sntos` -> `ALIAS-001`) are replaced with `Faculty.alias` before any request leaves the application.\n2. Allowlist Tool Serialization: Tool results are filtered through an explicit key allowlist (`serializeToolResultForLlm`). Free-text notes, email addresses, and contact numbers are never sent to the LLM.\n3. Streaming De-Pseudonymization: `DePseudonymizerStream` buffers trailing partial tokens across chunk boundaries and restores real faculty names only inside the Dean's authenticated browser response.\n4. Token-Only Usage Logging: `LlmUsageRecord` logs only `provider`, `model`, `tokensIn`, `tokensOut`, and `estimatedCostPhp`—never prompt or reply content.\n5. Automated Egress Verification: Verified by the 32-prompt golden evaluation suite (`phase4-and-phase5-exit-criteria.test.ts`), asserting 0 faculty names in any captured LLM request payload."
+  },
+  {
+   "id": "e45ba06b9be6",
+   "source": "Privacy & Security Notes",
+   "section": "3. Access Control & Audit Trail",
+   "priority": 1.1,
+   "text": "- Dean-Only Access (`D-20`): Public signup is disabled. Every `/api/v1/*` data, generation, schedule, AI, ML, analytics, report, and evaluation endpoint requires an authenticated Dean session verified with Argon2id + TOTP 2FA.\n- Append-Only Audit Log: Every state-changing action (`TERM_UPDATED`, `IMPORT_COMMITTED`, `GENERATION_RUN_COMPLETED`, `SCHEDULE_ENTRY_EDITED`, `SCHEDULE_EXCEPTION_ADDED`, `SCHEDULE_ACCEPTED`, `AI_PROPOSAL_APPLIED`, `ML_MODEL_TRAIN`, `REPORT_EXPORTED`) is recorded in the append-only `AuditLog`."
+  },
+  {
+   "id": "8cfc02fe691d",
+   "source": "Privacy & Security Notes",
+   "section": "4. Developer Data Deletion Attestation (Phase 8 Handover)",
+   "priority": 1.1,
+   "text": "In accordance with Quotation `Q-2026-002`:\n- Development and automated testing were conducted using synthetic fixtures (`generateSmallFixture` and `generateMediumCollegeFixture` modeling 7 programs, 44 faculty, and 903 students across 24 sections).\n- Upon final turnover and acceptance, all copies of MSEUF College of Engineering schedules or faculty data on developer machines are permanently deleted and confirmed in writing."
+  },
+  {
+   "id": "3e20906fa6a8",
+   "source": "Operations & Administration Manual",
+   "section": "Operations & Administration Manual",
+   "priority": 0.9,
+   "text": "System: ORDIQ (\"Order Meets Intelligence\") — AI-Based Class Scheduling Decision-Support System  \nClient: College of Engineering, Manuel S. Enverga University Foundation (MSEUF), Lucena City  \nQuotation Reference: `Q-2026-002`"
+  },
+  {
+   "id": "027fc839336a",
+   "source": "Operations & Administration Manual",
+   "section": "1. Starting and Stopping the System › Network Isolation",
+   "priority": 0.9,
+   "text": "- Only `apps/web` (port `3000` behind TLS reverse proxy) is exposed to the network.\n- `services/engine` (port `8000`) and `postgres` (port `5432`) run on an internal Docker bridge network with no public internet exposure, and every Web → Engine call requires the shared `X-Engine-Token` header."
+  },
+  {
+   "id": "94c392569bec",
+   "source": "Operations & Administration Manual",
+   "section": "2. Seeding or Resetting the Dean Account",
+   "priority": 0.9,
+   "text": "Public account registration is permanently disabled (`D-20`). The Dean's account is managed exclusively via the CLI seed script:\n\n- Passwords are hashed using Argon2id.\n- First login requires TOTP 2FA enrollment (Google Authenticator, Microsoft Authenticator, or Authy) and generates single-use recovery codes.\n- TOTP secrets are encrypted at rest using AES-256-GCM with `APP_ENCRYPTION_KEY`."
+  },
+  {
+   "id": "91798e8e0cb3",
+   "source": "Operations & Administration Manual",
+   "section": "3. Switching AI Providers (`LLM_PROVIDER`)",
+   "priority": 0.9,
+   "text": "ORDIQ supports switching LLM providers via `.env` without any code changes (`D-09`):\n\n- Cloud (Standard Package): Set `LLM_PROVIDER=openai` (with `OPENAI_API_KEY`) or `LLM_PROVIDER=anthropic` (with `ANTHROPIC_API_KEY`).\n- On-Premise Local (Premium / Offline Mode): Set `LLM_PROVIDER=ollama` and `OLLAMA_BASE_URL=http://ollama:11434`.\n- Regardless of provider, all traffic passes through the Privacy Gateway (`src/server/modules/ai/privacy-gateway.ts`), which replaces all faculty names with `Faculty.alias` (`ALIAS-001`, etc.) before egress."
+  },
+  {
+   "id": "bf16608e9e68",
+   "source": "Operations & Administration Manual",
+   "section": "5. Secret Rotation Checklist for Production Turnover",
+   "priority": 0.9,
+   "text": "Before live use with MSEUF College of Engineering data:\n1. Generate a fresh 64-hex-character `APP_ENCRYPTION_KEY` (`openssl rand -hex 32`).\n2. Generate a fresh `ENGINE_TOKEN` (`openssl rand -hex 32`) and update both `apps/web` and `services/engine`.\n3. Generate a fresh `SESSION_SECRET` (`openssl rand -hex 32`).\n4. Set `DEAN_INITIAL_PASSWORD` and run `pnpm --filter @ordiq/web db:seed-dean` so the Dean enrolls their own TOTP device."
+  },
+  {
+   "id": "480ab31953b6",
+   "source": "Implementation Plan",
+   "section": "1. Product goal",
+   "priority": 1,
+   "text": "The Dean tells a GPT-style assistant what is needed, and ORDIQ validates the data, generates conflict-free candidate schedules, and helps compare them before anything is encoded in the university portal. People no longer build the timetable by hand and hunt for conflicts afterward.\n\nThe manuscript's root-cause finding is \"insufficiently systematic early validation, compounded by changing data and manual handoffs.\" So validation and rechecking after changes matter as much as generation."
+  },
+  {
+   "id": "80187a74bdf3",
+   "source": "Implementation Plan",
+   "section": "1. Product goal › Institutional context",
+   "priority": 1,
+   "text": "| Item | Fact from the manuscript |\n|---|---|\n| Scope | Seven programs (Civil, Computer, Electrical, Electronics, Geodetic, Industrial, Mechanical) in the current College of Engineering building |\n| Faculty | 44: 12 full-time permanent, 18 full-time non-permanent, 13 part-time, 1 visiting |\n| Students | 903 first- and second-year students. ORDIQ uses section-level counts only, with no individual student records |\n| Stakeholders | Dean, 7 program coordinators, scheduling officer |\n| Manual baseline | 47 days: 15 for plotting, 22 for rework and portal encoding (not separable), 10 for university review |\n| Rooms | Lecture rooms hold at least 40 students, laboratories at least 30 |\n| Interview ranking of challenges | 1. Faculty specialization, 2. Time gaps between subjects, 3. Room and laboratory use by capacity |\n| Most reported problem | Classroom conflicts (19 selections from 23 faculty) |\n| Time signals, unverified | Survey comments mention 7:30 AM starts, classes ending 8:30 PM, a 12:00 to 1:30 break, and six-day weeks |\n| Outside the system | Portal encoding, approval by the Registrar, Audit and OVPAR, student change requests, release to students |"
+  },
+  {
+   "id": "e04372bea703",
+   "source": "Implementation Plan",
+   "section": "1. Product goal › Success criteria",
+   "priority": 1,
+   "text": "| # | Criterion | Measured by |\n|---|---|---|\n| 1 | A generated candidate has zero hard constraint violations | Independent validator on every saved schedule |\n| 2 | Candidates are compared fairly with the first-semester A.Y. 2026-2027 schedule | Side-by-side report: conflicts, gaps, load balance, utilization, preferences met |\n| 3 | The Dean can generate and adjust a schedule in plain language, including Taglish | Scripted acceptance scenarios |\n| 4 | Machine learning visibly improves results over time | Recommendation metrics per model version, plus a demonstrable change after Dean edits |\n| 5 | Only the Dean can access the system, and no faculty names reach the AI provider | Access tests and the privacy egress test |\n| 6 | Dashboards and PDF/Excel reports use the same numbers | One analytics service feeds all of them |\n| 7 | The system produces the evidence for the paper's three evaluation stages | Evaluation records and export (Phase 7) |\n\nNo performance improvement is claimed until it is tested. This is the manuscript's own rule, so the UI, docs and demos follow it too."
+  },
+  {
+   "id": "10df0519630a",
+   "source": "Implementation Plan",
+   "section": "1. Product goal › The four parts of the hybrid AI",
+   "priority": 1,
+   "text": "| Part | Job | Never does |\n|---|---|---|\n| Optimization engine | Builds and validates schedules | Interpret natural language |\n| Machine learning | Scores faculty–subject fit, learns preferences | Override a hard constraint |\n| Generative AI | Understands requests, explains results, prepares proposals | Create a schedule itself or write to the database |\n| Dean | Reviews, compares, accepts | Is not bypassed: only a person can apply a change or accept a schedule |"
+  },
+  {
+   "id": "a7d1e72853a0",
+   "source": "Implementation Plan",
+   "section": "1. Product goal › Where the manuscript and quotation differ",
+   "priority": 1,
+   "text": "| Topic | Manuscript | Quotation or client | Position in this plan |\n|---|---|---|---|\n| Users | \"Authorized users\": Dean, coordinators, scheduling officer. The mockup shows a Scheduling Officer login | Dean-only access | Build Dean-only. Roles stay in the data model, and more users need a change request (Q-18) |\n| Conflicts | Flags conflicts and allows \"documented exceptions\" | \"Guarantees no conflicts\" | Generated candidates have no hard conflicts. The Dean may record an exception on waivable rules only (D-18) |\n| \"Optimal\" | \"Does not imply a mathematically global optimum\" | \"Best possible result\" | Use the manuscript's wording (section 6) |\n| Output | Several candidate schedules to compare | One generated schedule | Generate several candidates (D-19) |\n| Status of output | Candidates are never official and are not released to students | Not addressed | \"Accepted\" means ready for portal encoding, nothing more |\n| Technology | \"No software package or solver is selected\" | Full stack quoted | The paper should name this stack (Q-17) |\n| Standalone | \"Standalone\" tool, no portal integration | Web application | A web app meets this, because it does not integrate with the portal (Q-19) |\n| Data access | Legal Office approval, ethics review not yet confirmed | Developer receives faculty data | No real data reaches the developer until authorization is in writing (Q-20) |"
+  },
+  {
+   "id": "640777efd32f",
+   "source": "Implementation Plan",
+   "section": "2. Architecture",
+   "priority": 1,
+   "text": "A modular monolith plus one stateless Python service. It suits one developer and 8 weeks, and it still has clear boundaries."
+  },
+  {
+   "id": "e564472a24cb",
+   "source": "Implementation Plan",
+   "section": "2. Architecture › Flow 2: changing a schedule through chat",
+   "priority": 1,
+   "text": "The proposal is re-validated at apply time because the candidate may have changed since it was created."
+  },
+  {
+   "id": "bbad102167d2",
+   "source": "Implementation Plan",
+   "section": "3. Decision log",
+   "priority": 1,
+   "text": "| ID | Decision | Why | Status |\n|---|---|---|---|\n| D-01 | Modular monolith with one Python service | Solo developer, 8 weeks, OR-Tools is best in Python | Decided |\n| D-02 | Next.js route handlers under `/api/v1`, no Server Actions, no separate Express app | One API style, still Node.js + TypeScript as quoted | Decided |\n| D-03 | pnpm workspaces for TypeScript, `uv` for Python | Simple monorepo, locked dependencies | Decided |\n| D-04 | Engine runs Python 3.12 in Docker | Stable OR-Tools wheels, independent of the local 3.13 install | Decided |\n| D-05 | Times stored as integer minutes from midnight plus a weekday | Weekly patterns have no date or time zone, which avoids a class of bugs | Decided |\n| D-06 | 30-minute solver grid, configurable per term | Fits the 7:30 starts and 8:30 PM ends in the survey comments. Confirm against official slots | Follow-up with client |\n| D-07 | Solver leaves a meeting unscheduled instead of returning bare INFEASIBLE | The Dean gets a usable candidate and a precise reason per meeting | Decided |\n| D-08 | Candidates may contain violations while being edited, accepted schedules cannot, apart from documented exceptions | The Dean can work in steps, and the guarantee holds at acceptance | Decided |"
+  },
+  {
+   "id": "2bbee73603b8",
+   "source": "Implementation Plan",
+   "section": "3. Decision log",
+   "priority": 1,
+   "text": "| D-09 | Vercel AI SDK with an OpenAI-compatible adapter for Ollama | One tool-calling and streaming interface across providers, supports Premium | Decided |\n| D-10 | Dean-only auth with Argon2id, RFC 6238 TOTP (`otpauth`), AES-256-GCM secret encryption, and Prisma/store session engine | Zero public signup, Authenticator app has no SMS cost, matches exact Prisma `User`/`Session` schema in Section 5 | Implemented |\n| D-11 | ML parameters stored as JSON in PostgreSQL, not pickles | Keeps the engine stateless and avoids unsafe deserialization | Decided |\n| D-12 | Local embeddings for NLP matching | Faculty data stays on our own infrastructure | Decided |\n| D-13 | AG Grid Community and FullCalendar free plugins only | Enterprise row grouping, Excel export and resource timeline views are paid. Export runs on the server | Decided |\n| D-14 | Excel via ExcelJS, PDF via `@react-pdf/renderer` | No headless browser needed, small containers | Decided |\n| D-15 | Docker Compose is the reference deployment | Same setup on a VPS or school server | Decided |\n| D-16 | Chat-driven rules use a closed set of directive types | The LLM cannot invent solver behavior, and unsupported requests are refused clearly | Decided |"
+  },
+  {
+   "id": "13cbcda5e24c",
+   "source": "Implementation Plan",
+   "section": "3. Decision log",
+   "priority": 1,
+   "text": "| D-17 | Faculty preference survey is imported by the Dean | Dean-only access means faculty cannot log in. Use a printed or online form, as the proponents did for their survey, then import | Decided |\n| D-18 | Exceptions need a reason and apply only to waivable rules. Double-booking (`HC-01` to `HC-03`) is never waivable | Satisfies the manuscript's \"documented exceptions\" and keeps the quotation's conflict promise | Follow-up with client |\n| D-19 | Each run generates about 3 candidates from different weight profiles | The manuscript has staff compare alternatives. Profiles such as balanced, faculty-first and student-first give real choices | Decided |\n| D-20 | Product name ORDIQ, with the maroon and orange identity and layout from Fig. 3 and Fig. 4 | This is the design the panel saw. Mockup numbers are illustrative only | Decided |\n| D-21 | Section-level counts only, no student records | The manuscript requires this for data minimization, and it removes a whole class of privacy risk | Decided |\n| D-22 | AI Assistant is a persistent side panel in the app shell, plus a full-page view. Data pages are editable grids | Matches Fig. 4 and the \"spreadsheet-based workspace\" | Decided |\n| D-23 | Classes the college does not control are stored as locked section blocks | General education, PATHFIT and classes in other buildings still occupy a section's time | Follow-up with client |"
+  },
+  {
+   "id": "c060bae026b6",
+   "source": "Implementation Plan",
+   "section": "3. Decision log",
+   "priority": 1,
+   "text": "| D-24 | Evaluation evidence is built into the product | Effort, corrections and test records are needed for the paper and are hard to rebuild later | Decided |\n| D-25 | Persistence is one state repository with a unit of work per request (`src/server/repo/state.repository.ts`, `state-sync.ts`), not a `*.repo.ts` per module. Services keep working on the in-memory domain state. `withDeanRoute` loads it from PostgreSQL, saves only changed records in one transaction, and uses `system_state.version` for optimistic concurrency (409 `CONCURRENT_MODIFICATION`). PostgreSQL (Supabase) is the only store; memory is used only by the automated tests |\\|memory` | Keeps every service synchronous and testable in memory, and makes one write path the only place that touches the database. One Dean and college-sized data make whole-state reloads cheap. See ADR 0001 | Implemented |\n| D-26 | The CP-SAT model is decomposed: per meeting, separate time, room and faculty choices with optional intervals and NoOverlap per faculty, room and section. A complete greedy hint is always supplied and returned if the solver finds nothing in time | The single-option model grew too large and placed under half of the medium fixture. The decomposed model places all meetings of 576-meeting terms in the time limit with no hard violations | Implemented |\n| D-27 | The privacy gateway for live providers is AI SDK middleware on the model (`createPrivacyMiddleware`). Every request, including each step of the tool loop and every tool result, is pseudonymized and captured there. Refusals stay deterministic and run before any provider call. Without a usable provider, under tests, or when a call fails, the built-in deterministic assistant answers | Code above the model cannot forget to scrub a field. The assistant keeps working offline, and tests never spend tokens | Implemented |"
+  },
+  {
+   "id": "c8c66bb69f79",
+   "source": "Implementation Plan",
+   "section": "5. Data model › Master data",
+   "priority": 1,
+   "text": "| Model | Key fields |\n|---|---|\n| `Program` | code, name, coordinator (plain text field) |\n| `Term` | academic year, semester, status, slot size, teaching days, day start and end |\n| `Faculty` | code, alias, name, program, employment type (`FULL_TIME_PERMANENT`, `FULL_TIME_NON_PERMANENT`, `PART_TIME`, `VISITING`), specialization, education, max load, status |\n| `Subject` | code, name, description, program, year level, category (major, general engineering, mathematics, science, general education, PATHFIT), units, contact hours, curriculum version |\n| `Section` | code, program, year level, student count. No student records |\n| `FixedBlock` | section, term, weekday, start, end, label, location. For classes outside the college's control (D-23) |\n| `Room` | code, type, capacity, equipment, restrictions |\n| `RoomAvailability` | room, weekday, start, end, reason (including maintenance) |\n| `CalendarRestriction` | term, weekday or date range, scope, reason |\n| `FacultyAvailability` | faculty, term, weekday, start, end, status |\n| `FacultyQualification` | faculty, subject, source (`DECLARED`, `HISTORY`, `DEAN`) |\n| `FacultyPreference` | faculty, term, type, value, source (`SURVEY`, `LEARNED`, `DEAN`) |\n| `Offering` | term, section, subject, component (`LECTURE`, `LAB`), meetings per week, minutes per meeting, meeting pattern, required room type, preassigned faculty (optional), combined-class group (optional) |"
+  },
+  {
+   "id": "94d9bb8f282d",
+   "source": "Implementation Plan",
+   "section": "5. Data model › Master data",
+   "priority": 1,
+   "text": "`Faculty.alias` is a generated code used only for the LLM. It stays separate from `code` in case the college's IDs are employee numbers."
+  },
+  {
+   "id": "eedcace3bbd5",
+   "source": "Implementation Plan",
+   "section": "5. Data model › Scheduling",
+   "priority": 1,
+   "text": "| Model | Key fields |\n|---|---|\n| `Constraint` | term, catalogue code, scope, parameters JSON, hardness, weight, waivable, approval status, approved by, source (`SYSTEM`, `IMPORT`, `CHAT`, `DEAN`), active |\n| `GenerationRun` | term, status, snapshot JSON, weight profiles, engine job IDs, solver status, objective, bound, duration, model version |\n| `Schedule` | term, run, parent, candidate label, status (`CANDIDATE`, `ACCEPTED`, `ARCHIVED`), source (`GENERATED`, `IMPORTED`), recheck needed, version, quality score |\n| `ScheduleEntry` | schedule, offering, faculty, room, weekday, start, end, pinned |\n| `UnscheduledMeeting` | schedule, offering, reason code, details |\n| `ScheduleChange` | schedule, entry, before, after, actor (`DEAN`, `AI_PROPOSAL`), reason. Append-only |\n| `ScheduleException` | schedule, entry, constraint code, reason, accepted by, timestamp |\n| `ChangeProposal` | schedule, operations JSON, impact JSON, status, conversation, expiry |"
+  },
+  {
+   "id": "34d1c0dc6746",
+   "source": "Implementation Plan",
+   "section": "5. Data model › Scheduling",
+   "priority": 1,
+   "text": "As implemented (D-25):\n- The Prisma schema mirrors the in-memory domain records one to one.\n- Chat-driven rules are stored as `Directive` rows (the closed set from D-16). The constraint catalogue itself lives in the engine validator.\n- Unscheduled meetings, the change log and exceptions are JSON columns on `Schedule`. Each one is always read and written with its schedule.\n- `RoomAvailability` and `CalendarRestriction` have no tables yet, because nothing in the app records them. Add them together with their UI and validator support.\n- The schema is applied with `prisma db push`. Switch to `prisma migrate` before the production deployment so that later changes are versioned."
+  },
+  {
+   "id": "ccf43bf29cd1",
+   "source": "Implementation Plan",
+   "section": "5. Data model › AI, ML and platform",
+   "priority": 1,
+   "text": "| Model | Key fields |\n|---|---|\n| `Conversation`, `Message` | role, parts JSON, stored with real names and protected like other data |\n| `LlmUsage` | provider, model, tokens in and out, timestamp. No content |\n| `ModelVersion` | kind, parameters JSON, metrics JSON, trained at, status |\n| `LearningEvent` | type, faculty, subject, slot, weight, source schedule |\n| `ImportBatch` | dataset, file hash, status, row counts, errors JSON |\n| `User`, `Session`, 2FA tables | owned by the auth library |\n| `AuditLog` | actor, action, entity, entity ID, before and after, IP, timestamp. Append-only |\n| `EvaluationSession` | stage, scenario, participant role, started at, ended at, schedule, notes. Feeds person-hours and correction counts |"
+  },
+  {
+   "id": "93cce5748e7c",
+   "source": "Implementation Plan",
+   "section": "5. Data model › Schedule lifecycle",
+   "priority": 1,
+   "text": "\"Accepted\" means the Dean approved this candidate for portal encoding. It is not an official schedule, because university approval happens outside ORDIQ. Accepted schedules are never edited in place. A revision creates a new candidate with `parent` set, which keeps the history complete."
+  },
+  {
+   "id": "b764f34ab29e",
+   "source": "Implementation Plan",
+   "section": "6. Constraint catalogue",
+   "priority": 1,
+   "text": "Codes are stable. Tests, reports and explanations all use them. The college's approved rules are still pending, and the manuscript requires college confirmation before encoding, so treat this as the starting list."
+  },
+  {
+   "id": "6704c4094041",
+   "source": "Implementation Plan",
+   "section": "6. Constraint catalogue › Hard constraints",
+   "priority": 1,
+   "text": "| Code | Rule |\n|---|---|\n| `HC-01` | A faculty member teaches one class at a time |\n| `HC-02` | A room hosts one class at a time |\n| `HC-03` | A section attends one class at a time |\n| `HC-04` | Room capacity fits the section |\n| `HC-05` | Room type matches the requirement (lecture or laboratory) |\n| `HC-06` | Faculty are scheduled only when available |\n| `HC-07` | Faculty stay within maximum teaching load for their employment type |\n| `HC-08` | All required meetings and contact hours are scheduled |\n| `HC-09` | Faculty specialization matches the subject |\n| `HC-10` | Rooms are used only when available |\n| `HC-11` | Classes stay inside allowed periods and avoid official breaks |\n| `HC-12` | Dean directives marked as required are respected |\n| `HC-13` | Each class follows its required duration and meeting pattern |\n| `HC-14` | Approved calendar and maintenance restrictions are respected |\n| `HC-15` | Sections stay clear of their fixed blocks |\n\nIf the mandatory rules cannot all be met, ORDIQ reports the cause and never silently relaxes a rule. Never waivable: `HC-01`, `HC-02`, `HC-03`. Combined classes are modeled through a combined-class group, not as a conflict. All other rules are provisionally waivable with a documented reason (D-18)."
+  },
+  {
+   "id": "a9486fa78695",
+   "source": "Implementation Plan",
+   "section": "6. Constraint catalogue › Soft constraints",
+   "priority": 1,
+   "text": "Each one is a weighted penalty, stored as data with a default weight. The manuscript allows preferences to be traded off only after stakeholders approve them, so a preference is inactive until it is marked approved.\n\n| Code | Goal |\n|---|---|\n| `SC-01` | Honor faculty preferred days and times |\n| `SC-02` | Balance teaching loads |\n| `SC-03` | Minimize vacant gaps for faculty and sections |\n| `SC-04` | Use preferred rooms |\n| `SC-05` | Distribute classes evenly across the week |\n| `SC-06` | Minimize changes from the existing schedule on regeneration |\n| `SC-07` | Prefer faculty with a high ML fit score |\n| `SC-08` | Use rooms efficiently, for example avoid a 40-seat room for 15 students |"
+  },
+  {
+   "id": "a88c477d96ab",
+   "source": "Implementation Plan",
+   "section": "6. Constraint catalogue › Candidate preferences from the manuscript",
+   "priority": 1,
+   "text": "These come from the proposal text and student survey. Each needs approval, and some of them pull against each other, such as avoiding both early and evening classes.\n\n| Code | Goal | Source |\n|---|---|---|\n| `SC-09` | Avoid evening classes for lower-year sections | Manuscript 5.1 |\n| `SC-10` | Give lower-year sections priority | Conceptual framework |\n| `SC-11` | Keep laboratories away from late hours | Student comments |\n| `SC-12` | Spread major and mathematics subjects, not all on one day | Student comments |\n| `SC-13` | Keep a break between long back-to-back classes | Student comments |\n| `SC-14` | Avoid a late class followed by an early class the next day | Student comments |\n| `SC-15` | Place PATHFIT late in the day or before a vacant period | Student comments |\n| `SC-16` | Limit very early starts where feasible | Student comments |"
+  },
+  {
+   "id": "13169bbbe9d9",
+   "source": "Implementation Plan",
+   "section": "6. Constraint catalogue › Directive types available to chat",
+   "priority": 1,
+   "text": "`FACULTY_NOT_ON_DAY`, `FACULTY_TIME_WINDOW`, `SECTION_TIME_WINDOW`, `AVOID_ROOM`, `REQUIRE_ROOM`, `PIN_MEETING`, `ASSIGN_FACULTY`, `SET_WEIGHT`.\n\nIf a request does not fit one of these, the assistant says so and does not improvise."
+  },
+  {
+   "id": "888fd35cfc3f",
+   "source": "Implementation Plan",
+   "section": "6. Constraint catalogue › What \"optimized\" means",
+   "priority": 1,
+   "text": "The manuscript defines optimization as improving schedule quality and resource use against the documented baseline. It \"does not imply a mathematically global optimum,\" and feasibility alone doesn't prove quality.\n\nThe objective is the weighted sum of soft penalties, plus a very large penalty per unscheduled meeting. The manuscript leaves open whether priorities are weights or a strict order, so this needs a decision (Q-12).\n\n- Proven optimal: the solver finished and proved no better schedule exists for these weights.\n- Best found: the time limit ended the search, and the solver reports the remaining gap.\n\nThe UI shows which one applies, plus which preferences went unmet. Don't describe every result as \"the best possible.\""
+  },
+  {
+   "id": "700ba8960931",
+   "source": "Implementation Plan",
+   "section": "Phase 5: Machine learning",
+   "priority": 1,
+   "text": "Objective: the system learns from one semester of history plus faculty data, and it improves each time a schedule is accepted.\n\nWeeks: 5 to 6. Depends on: Phase 2."
+  },
+  {
+   "id": "c8c3f2dd7fdc",
+   "source": "Implementation Plan",
+   "section": "Phase 5: Machine learning › Be honest about the data",
+   "priority": 1,
+   "text": "One semester is a small dataset. The design starts with NLP and survey data, which need no history, then gives more weight to learned signals as evidence builds. Enrollment and section forecasting stay out of scope, as the quotation says.\n\nThe manuscript does not mention machine learning yet, so Q-17 is a follow-up for this phase. If faculty are preassigned before scheduling (Q-08), the fit model mainly checks assignments and suggests replacements. The module stays useful either way, because specialization is the interview's top-ranked challenge."
+  },
+  {
+   "id": "7a7ad934ac43",
+   "source": "Implementation Plan",
+   "section": "Phase 5: Machine learning › 5A. Faculty–subject fit",
+   "priority": 1,
+   "text": "- [x] Build local embeddings for subject descriptions and faculty specialization or education (D-12)\n- [x] Build features: text similarity, prior assignments, program match, qualification source\n- [x] Train a regularized logistic regression, using historical assignments as positives and sampled pairs as negatives\n- [x] Fall back to similarity ranking when there are too few examples\n- [x] Store coefficients and metrics in `ModelVersion` (D-11)\n- [x] Expose the ranking through `POST /v1/ml/recommend`"
+  },
+  {
+   "id": "f0765c8c9d1c",
+   "source": "Implementation Plan",
+   "section": "Phase 5: Machine learning › 5B. Preference learning",
+   "priority": 1,
+   "text": "- [x] Build per-faculty day and time-band distributions from history, survey and Dean edits\n- [x] Apply smoothing, so one observation cannot dominate, and decay older semesters\n- [x] Keep declared preferences above inferred ones\n- [x] Save results as `FacultyPreference` with source `LEARNED`"
+  },
+  {
+   "id": "9a20aee2bd2b",
+   "source": "Implementation Plan",
+   "section": "Phase 5: Machine learning › 5C. Feedback loop",
+   "priority": 1,
+   "text": "- [x] Create `LearningEvent` records from accepted schedules and Dean edits\n- [x] Retrain on acceptance\n- [x] Promote a new model only if it is no worse than the current one on held-out data\n- [x] Feed scores into the solver through `SC-07` and `SC-01`\n- [x] Show \"why this faculty?\" with plain-language factors"
+  },
+  {
+   "id": "df6dd5b4c97b",
+   "source": "Implementation Plan",
+   "section": "Phase 5: Machine learning › 5D. Evaluation",
+   "priority": 1,
+   "text": "- [x] Report Top-1 and Top-3 recommendation accuracy on held-out assignments\n- [x] Compare against two baselines: random and text similarity alone\n- [x] Add a model performance page, useful for the defense and the paper"
+  },
+  {
+   "id": "8ab8cd4925b0",
+   "source": "Implementation Plan",
+   "section": "Phase 5: Machine learning › Exit criteria",
+   "priority": 1,
+   "text": "- [x] The system produces recommendations with one semester of data, and with none\n- [x] The model beats random, and its comparison with text similarity is reported honestly\n- [x] A scripted scenario shows repeated Dean edits changing later preferences and results\n- [x] ML never makes a schedule invalid, proven by running the validator with extreme scores\n- [x] Rollback to the previous model version works"
+  },
+  {
+   "id": "fbeb9a8b35fe",
+   "source": "Implementation Plan",
+   "section": "13. Out of scope",
+   "priority": 1,
+   "text": "- Enrollment and section forecasting (Future Enhancements in the paper)\n- Faculty, coordinator or student accounts and portals, unless agreed through a change request\n- Handling individual student change requests, or assigning students to sections\n- Releasing schedules to students, or replacing the official schedule\n- Portal integration, and automated Registrar, Audit or OVPAR approval\n- Other colleges, buildings or universities\n- Mobile apps\n- Writing thesis chapters or the evaluation report\n- Encoding printed or scanned records, unless quoted separately\n- AI, hosting and domain fees\n\nAnything here needs a written change request before work starts."
+  },
+  {
+   "id": "823d519ab069",
+   "source": "Research Manuscript",
+   "section": "1. Platform/s Thematic Areas",
+   "priority": 0.85,
+   "text": "(Based on MSEUF Research Agenda 2019 – 2030)\n\nCheck applicable boxes:\n\nTechnology, Engineering, and Industry 4.0 Research\n\nEnvironmental Protection, Development, and Conservation Research\n\nBusiness, Economics and Industry 4.0 Research\n\nPolitics, Society, and Culture Research\n\nLegal, Law Enforcement, and Criminology Research\n\nHealth Research, Development, Innovation, and Extension\n\nEducation 4.0 and Workforce 4.0 Research"
+  },
+  {
+   "id": "5189552f3cbe",
+   "source": "Research Manuscript",
+   "section": "2. Sustainable Development Goals (SDGs)",
+   "priority": 0.85,
+   "text": "(_Depending on the platform, you may check more than one SDG_)\n\nSDG 1. End poverty in all its forms everywhere.\n\nSDG 2. End hunger, achieve food security and improved nutrition and promote sustainable agriculture.\n\nSDG 3. Ensure healthy lives and promote well-being for all at all ages.\n\nSDG 4. Ensure inclusive and equitable quality education and promote lifelong learning opportunities for all.\n\nSDG 5. Achieve gender equality and empower all women and girls\n\nSDG 6. Ensure availability and sustainable management of water and sanitation for all.\n\nSDG 7. Ensure access to affordable, reliable, sustainable & modern energy for all\n\nSDG 8. Promote sustained, inclusive and sustainable economic growth, full and productive employment and decent work for all.\n\nSDG 9. Build resilient infrastructure, promote inclusive and sustainable industrialization and foster innovation.\n\nSDG 10. Reduce inequality within and among countries.\n\nSDG 11. Make cities and human settlements inclusive, safe, resilient and sustainable.\n\nSDG 12. Ensure sustainable consumption and production patterns.\n\nSDG 13. Take urgent action to combat climate change and its impacts.\n\nSDG 14. Conserve and sustainably use the oceans, seas and marine resources for sustainable development."
+  },
+  {
+   "id": "8054dbf2bd55",
+   "source": "Research Manuscript",
+   "section": "2. Sustainable Development Goals (SDGs)",
+   "priority": 0.85,
+   "text": "SDG 15. Protect restore and promote sustainable use of terrestrial ecosystems, sustainably manage forests, combat desertification and reverse land degradation and halt biodiversity loss.\n\nSDG 16. Promote peaceful and inclusive societies for sustainable development, provide access to justice for all and build effective, accountable and inclusive institutions at all levels.\n\nSDG 17. Partnerships for the goals\n\nTable of Contents\n\nApproval Sheet ii\n\nAcknowledgement iii\n\nDedication iv\n\n1. Platform/s Thematic Areas 2\n\n2. Sustainable Development Goals (SDGs) 2\n\n3. Abstract 5\n\n4. Introduction 6\n\n4.1 Background of the Study 6\n\n4.2 Objectives of the Study 8\n\n4.3 Significance of the Study 9\n\n4.4 Scope and Limitations of the Study 11\n\n4.5 Conceptual Framework 13\n\n4.6 Definition of Terms 15\n\n4.7 Acronyms 17\n\n5. Review of Literature and Related Studies 17\n\n5.1 Theoretical and Technical Foundations 17\n\n5.2 Review of Related Literature 19\n\n5.3 Review of Patent Literature 24\n\n5.4 Applicable Engineering Standards and Regulations 25\n\n5.5 Existing Technologies and Systems 26\n\n5.6 Synthesis of the Review 28\n\n6. Methods and Procedures 29\n\n6.1 Research Design 29\n\n6.2 Research Environment 29\n\n6.3 Procedures 30\n\n6.3.1 Data-Gathering Plan 30\n\n6.3.2 Analysis Plan 32\n\n6.3.3 Design and Development Plan 35\n\n6.3.4 Evaluation/ Validation Plan 36\n\n6.4 Design Concept 37\n\n7. Results and Discussion 43"
+  },
+  {
+   "id": "6f37e8c671c5",
+   "source": "Research Manuscript",
+   "section": "2. Sustainable Development Goals (SDGs)",
+   "priority": 0.85,
+   "text": "8. References (Use IEEE Referencing) 63\n\n9. Statement of AI Declaration 66\n\nAppendix A. Curriculum Vitae 70"
+  },
+  {
+   "id": "627342fe80a6",
+   "source": "Research Manuscript",
+   "section": "3. Abstract",
+   "priority": 0.85,
+   "text": "Class scheduling in the College of Engineering at Manuel S. Enverga University Foundation involves coordinating faculty assignments, class times, rooms, laboratories, and section requirements. The existing spreadsheet-based process requires repeated checking and revisions. This study documented the current workflow and scheduling concerns and established requirements for ORDIQ, a proposed standalone, AI-based scheduling decision-support system. Using an applied, developmental research design, the study examined the department's scheduling process and gathered survey responses from 23 faculty members and 349 first- and second-year engineering students. The documented scheduling cycle lasted 47 days: 15 days for initial schedule preparation, 22 days for program-level rework combined with portal encoding, and 10 days for university-level review. Among faculty respondents, 22 of 23 (95.7%) perceived a need for significant improvement; classroom conflicts were the most frequently reported problem, selected 19 times. Among student respondents, 16.6% reported requesting a schedule adjustment during the current or most recently completed semester, most commonly to change a subject schedule. These survey findings are descriptive and should not be treated as representative of the entire college. The results informed a proposed system that validates scheduling data, checks mandatory time, faculty, room, and capacity constraints, and supports staff review of candidate schedules. Because system performance has not yet been established, this study does not claim reductions in scheduling time, rework, or student adjustment requests. The findings provide a local basis for developing and evaluating a constraint-based decision-support tool while retaining human review and institutional approval."
+  },
+  {
+   "id": "86a2d583770c",
+   "source": "Research Manuscript",
+   "section": "3. Abstract",
+   "priority": 0.85,
+   "text": "Keywords: academic timetabling, class scheduling, resource allocation, decision-support system, constraint-based scheduling, engineering education"
+  },
+  {
+   "id": "0089bcb97a75",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.1 Background of the Study",
+   "priority": 0.85,
+   "text": "Academic timetable preparation requires coordinated assignment of courses, sections, instructors, students, rooms, and time periods under institutional rules. At the College of Engineering, this work relies substantially on spreadsheet-based preparation and manual review before the schedule is encoded in the university portal. For the first semester for the academic year (A.Y.) 2026-2027, the college offers seven programs: Industrial, Civil, Electrical, Mechanical, Computer, Electronics, and Geodetic Engineering. Its 44 faculty members comprise 13 part-time, 18 full-time non-permanent, 12 full-time permanent, and one visiting lecturer. A feasible schedule must satisfy course duration, faculty specialization and availability, student numbers, room and laboratory capacity and type, and section needs. A conflict in time, room, or subject assignment can therefore trigger rework. Once completed, the schedule then proceeds to institutional verification and approval, which fall outside the scope of the proposed system."
+  },
+  {
+   "id": "f2c2e5eaeefe",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.1 Background of the Study",
+   "priority": 0.85,
+   "text": "A preliminary interview with the scheduling officer describes the current process as follows: The Dean prepares a raw first-semester schedule over 15 days, including weekends. Program coordinators then rework their respective program schedules, and all 44 faculty schedules were reportedly subject to rework for the first semester of academic year 2026 to 2027. This rework takes approximately one month of eight-hour weekdays. The reworked schedules are then encoded in the portal within a day every time a rework is finished. Student schedule changes add further workload: based on the scheduling officer's estimate, that about 70% of the 903 combined first- and second-year engineering students (632 students) request a change to their schedules."
+  },
+  {
+   "id": "2019ee5831d7",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.1 Background of the Study",
+   "priority": 0.85,
+   "text": "A survey of 23 out of 44 faculty identified the main causes of rework. These fall into three groups: time-related causes (faculty availability and teaching load not properly considered, overlapping class schedules, and schedule hours that do not match required contact hours), room-related causes (double-booked rooms or laboratories, and room capacity or type that does not match the class), and subject-related causes (faculty specialization not matched to subjects, changes to assignments after the schedule is drafted, and outdated curriculum information). Most of these are incompatibilities that could, in principle, be detected before the schedule is encoded.\n\nTherefore, the problem is not only constructing a timetable but repeatedly adjusting it. Searching manually for a compatible combination of instructor, room, and time slot is slow, and conflicts are found only after they have caused rework and results to unwanted situations including delays in schedule release, sudden changes in schedules for both faculty and students, and delay beginning of classes. The volume of student change requests suggests that released schedules often do not fit students' need due to multiple reasons including unwanted subject schedule or class time and found overlapping schedules or class conflicts."
+  },
+  {
+   "id": "f9b2b32d26ed",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.1 Background of the Study",
+   "priority": 0.85,
+   "text": "Because rooms, laboratories, and faculty load are also assigned by hand, the resulting allocation may be feasible without being efficient in comparison to a release of a feasible schedule in less than a week with minor rework on the part of few program coordinators. Timetabling of this kind is a well-studied and computationally hard combinatorial problem [1], [2], and artificial intelligence (AI)-based techniques, such as genetic algorithms, tabu search, and constraint satisfaction have long been applied to it [3]. However, recent reviews observe that some methods are not fully utilized in real-world settings, possibly because of limited flexibility [2]. This suggests a need for systems configured to the rules and workflow of a specific institution."
+  },
+  {
+   "id": "c71b67d238a2",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.1 Background of the Study",
+   "priority": 0.85,
+   "text": "This study addresses that need by developing an AI-based scheduling decision-support system for the College of Engineering. The system validates scheduling data, generates candidate schedules, and flags incompatible assignments before portal entry, while leaving exceptions and final approval to department staff. It also seeks to improve the allocation of rooms, laboratory spaces, and faculty load, and to respect scheduling preferences approved by the college. The study's contribution is a logically configured system, evaluated against a documented current-process baseline in terms of scheduling time, conflict count, rework effort, resource utilization, and the number of student schedule change request."
+  },
+  {
+   "id": "86163fe6d2cc",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.2 Objectives of the Study",
+   "priority": 0.85,
+   "text": "The main objective is to design, develop, and evaluate an AI-based automated scheduling system to support accurate and efficient class scheduling in the College of Engineering. Specifically, the study aims to:\n\n1. To document the existing class-scheduling workflow, participants, inputs, constraints, correction types, and time requirements in the College of Engineering.\n\n2. To analyze the causes of schedule rework, classified as time-, room-, and subject-related, to identify the constraints the system must detect and enforce.\n\n3. To design and develop a standalone system that validates scheduling data, generates feasible candidate schedules, optimizes room utilization and faculty load distribution, prioritizes stakeholder-approved preferences, and flags conflicts for human review, and presents reports and a dashboard to support review and decision-making.\n\n4. To evaluate the system in three stages:\n\n4.1. Functional performance testing by the researchers;\n\n4.2.Testing against the college's first-semester AY 2026-2027 scheduling data to assess schedule feasibility, resource utilization, and indicators of likely student change requests, and;\n\n4.3. Pilot testing by the Dean to assess preparation effort, correction burden, and user experience, all against the prespecified criteria."
+  },
+  {
+   "id": "daa01e8f8dd6",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.3 Significance of the Study",
+   "priority": 0.85,
+   "text": "This study may benefit the following groups, subject to the conditions stated at the end of this section.\n\nDean and program coordinators. Automated generation and validation allow them to review candidate schedules and identify conflicts before schedules move to encoding. Rework currently takes half-a-month room, laboratory, subjects, time, and faculty scheduling plotting, combined with approximately one month of eight-hour weekdays, resulting to over 1.5-month scheduling process duration, so the study measure whether the system reduces this effort instead of assuming that it does.\n\nScheduling officer. May receive schedules that have undergone systematic pre-encoding checks for time, room, and subject conflicts. Portal entry and institutional approval remain outside the proposed system.\n\nFaculty. Faculty may benefit if availability, teaching load, and subject specializations are presented accurately in the schedule, which addresses causes of rework identified in the survey.\n\nStudents. The study will also evaluate whether the system's schedules show fewer conflicts and unmet approved preferences, which may indicate a lower likelihood of student change requests."
+  },
+  {
+   "id": "16db17dfa345",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.3 Significance of the Study",
+   "priority": 0.85,
+   "text": "The College of Engineering. The college may gain local evidence on the feasibility and operational value of a scheduling tool, including its effect on the use of rooms, laboratories, and faculty load and their specializations.\n\nThe University. The institution may adapt the proposed system once criteria and quality standards are met which can then be implemented on other college departments that may benefit the entire university in reducing scheduling efforts and minimizing conflicts in the overall process.\n\nFuture researchers and developers. The documented workflow, constraint classification, and evaluation criteria may serve as a reference for similar institution-specific scheduling systems.\n\nThese benefits depend on reliable input data, policy agreement, staff adoption, and satisfactory evaluation results. The study will also evaluate whether the system reduces the number of students who need to request schedule changes."
+  },
+  {
+   "id": "40e25e77cb56",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.4 Scope and Limitations of the Study",
+   "priority": 0.85,
+   "text": "The scope of the study covers class scheduling for the seven programs of the College of Engineering (Civil, Computer, Electrical, Electronics, Geodetic, Industrial, and Mechanical Engineering) within the current College of Engineering building. The proposed AI-based scheduling decision-support system uses course and section records, room and laboratory characteristics (capacity and type), time periods, faculty assignments, specializations and availability, student or section requirements, and scheduling preferences approved by the department. Using these inputs, the system validates scheduling data, generates candidate schedules, and flags conflicts for human review. The system also provides reports and a dashboard summarizing conflicts, room and laboratory utilization, and faculty load to support review and decision-making. It does not process or accommodate individual student change requests. Instead, it aims to reduce their number by producing conflict-free schedules that reflect approved preferences. The system will be tested by the researchers, then with the college's first-semester A.Y. 2026-2027 scheduling data, and finally in a pilot test by the Dean to obtain experience-based feedback. The generated schedules are not released to the students and do not replace the college's official schedule. In addition, the application supports schedule preparation before submission to the university scheduling portal. It neither replaces nor directly integrates with that portal, and it does not automate the approval of the Registrar, the Audit Office, or the Vice President for Academic Affairs and Research."
+  },
+  {
+   "id": "1f7174382a37",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.4 Scope and Limitations of the Study",
+   "priority": 0.85,
+   "text": "System output is limited by the completeness and accuracy of local data and by the constraints encoded and approved by the department. Outdated curriculum information and changes to faculty, subject, section, or room assignments after a schedule is drafted can be handled only to the extent that the input data are updated, and the schedule is regenerated or adjusted. Conflicting requirements may require human decision, and the system cannot guarantee that every preference will be met. Additionally, some student changes requests arise from circumstances outside the schedule, such as individual situations, and cannot be addressed by the system. The department has no official record of the student schedule change requests, the baseline is the scheduling officer's estimate. Any comparison involving change requests is therefore indicative and not a statistically established reduction. Consequently, the gathering of data is also limited in terms of the constraints involving the faculty members' presence and amount of time to collect data during the time where they are outside the university attending important events. Likewise, the project does not include scheduling for other colleges or buildings nor other universities."
+  },
+  {
+   "id": "4a08318845e6",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.5 Conceptual Framework",
+   "priority": 0.85,
+   "text": "INPUT\n\n**  \nAcademic Data**:\n\n- Validated courses, sections, and required contact hours\n- Faculty specialization, availability, and teaching load\n\nFacilities:\n\n- Rooms and laboratories, with capacity and type\n\nTime Information:\n\n- Available time periods\n- Calendar and maintenance restrictions\n\nStudent and Section Data:\n\n- Enrolled students per section\n- Program and year-level requirements\n\nPolicies and Preferences:\n\n- College scheduling rules\n- Approved preferences, (soft constraints), including priority for lower-year students\n\nPROCESS\n\n_AI-based scheduling decision-support system_\n\n1. Data Checking and Validation\n\n- Verify completeness, accuracy, and consistency of inputs\n\n2. Constraint Encoding\n\n- Encode hard constraints and approved soft preferences\n\n3. Generation and Optimization\n\n- Generate feasible candidate schedules; improve room use, faculty load, and preference satisfaction (AI component)\n\n4. Conflict Detection and Flagging\n\n- Flag time, room, faculty, section, and capacity conflicts for human decision\n\n5. Human Review and Revision\n\n- Dean and coordinators review, adjust, or accept documented exceptions\n\n6. Feedback and Iteration\n\n- Return corrections or changed requirements to the relevant step\n\nOUTPUT\n\nSchedule-Level Decision-Support System:"
+  },
+  {
+   "id": "fa36219dd420",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.5 Conceptual Framework",
+   "priority": 0.85,
+   "text": "- Standalone tool for generating and reviewing candidate schedules\n- Flagged conflicts, unmet preferences, and data-validation results\n\n- Candidate section-level timetable for staff review; feasibility and preference results reported\n- Dashboard for visualization of reports and analytics for review and decision-making (secondary support feature)\n\nDocumentation:\n\n- Scheduling-support process documentation\n- Assumptions, rules, and validation records\n\nFeedback: Corrections, changes in requirements, or new information\n\nOUTSIDE SYSTEM BOUNDARY\n\nPortal encoding; approval by the Registrar, Audit Office, and VP for Academic Affairs and Research\n\nEVALUATION AGAINST THE DOCUMENTED CURRENT-PROCESS BASELINE\n\nStage 1: Researcher testing 🡪 Stage 2: Testing with first semester A.Y. 2026-2027 portal data 🡪 Stage 3: Pilot testing by the Dean\n\n_*Includes indicators of likely student change requests (e.g., section conflicts and unmet approved preferences)._\n\nFunctional correctness\n\nSchedule feasibility\n\nResource utilization\n\nPreparation effort\n\nCorrection burden\n\nPerformance\n\nUser  \nexperience\n\nFig. 1. Conceptual Framework of the AI-based scheduling decision-support system"
+  },
+  {
+   "id": "12341e3ab01e",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.5 Conceptual Framework",
+   "priority": 0.85,
+   "text": "The study uses an input–process–output (IPO) logic with a feedback loop. Inputs comprise validated course, section, and required contact-hour data; faculty specializations, availability, and teaching load; room and laboratory characteristics; available time periods; student and section data; and the college's scheduling rules and approved preferences. The process, carried out by the AI-based scheduling decision-support system, comprises data checking and validation; constraint encoding; candidate schedule generation and optimization; conflict detection and flagging; human review and revision; and feedback and iteration. The outputs are candidate class schedules, conflict and validation reports, a dashboard and reports that support review and decision-making, and documentation of assumptions, encoded rules, and validation records."
+  },
+  {
+   "id": "4f2a363ad934",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.5 Conceptual Framework",
+   "priority": 0.85,
+   "text": "The system's provisional predictor is the availability of an automated, constraint-based scheduling capability. The provisional outcomes are: (a) process efficiency, measured through defined staff effort and elapsed preparation time, and (b) schedule quality, assessed through hard-constraint violations, correction counts, resource utilization, indicators of likely student change requests, and satisfaction of validated soft preferences. Mandatory rules must be met for a schedule to be feasible, while preferences can be prioritized only after college stakeholders agree on their weights. Human review supplies the feedback loop for correcting inputs, changing rules, or accepting documented exceptions. Portal encoding and final approval by the Registrar, the Audit Office, and the Vice President for Academic Affairs and Research remain outside the system. The system is evaluated against the documented current-process baseline in three stages: (1) researcher testing, (2) testing with the department's first-semester A.Y. 2026–2027 scheduling data, and (3) a pilot test by the Dean."
+  },
+  {
+   "id": "1ba2d24347b5",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.6 Definition of Terms",
+   "priority": 0.85,
+   "text": "AI-based scheduling decision-support system. The proposed standalone application that validates scheduling inputs, generates candidate timetables, and identifies constraint conflicts for authorized review. It supports, and does not replace, human decisions and institutional approval.\n\nCandidate schedule. A timetable produced by the system for review by the Dean and program coordinators. It is not an approved schedule until accepted through the college's and the university's own procedures.\n\nCorrection burden. The amount of rework needed after a schedule is drafted, measured by the number of conflicts or corrections, the staff time spent on them, and indicators of likely students change requests.\n\nDashboard. A visual summary within the system conflicts, room and laboratory utilization, faculty load, and validation status, intended to help authorized users review candidate schedules and make decisions.\n\nFaculty load distribution. The spread of teaching assignments across faculty members, assessed using measures finalized during requirements analysis.\n\nHard constraint. A mandatory scheduling rule that a feasible timetable must satisfy, such as preventing a room or faculty member from being assigned to overlapping classes."
+  },
+  {
+   "id": "a71bf5ed2ca2",
+   "source": "Research Manuscript",
+   "section": "4. Introduction › 4.6 Definition of Terms",
+   "priority": 0.85,
+   "text": "Optimization. In this study, the improvement of schedule quality and resource utilization relative to the documented current-process baseline. It does not imply a mathematically global optimum.\n\nPilot testing. A trial in which the Dean uses the system with the college's first-semester AY 2026-2027 scheduling data, without releasing the generated schedules for official use, to assess the system's usability and to obtain feedback.\n\nResource utilization. The extent to which rooms, laboratories, and faculty time are used within available capacity, assessed using measures finalized during requirements analysis.\n\nSchedule feasibility. The state in which all encoded hard constraints are satisfied. It does not by itself establish that preferences or schedule quality are optimal.\n\nSchedule quality. The degree to which a feasible schedule meets approved soft preferences and planning objectives, assessed using measures finalized during requirements analysis.\n\nScheduling-process effort. Staff time attributable to schedule preparation and correction, recorded using a defined start and end rule and expressed in person-hours.\n\nSoft constraint. A desirable but nonmandatory preference, such as avoiding a less-preferred time, whose priority must be set by the department."
+  },
+  {
+   "id": "190e9f7aee7d",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies",
+   "priority": 0.85,
+   "text": "This section reviews the theories, research, patents, standards, and existing systems relevant to an AI-based scheduling decision-support system for the College of Engineering. It establishes the technical foundation for a constraint-based, feasibility-first design, examines how published studies and available technologies treat scheduling constraints, workload, and schedule quality, and identifies the local gap that the project intends to address."
+  },
+  {
+   "id": "c5703c5ea2bc",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.1 Theoretical and Technical Foundations",
+   "priority": 0.85,
+   "text": "University course timetabling is a constrained allocation problem: teaching events must be assigned to periods and rooms while respecting faculty specializations and availability, section requirements, and institutional rules. These decisions are interdependent, so a locally acceptable assignment can make another event infeasible. Timetabling surveys describe the complexity of hard and soft constraints and review exact, metaheuristic, and hybrid approaches [2], [3]. For this proposal, \"AI-based\" refers to constraint-based search and optimization; it does not imply machine learning.\n\nEach required class event is assigned a time period, a room, and a qualified instructor. Hard constraints encode mandatory requirements:\n\n- A room cannot host simultaneous classes.\n- A faculty member or section cannot be assigned to overlapping events.\n- Each event must receive its required duration and meeting pattern.\n- A laboratory course must use a suitable laboratory room.\n- Class size cannot exceed room capacity.\n\nThe college must confirm additional rules, including teaching periods, faculty-subject specializations, and weekly meeting patterns, before they are encoded. Missing or outdated rules can produce a technically feasible but unacceptable candidate. If the input constraints are infeasible, the system should report the cause rather than silently relax a mandatory rule."
+  },
+  {
+   "id": "450fecaee963",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.1 Theoretical and Technical Foundations",
+   "priority": 0.85,
+   "text": "Soft constraints represent preferences that may be traded off only after stakeholder approval. Candidate examples in this proposal include preferred faculty periods, avoiding evening classes for lower-year sections where feasible, minimizing excessive gaps, balancing room use, and distributing faculty load. Constraint-handling approaches distinguish mandatory rules from preferences [4]. The final set and priority of soft constraints remain subject to requirements analysis; no preference should override a hard constraint without an authorized, documented exception.\n\nMixed-integer programming can represent assignment and resource constraints explicitly. Rappos et al. used a feasible-solution stage followed by local improvement in a competition problem that also included student-to-class allocation [5]. That benchmark design is informative about staged optimization, but individual student allocation is outside this proposal's scope. A suitable design sequence is to seek hard-constraint feasibility first, then improve candidates against stakeholder-approved preferences."
+  },
+  {
+   "id": "9a6e96535966",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.1 Theoretical and Technical Foundations",
+   "priority": 0.85,
+   "text": "The system should make candidate assignments, detected conflicts, unmet preferences, and the reasons for each warning reviewable. Multi-criteria timetabling research illustrates that criteria and decision levels can differ; some models also include individual student assignments, which this project excludes [6]. Whether the prototype uses a lexicographic hierarchy or agreed weights must be decided during requirements analysis and documented for staff review. The technical foundation is therefore a transparent constraint model, feasibility checks, preference-based improvement after stakeholder approval, and human review."
+  },
+  {
+   "id": "bd98aa483209",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.2 Review of Related Literature",
+   "priority": 0.85,
+   "text": "Automated scheduling. Automated timetabling research includes exact models, constraint-based methods, metaheuristics, and hybrids. The university course-timetabling survey by Chen et al. describes the prevalence of metaheuristic and hybrid approaches and notes that limited flexibility may constrain uptake in real-world settings [2], [3]. This literature supports explicit local rule encoding and testing; it does not establish which solver will fit this college or prove that automation alone improves schedule quality.\n\nConstraint-handling. Constraint-handling rules provide one way to represent mandatory conditions and preferences within a scheduling approach [4]. Mixed-integer programming provides another explicit formulation: Rappos et al. report a feasible-first method followed by local improvement and benchmark performance in the International Timetabling Competition 2019 [5]. The competition result is computational evidence for those instances, not evidence of local usability, staff-time savings, or fit with the department's rules."
+  },
+  {
+   "id": "c9a429c57dd3",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.2 Review of Related Literature",
+   "priority": 0.85,
+   "text": "Customization. Customization matters because institutions differ in their constraints and workflows. Algethami and Laesanklang model faculty-course assignments, specializations, preferences, and workload in a pre-registration setting [7]. Dunke and Nickel examine customized multi-level, multi-criteria planning, including individual assignments [6]. These studies help identify possible dimensions for requirements analysis, but the proposed prototype remains at the section, faculty, and room level and does not allocate individual students.\n\nAlgorithm performance. Algorithm studies report results on defined instances rather than end-to-end administrative outcomes. Song et al. found feasible solutions for 58 of 60 benchmark instances with an iterated local-search method [8]; Thepphakorn and Pongcharoen compared Cuckoo Search strategies on 11 engineering-faculty instances [9]. Such results demonstrate computational approaches in their tested settings only. They do not establish that either method is suitable for the department's data or that a particular runtime translates into reduced coordinator effort."
+  },
+  {
+   "id": "25eac04054c7",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.2 Review of Related Literature",
+   "priority": 0.85,
+   "text": "Operational efficiency. Evidence about operational efficiency should be separated from solver performance. Abdennadher and Marte describe a Munich prototype and report minutes of processing compared with manual days in that setting [4]. Stallaert reports an operational university case in which administrators used automated scheduling for three years and described comparable schedules as being prepared faster than manually [10]. Both are context-specific reports; neither provides a local estimate for this department. The present evaluation should therefore record elapsed time and person-hours by process stage, alongside solver runtime and correction effort.\n\nReal-world scheduling cases. Real-world problem descriptions also differ in their decision scope and data. Rudová, Müller, and Müllerová analyze 30 competition cases combining student sectioning with time and room assignment [11]. Their work illustrates variation across institutions, but those benchmark cases are not a direct comparator for a single college's pre-portal workflow. The proposed evaluation should use locally verified rules and a documented current-process baseline."
+  },
+  {
+   "id": "9d22581f2e2b",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.2 Review of Related Literature",
+   "priority": 0.85,
+   "text": "Schedule-quality measures. Studies of schedule quality provide candidate measures rather than a ready-made local objective. Tavakoli et al. report a course-timetabling case study using lecturer and course-related measures [12]. Palma and Bornhardt consider section balance and schedule flexibility in a curriculum-based model, including a real-case comparison with a manual schedule [13]. These examples make section balance and preference satisfaction reasonable topics for stakeholder review, but their case-specific results should not be generalized to this project.\n\nFaculty and room constraints. Faculty assignments, room suitability, capacity, and time conflicts are directly relevant to the department's stated scheduling problem. Research on faculty-course assignment constraints supports representing specializations, availability, and load explicitly [7]. The literature does not determine the college's preferred load distribution or establish that any one measure should dominate. The system should report feasibility separately from preference satisfaction, and staff should review any trade-offs."
+  },
+  {
+   "id": "69ab77b1c0a9",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.2 Review of Related Literature",
+   "priority": 0.85,
+   "text": "Schedule-quality criteria. Schedule quality is multidimensional. A candidate must first satisfy approved hard constraints; among feasible candidates, stakeholders may consider room and laboratory suitability, faculty availability and workload, section conflicts, and approved preferences. The preliminary faculty survey and scheduling-officer interview identify local issues for investigation, but neither establishes population-level priorities or a validated weighting scheme.\n\nFairness. Fairness may also matter if the department identifies a defensible objective, such as the distribution of undesirable time periods. Mühlenthaler and Wanka study the distribution of undesirable soft-constraint violations in academic timetabling [14]. Their work motivates asking stakeholders whether such a criterion is relevant; it does not mean that this proposal has selected a fairness measure or defined the groups to compare."
+  },
+  {
+   "id": "b56a48e211a9",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.2 Review of Related Literature",
+   "priority": 0.85,
+   "text": "Student-level allocation. This study does not optimize individual student schedules. Research that combines student sectioning with room and time assignment [11] or considers individual courses of study [6] addresses a broader or later allocation stage. Here, section-level enrollment and year information may inform candidate schedules, but the prototype will not assign named or individual students to sections. Any future expansion would require separate requirements, data, privacy review, and evaluation.\n\nEvaluation measures. Accordingly, evaluation should distinguish hard-constraint violations from unmet soft preferences, documented exceptions, resource-use measures, and staff correction effort. Benchmark feasibility, solver speed, or an aggregate score alone would not establish operational benefit. The definitions of errors, approved preferences, and any group-level comparisons must be settled with college stakeholders before testing.\n\nLocal validation. The literature provides design options and candidate evaluation dimensions, not a predetermined solver, objective weight, or expected benefit. The local study must verify its input data, confirm the department's rules, document the current workflow, and test whether staff can interpret and use the generated reports. No reduction in preparation time, rework, or student change requests is claimed before evaluation."
+  },
+  {
+   "id": "85a2f812d94d",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.3 Review of Patent Literature",
+   "priority": 0.85,
+   "text": "Patent literature was reviewed as a preliminary scan of examples of class-scheduling technology, not as a systematic patent search. The records in Table I were checked against public patent-database pages. They do not establish novelty, patentability, or freedom to operate; those questions require a broader search and appropriate legal review.\n\nTABLE I\n\nPRELIMINARY PATENT RECORDS ON CLASS TIMETABLE SCHEDULING"
+  },
+  {
+   "id": "f68bb3c6ba03",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.3 Review of Patent Literature",
+   "priority": 0.85,
+   "text": "| Patent number         | Main purpose                                   | Features described in the record                                                                   | Relation to this proposal                        | Scope distinction                                                                        | Design consideration                                       |\n| ------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |\n| US 2019/0180397 A1 [15] | Class timetable adjustment with real-time feedback | The proposal's reviewed record describes constraint-based timetable adjustment with conflict feedback. | Adjacent example of interactive timetable review.    | A patent record does not establish novelty, effectiveness, or freedom to operate.            | Make conflict reasons and revision effects reviewable.         |\n| US 8,052,426 B2 [16]    | Scheduling classes and educational resources       | The proposal's reviewed record concerns class scheduling and resource management.                      | Adjacent example of educational-resource scheduling. | Its record does not establish that the proposed local workflow is novel or legally distinct. | Base rules and priorities on department-approved requirements. |"
+  },
+  {
+   "id": "8302c08cf546",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.3 Review of Patent Literature",
+   "priority": 0.85,
+   "text": "The two patent records illustrate prior systems addressing timetable adjustment and educational-resource scheduling [15], [16]. They are useful as preliminary examples of related functionality, but this review does not infer that their features are unique or that the proposed system is technically or legally distinct. The project's local requirements—pre-portal preparation, section-level scheduling, faculty and room constraints, and staff review—must be evaluated on their own merits.\n\nFor the prototype, design requirements should be derived from verified department needs: display the reason for each detected conflict, distinguish mandatory rules from preferences, show the effect of revisions, and retain a record of approved rule priorities."
+  },
+  {
+   "id": "e8b4889fb370",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.4 Applicable Engineering Standards and Regulations",
+   "priority": 0.85,
+   "text": "ISO/IEC 25010:2023 and ISO/IEC 25012:2008 may guide the selection of software- and data-quality criteria relevant to the proposed scheduling decision-support system [17], [18]. The evaluation will use criteria that are relevant to the prototype and defined as observable measures in the methods section—for example, correct handling of approved scheduling constraints, validation of input data, and system response time.\n\nISO/IEC/IEEE 29148:2018 may guide how stakeholder needs and system requirements are elicited, documented, and checked for consistency [19]. The research team will tailor this guidance to the project's scope, including the college's approved scheduling rules and reporting needs.\n\nThe project will consider applicable university quality procedures under the university's ISO 9001-based quality-management system [20]. This may include documenting approved requirements and scheduling rules, recording validation and test results, and tracking revisions, exceptions, and corrective actions. This is project-level alignment with applicable university procedures; it is not a claim that the prototype is independently certified or conforms to all ISO 9001 requirements. The applicable edition should be confirmed with the university's quality-management office before finalizing reference [20]."
+  },
+  {
+   "id": "a321d75317f2",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.4 Applicable Engineering Standards and Regulations",
+   "priority": 0.85,
+   "text": "The proposed system schedules sections, faculty, and rooms; it does not assign individual students to sections. Where feasible, student enrollment should therefore be represented by section-level counts or requirements rather than individual student records. If identifiable faculty or student personal information is collected or used, the research team must follow applicable institutional ethics and data-protection requirements, including Republic Act No. 10173, the Philippine Data Privacy Act of 2012 [21]. The protocol should specify the purpose and scope of data use, data minimization, access controls, secure storage, retention, and safeguards for coded or aggregated information, subject to university review and authorization."
+  },
+  {
+   "id": "197cc3786a35",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.5 Existing Technologies and Systems",
+   "priority": 0.85,
+   "text": "Relevant technologies include constraint-based scheduling, mathematical-programming models, heuristic search, and interactive timetable tools. Published work addresses constraint handling [4], mixed-integer scheduling [5], faculty-course assignment [7], and section balance [13]; the patent records provide additional examples of class scheduling and adjustment [15], [16]. These sources address different decision scopes and do not demonstrate that a particular package is suitable for the department. The current local workflow uses spreadsheets and the university portal, whose capabilities must be confirmed directly with the department. The proposed system is standalone and supports preparation before portal entry; it does not integrate with the portal, assign individual students, or approve schedules.\n\nFor requirements analysis, candidate systems can be compared on support for time, room, and faculty constraints; laboratory type and capacity; separation of hard and soft rules; conflict explanations; staff-controlled revision; import or export; auditability; response time; and setup effort. These are comparison criteria, not confirmed features of a selected product. No software package or solver is selected until data, implementation requirements, licensing, and available technical resources have been reviewed.\n\nTABLE II\n\nEXISTING TECHNOLOGIES AND SYSTEMS RELEVANT TO THE PROJECT"
+  },
+  {
+   "id": "f0f4b4907405",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.5 Existing Technologies and Systems",
+   "priority": 0.85,
+   "text": "| Source                                 | Approach or technology                                | Relevant contribution                                                                | Limit                                                                          | Relevance to this project                                             |\n| ------------------------------------------ | --------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |\n| Abdennadher and Marte [4]                | Constraint-handling rules                                 | Addresses hard and soft constraints in university course timetabling.                    | Prototype and reported timing are specific to the Munich setting.                  | Supports explicit representation of mandatory rules and preferences.      |"
+  },
+  {
+   "id": "8eb0159b762b",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.5 Existing Technologies and Systems",
+   "priority": 0.85,
+   "text": "| Rappos et al. [5]                        | Mixed-integer programming with feasible-first improvement | Combines room/time assignment and student-class allocation.                              | Competition benchmark; includes individual allocation beyond this project's scope. | Supports considering a staged feasibility-then-improvement design.        |\n| Algethami and Laesanklang [7]            | Faculty-course assignment model                           | Represents faculty specializations, preferences, and load in a pre-registration setting. | Model evidence does not establish local usability or staff-time savings.           | Informs faculty-related input and constraint requirements.                |\n| Palma and Bornhardt [13]                 | Curriculum-based integer optimization                     | Considers section balance and schedule flexibility.                                      | Case-specific model and comparison; not a direct local effect estimate.            | Suggests section balance as a candidate measure for stakeholder review.   |\n| College spreadsheets and university portal | Current manual preparation and portal encoding            | Describes the local process to be documented and measured.                               | Capabilities and baseline details require confirmation with the department.        | Provides the comparator; the prototype remains standalone and pre-portal. |"
+  },
+  {
+   "id": "7ca398b39b79",
+   "source": "Research Manuscript",
+   "section": "5. Review of Literature and Related Studies › 5.6 Synthesis of the Review",
+   "priority": 0.85,
+   "text": "The reviewed literature supports investigating a transparent, feasibility-first scheduling process that separates mandatory constraints from stakeholder-approved preferences and leaves final review to college staff. Published algorithm results concern their tested instances; operational reports are limited to the institutions studied [4], [8]–[10]. Other work helps identify faculty-assignment, section-balance, and possible fairness dimensions [7], [13], [14], while competition cases show that timetabling problems vary across institutions [11]. Preliminary patent records are examples only [15], [16]. The proposal's listed standards require edition and applicability checks before detailed use [17]–[20], and data handling requires institutional review under applicable law [21]. The local gap is to translate verified college rules into a standalone pre-portal decision-support prototype and evaluate feasibility, preference satisfaction, resource use, preparation effort, corrections, and user experience against a documented baseline."
+  },
+  {
+   "id": "bb8869f760fd",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.1 Research Design",
+   "priority": 0.85,
+   "text": "The study is applied research because it responds to a documented local scheduling problem, and developmental research because it will design, build, and evaluate a software system. The work will proceed from descriptive process analysis to requirements specification, iterative prototype development, and system evaluation. At proposal stage, only the scheduling-officer interview figures have been supplied; faculty and student baseline data and the proposed system's performance results are not yet available.\n\nEvaluation should compare the current process with system-assisted scheduling on the same or closely matched schedule inputs where feasible. If a single semester's data and schedule cycle are available, use paired comparisons at the schedule or program level; otherwise report descriptive prototype tests and usability findings without implying a causal effect."
+  },
+  {
+   "id": "98453f8dfeff",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.2 Research Environment",
+   "priority": 0.85,
+   "text": "The study is situated in the College of Engineering at Manuel S. Enverga University Foundation (MSEUF), Lucena City. The system scope is the seven programs and the current College of Engineering building. Department personnel prepare schedules through the existing spreadsheet-based workflow and submit schedules to the university's official portal for encoding and subsequent institutional review. Program coordinators, the Dean, scheduling personnel, faculty, and students are relevant stakeholders. The application is planned as a standalone tool used before portal encoding."
+  },
+  {
+   "id": "1e814b525c4e",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures",
+   "priority": 0.85,
+   "text": "The procedure for this study followed a systematic, step-by-step process, beginning with the collection of relevant information and the identification and analysis of existing class scheduling problems. Based on the findings, appropriate solutions were formulated, and a development plan for the decision-support system was established. The process then proceeded to the system's design and development, followed by implementation and validation to assess its functionality and effectiveness in addressing the identified scheduling problems."
+  },
+  {
+   "id": "829777f57339",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.1 Data-Gathering Plan",
+   "priority": 0.85,
+   "text": "The data-gathering process was designed to identify the existing problems in the class scheduling process of the College of Engineering and establish the requirements for the proposed decision-support system. Interviews with the Dean and the scheduling officer were conducted to obtain information about the current scheduling practices, encountered difficulties, and considerations involved in faculty and classroom assignments. These interviews provided the initial context for the study and helped identify the issues requiring further investigation.\n\nSurvey questionnaires were also administered to faculty members and students. Printed questionnaires were distributed to faculty members, while an online questionnaire was used to gather responses from students. The instruments consisted of multiple-choice questions, open-ended questions and rating-scale questions. The questions covered the respondents' profiles, experiences with the existing scheduling process, satisfaction levels, encountered problems, feedback, and suggested improvements. The collected responses were used to identify recurring scheduling issues and determine the functional requirements of the proposed system."
+  },
+  {
+   "id": "ff27b05b5843",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.1 Data-Gathering Plan",
+   "priority": 0.85,
+   "text": "For the faculty survey, the target sample consisted of 30 out of the 44 faculty members in the College of Engineering. Due to the limited availability of some faculty members, the research team sought to obtain responses from as many faculty members as possible. If the target sample could not be achieved, the actual number of respondents would be reported, together with the corresponding response rate and sampling limitations. This approach allowed the researchers to document the available faculty feedback without assuming that a smaller sample automatically satisfied the intended margin of error.\n\nFor the student survey, the population consisted of 903 first- and second-year engineering students. Using Slovin's formula with a 5% margin of error, the required sample size was calculated as follows:\n\n$$\nn=\\frac{N}{1+Ne^2}\n$$\n\n(1)\n\n$$\nn=\\frac{903}{1+(903)({0.05)}^2}\n$$\n\n$$\nn=277.14 (approx. 278)\n$$\n\nTherefore, the target sample was set at 278 students. The survey aimed to determine the reasons for student requests for schedule changes and identify the problems they encountered with the existing scheduling process. The selection of respondents was to be conducted using a Cluster sampling method to ensure that the student population was adequately represented."
+  },
+  {
+   "id": "06296ee70b1c",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.1 Data-Gathering Plan",
+   "priority": 0.85,
+   "text": "The data-gathering activities were allocated a period of eight weeks: three weeks for approvals, 2 weeks for interview on the stakeholders including analysis on department's workflow, and three weeks for respondent survey. In parallel, the research team sought authorization through the appropriate university office to access the department portal and obtain relevant scheduling records. Subject to the approved scope of access, these records would be used as input data for developing, testing, and validating the proposed decision-support system. The records would support the assessment of the system's ability to assist in scheduling decisions and resource allocation. The findings from the interviews, surveys, and authorized portal records would then be consolidated to establish the system requirements and evaluate the proposed solution."
+  },
+  {
+   "id": "c04f1cb3c24e",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.2 Analysis Plan",
+   "priority": 0.85,
+   "text": "The analysis plan focuses on reviewing the technical requirements, applicable standards, and operational constraints relevant to the development of the proposed class scheduling decision-support system for the College of Engineering. The review will establish the necessary system functions, data requirements, operating conditions, and limitations that must be considered in designing the proposed solution.\n\nThe technical requirements will be examined by identifying the scheduling data needed by the system, including faculty profiles and specializations, teaching assignments, course offerings, and classroom and laboratory availability. The required system functions, data-processing procedures, and expected outputs will also be identified to establish how the system will support scheduling decisions and identify potential conflicts. Relevant software, hardware, and data-access requirements will be considered in determining the system's technical specifications and overall design."
+  },
+  {
+   "id": "e967e12aba58",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.2 Analysis Plan",
+   "priority": 0.85,
+   "text": "Applicable university policies, departmental scheduling procedures, and relevant technical and data privacy requirements will also be reviewed to ensure that the proposed system follows established scheduling rules and information-handling requirements. Particular attention will be given to faculty specialization requirements, teaching assignments, room capacity, and resource availability, as these factors may affect the feasibility of schedule allocation.\n\nFinally, the operational and technical constraints affecting system development and implementation will be assessed. These may include restrictions on accessing the existing department portal, the availability and completeness of scheduling records, limitations in faculty and classroom resources, and the time and technical resources available for development. The findings from these reviews will serve as the basis for defining the system requirements, establishing the design specifications, and determining the appropriate scope and functionality of the proposed decision-support system.\n\nSTART: Review of Existing Scheduling Process\n\nGather scheduling records, departmental procedures, and system-related information.\n\n1. Technical Requirements Analysis\n\n- Faculty profiles and specializations\n- Teaching assignments and course offerings\n- Classroom and laboratory availability\n- Required system functions, inputs, and outputs"
+  },
+  {
+   "id": "aca61a43b049",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.2 Analysis Plan",
+   "priority": 0.85,
+   "text": "2. Policy and Standard Review\n\n- University policies and departmental scheduling rules\n- Faculty specialization and teaching-load requirements\n- Room capacity and resource allocation rules\n- Data privacy and information-handling requirements\n\n3. Operational Technical Constraints Assessment\n\n- Existing department portal access and integration limitations\n- Completeness and availability of scheduling records\n- Faculty and classroom resource limitations\n- Available development time, hardware, and software\n\n4. Consolidation of Findings\n\nDetermine system requirements, design specifications, scope, and functional limitations.\n\nOUTPUT: System Design Basis\n\nRequirements and constraints that will guide the development of the class scheduling decision-support system.\n\nFig. 2. Analysis Plan Flowchart\n\nFigure 2 presents the analysis plan for the development of the class scheduling decision-support system. The analysis will cover technical requirements, applicable policies and standards, and operational and technical constraints. The findings from these activities will be consolidated to determine the system requirements, design specifications, and implementation limitations. These outputs will provide the basis for the subsequent design and development of the proposed system."
+  },
+  {
+   "id": "c4d10798646c",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.3 Design and Development Plan",
+   "priority": 0.85,
+   "text": "The design and development plan describes the process of translating the identified technical requirements, scheduling rules, and operational constraints into a functional class scheduling decision-support system for the College of Engineering. The development process will focus on establishing the system specifications, designing the system components, and integrating the necessary functions to support scheduling decisions and resource allocation.\n\nThe design specifications will be established based on the results of the analysis, including the required scheduling data, faculty specialization requirements, teaching assignments, classroom and laboratory availability, and applicable scheduling rules. These specifications will define the system's required inputs, processing procedures, decision rules, and outputs. A system architecture diagram, process flowchart, and input-process-output model may be prepared to illustrate the relationships among the system components and the flow of scheduling information."
+  },
+  {
+   "id": "962d6641032f",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.3 Design and Development Plan",
+   "priority": 0.85,
+   "text": "The development stage will involve preparing the necessary system models and logical procedures for processing scheduling data, identifying conflicts, and generating scheduling recommendations. Appropriate programming tools, software components, and data-management methods will be selected based on the established specifications and available technical resources. The identified functions will then be programmed and integrated into the proposed system to ensure that the input data, scheduling rules, processing procedures, and outputs operate as intended.\n\nThe completed system design and its integrated components will serve as the basis for subsequent testing and validation. The developed system will be evaluated to determine whether it satisfies the established functional requirements and supports the scheduling needs of the College of Engineering."
+  },
+  {
+   "id": "0b6fc9d9a6bb",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.4 Evaluation/ Validation Plan",
+   "priority": 0.85,
+   "text": "The evaluation and validation plan focuses on determining whether the developed class scheduling decision-support system meets the established technical requirements and addresses the scheduling problems identified in the College of Engineering. The system will be evaluated through functional testing, verification of scheduling constraints, and assessment of its usability and practical applicability to the existing scheduling process.\n\nFunctional testing will be conducted to determine whether the system processes the required scheduling data correctly, identifies potential conflicts, and generates scheduling recommendations based on the defined rules and constraints. The resulting schedules will be examined to verify compliance with applicable requirements, including faculty specialization, teaching assignments, classroom and laboratory availability, and other relevant scheduling policies. Where appropriate, the system's outputs will be compared with existing scheduling records or manually verified scheduling scenarios to assess the accuracy and consistency of its results."
+  },
+  {
+   "id": "93523e7e0894",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.3 Procedures › 6.3.4 Evaluation/ Validation Plan",
+   "priority": 0.85,
+   "text": "The system's practical usefulness will also be evaluated using appropriate feedback from the intended users, such as the scheduling officer and other authorized personnel involved in class scheduling. Their feedback will be used to assess the system's usability, clarity of outputs, and suitability for supporting scheduling decisions. If baseline data on scheduling preparation time and revisions are available, these may also be compared with results obtained using the developed system to examine potential improvements in process efficiency.\n\nFinally, the evaluation results, identified limitations, testing records, and recommended improvements will be documented. Relevant system diagrams, specifications, test cases, results, and user feedback will be compiled to provide evidence of the system's performance and the extent to which it meets the objectives of the study."
+  },
+  {
+   "id": "d55ae04783f8",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.4 Design Concept",
+   "priority": 0.85,
+   "text": "The proposed design is an AI-assisted, spreadsheet-based class scheduling decision-support system for the College of Engineering, named ORDIQ, with the tagline \"Order Meets Intelligence.\" The system is designed to support the preparation, checking, generation, and review of class schedules while retaining authorized personnel's responsibility for reviewing and approving the final timetable.\n\nFig. 3. ORDIQ Application Logo\n\nFigure 3 illustrates the ORDIQ logo combines a calendar and a stylized artificial intelligence brain to represent the integration of class scheduling and intelligent decision support. The maroon and orange color scheme establishes the application's visual identity, while the calendar symbolizes timetable organization, and the brain represents AI-assisted analysis and decision-making. These elements reflect the system's tagline, \"Order Meets Intelligence.\"\n\n1. Overview of the Proposed System"
+  },
+  {
+   "id": "5958a17e01f6",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.4 Design Concept",
+   "priority": 0.85,
+   "text": "The proposed system will be developed as a standalone scheduling application featuring a spreadsheet-based workspace, an integrated AI Assistant, a dashboard, and reporting functions. Its interface will provide centralized access to academic data and scheduling tools, allowing authorized users to manage scheduling information, identify conflicts, generate candidate timetables, and review resource allocation. The application will support both the validation of existing schedules and the generation of alternative schedules based on approved constraints. Final approval and encoding into the existing academic portal will remain outside the system's direct scope.\n\n2. Spreadsheet-Based Workspace\n\nThe main workspace will organize faculty, courses and sections, rooms and laboratories, time periods, and schedules into editable tables. The faculty data view will include information such as faculty identification, specialization, teaching load, availability, preferences, and status. Data-entry controls, search, filtering, and import and export options will support the management and review of scheduling records. Validation rules will identify missing, invalid, or inconsistent information before schedule generation.\n\nFig. 4. Proposed ORDIQ Application Interface"
+  },
+  {
+   "id": "47cd289fc97b",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.4 Design Concept",
+   "priority": 0.85,
+   "text": "Figure 4 shows the proposed interface presents the system's main dashboard, spreadsheet-based data workspace, weekly schedule preview, system analytics, and integrated AI Assistant. The navigation sidebar provides access to faculty, courses and sections, rooms and laboratories, schedules, rules and preferences, and reports. Dashboard indicators summarize scheduling information, while the AI Assistant supports users in identifying conflicts and requesting schedule improvements.\n\nThe interface is designed to consolidate scheduling activities within a single workspace. The spreadsheet-based layout supports the management and review of academic data, while the dashboard and analytics provide an overview of scheduling conditions. The AI Assistant complements these functions by helping users interpret issues and access scheduling operations. Together, these components are intended to support a more organized scheduling process while retaining human review and approval of final schedules.\n\n3. Integrated AI Assistant"
+  },
+  {
+   "id": "fd3fc2666fcb",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.4 Design Concept",
+   "priority": 0.85,
+   "text": "A persistent AI Assistant panel will be positioned beside the main workspace, allowing users to issue supported natural-language commands without leaving the current view. Users may request conflict checks, workload summaries, explanations of scheduling issues, room-utilization reviews, and candidate schedule generation. The AI Assistant will interpret requests and explain results, while the constraint-based scheduling engine will perform the actual validation and timetable-generation operations. Changes to important records and schedules will require user review and confirmation.\n\n4. Dashboard and Reporting Functions\n\nThe dashboard will provide an overview of scheduling status through indicators such as the number of classes scheduled, detected conflicts, faculty workload balance, and room utilization. The finalized interface will also include a weekly timetable preview, system analytics, and a summary of conflicts requiring attention. Reporting functions will present validation findings, candidate schedules, unresolved constraints, and scheduling summaries. Displayed indicators will be based on available data and defined calculation methods; illustrative values in the design mockup will not be treated as verified results.\n\n5. Proposed System Architecture"
+  },
+  {
+   "id": "e28d4d2a9058",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.4 Design Concept",
+   "priority": 0.85,
+   "text": "The system will consist of connected components for data management, validation, scheduling, user interaction, reporting, and export. The spreadsheet workspace will manage academic records, the validation module will check data quality, and the constraint-based scheduling engine will evaluate existing schedules and generate candidate timetables. The AI Assistant will interpret user requests and explain results, while the dashboard and reporting module will present relevant indicators and findings. An export module will prepare reviewed schedules for encoding into the existing academic portal. The application will operate independently without assuming direct portal integration.\n\n6. Scheduling Constraints and Priorities\n\nThe scheduling engine will distinguish between hard constraints and soft preferences. Hard constraints, such as faculty availability, faculty and room conflicts, room capacity and suitability, required course contact hours, and approved calendar restrictions, must be satisfied for a schedule to be considered feasible. Soft preferences, such as preferred teaching periods and workload distribution, may be used to compare feasible alternatives based on priorities approved by the department. If no feasible schedule can be generated, the system will report the limitation rather than silently relax mandatory requirements.\n\n7. Proposed User Workflow"
+  },
+  {
+   "id": "7ac1629142b7",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.4 Design Concept",
+   "priority": 0.85,
+   "text": "The proposed workflow will begin with entering or importing academic data, followed by data validation and the checking of existing schedules or generation of candidate timetables. The system will display conflicts, unmet preferences, and other relevant findings through the spreadsheet workspace, dashboard, AI Assistant, and reports. Authorized users may correct data, revise scheduling criteria, and compare alternatives before reviewing and approving a selected schedule. The approved timetable may then be exported for encoding into the existing portal.\n\n8. Data Management, Export, and User Control\n\nThe system will use structured records to support consistent validation of faculty, courses, sections, rooms, and schedules. Import and export functions will be designed according to the data formats required by the department. Access to scheduling information will be limited to authorized users, and the application will distinguish original records from proposed changes and generated schedules. Important changes will require confirmation to support data integrity and human oversight.\n\n9. System Evaluation and Validation"
+  },
+  {
+   "id": "97f26008bf36",
+   "source": "Research Manuscript",
+   "section": "6. Methods and Procedures › 6.4 Design Concept",
+   "priority": 0.85,
+   "text": "The proposed system will be evaluated through functional testing, testing using available first-semester Academic Year 2026–2027 scheduling data, and pilot testing with the Dean or other authorized personnel. Evaluation may consider schedule feasibility, conflict detection, faculty workload compliance, room utilization, schedule preparation and revision effort, and user-perceived usability. Performance claims will be based on defined evaluation criteria and actual test results rather than the visual interface alone.\n\n10. Design Decisions Requiring Confirmation\n\nThe final implementation will require confirmation of the department's mandatory scheduling constraints, preference priorities, spreadsheet fields, AI Assistant permissions, import and export formats, user access requirements, and evaluation criteria. These details will be established with the appropriate department personnel and project supervisor before implementation."
+  },
+  {
+   "id": "0170a0eb1b9d",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "This section presents and discusses the findings from the interviews, documented scheduling workflow, time-study records, and surveys administered to faculty members and first- and second-year engineering students. The results are examined in relation to the study objectives of documenting the existing scheduling process, identifying recurring scheduling problems and their potential causes, and deriving requirements for an AI-based scheduling decision-support system. The findings describe the current process and provide a basis for system design and subsequent evaluation; they do not establish that the proposed system has already improved scheduling performance.\n\n1. Existing Process and Challenges of Department Scheduling\n\nThe existing scheduling process was examined through interviews with the Dean and scheduling officer and review of the recorded workflow. The analysis focused on the sequence of schedule preparation, portal encoding, conflict checking, program-level revisions, and university-level review. These findings were used to identify the operational constraints that should be addressed by the proposed decision-support system.\n\nScheduling Officer receives schedule data/report\n\nSchedule data is encoded into the university portal\n\nRegistrar checks the submitted schedule report\n\nConflicts detected?\n\nSubmit schedule report to university portal"
+  },
+  {
+   "id": "e8cd1b22ed04",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "Schedule report endorsed to Audit then to Office of the VPAR\n\nScheduling officer manually checks for conflicts\n\nScheduling Officer notifies Program Coordinators\n\nCoordinators manually rework their program schedules to eliminate conflicts\n\nNone\n\nYes\n\nAccepted?\n\nProcessors verify department schedule\n\nNo\n\nDocument finalized department schedule\n\nDean manually plots the department schedule reusing Microsoft Excel\n\nRooms, laboratories, faculty specialization and availability, course subjects, blocks, and time\n\nYes\n\nFig. 5. Current Scheduling Process of the Department"
+  },
+  {
+   "id": "3fb6175d31e2",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "Figure 5 illustrates the existing scheduling process of the College of Engineering, as documented through interviews with the department dean and scheduling officer. The process begins with the dean manually preparing the department schedule using Microsoft Excel, considering faculty specialization and availability, course subjects, time blocks, classrooms, and laboratories. The schedule is then forwarded to the scheduling officer, who encodes the information into the university portal and manually checks for scheduling conflicts. When conflicts are detected, the scheduling officer notifies the concerned program coordinators, who manually revise their respective program schedules. The revised information is then returned for further processing and checking. Once no conflicts are detected, the schedule report is submitted through the portal for review by the Registrar, followed by endorsement to the Audit Department and the Office of the Vice President for Academic and Research Affairs (OVPAR). The university processors then verify the submitted schedule and determine whether it is accepted. If the schedule is rejected, the department must make the necessary revisions and resubmit the report, potentially extending the overall processing time. These review and verification stages follow established procedures and processing periods that are beyond the department's direct control."
+  },
+  {
+   "id": "fc3db6ba5f8f",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "The interviews further revealed three major challenges that contribute to the complexity and delays of the existing scheduling process, ranked by the department dean and scheduling officer as follows: (1) faculty specialization, (2) time gaps between subjects, and (3) classroom and laboratory utilization based on capacity.\n\nFaculty specialization. Faculty specialization was identified as the most challenging scheduling consideration because each faculty member must be assigned subjects aligned with their qualifications and area of specialization. Differences in faculty teaching loads, specializations, and assigned subject types further complicate the allocation process, requiring considerable effort to develop a feasible schedule.\n\nTime gaps between subjects. Unexpected gaps between subjects may become apparent after schedules have been prepared or published, requiring further adjustments. The scheduling officer also reported that students may begin enrolling while the schedules are still being encoded into the academic portal. This situation creates additional constraints because enrollment may begin before the schedules have been finalized, potentially complicating subsequent revisions."
+  },
+  {
+   "id": "5998446dcd6e",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "Classroom and laboratory utilization based on capacity. Another challenge involves assigning student sections to appropriate classrooms and laboratories according to enrollment and room capacity. Based on the information gathered, lecture rooms accommodate at least 40 students, while laboratory rooms accommodate at least 30 students. Although the department considers its available facilities sufficient, the limited number of rooms requires careful coordination of room assignments, student sections, and time slots to avoid conflicts and capacity-related issues.\n\nTaken together, these findings suggest that the primary improvement opportunity lies in optimizing the scheduling and allocation of existing academic resources rather than simply increasing the number of available rooms. Improving the coordination of faculty assignments, subject time slots, student sections, and room utilization may reduce scheduling conflicts and unnecessary revisions. A decision-support system that identifies potential conflicts before submission could help the department prepare more accurate schedules and minimize avoidable rework. However, the university's required review and verification stages would remain necessary, and their established processing periods would still need to be considered in the overall scheduling timeline.\n\nTABLE III\n\nTIME STUDY ANALYSIS OF DEPARTMENT MANUAL SCHEDULING PROCESS"
+  },
+  {
+   "id": "fae0d75f6902",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "| No. | Activity                          | Description                                                                                                                                                           | Time (days) |\n| ------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |\n| 1       | Plotting of initial scheduling matrix | The department dean manually composes the department scheduling with the aid of Microsoft Excel                                                                           | 15              |\n| 2       | Rework of program schedules           | Program coordinators of all seven engineering programs manually rework their schedules to fix errors and resolve conflicts.                                               | 22              |\n| 3       | Portal encoding                       | Scheduling officer encodes the plotted, revised, and reworked versions of schedules.                                                                                      |                 |\n| 4       | Registrar confirmation                | The registrar confirms the submitted department scheduling report from the portal; non-negotiable process.                                                                | 3               |\n| 5       | Audit checking                        | The Aduit department manually checks the elements of the submitted scheduling report; non-negotiable process.                                                             | 4               |\n| 6       | Office of the VPAR processing         | The office of the vice president for academics and research affairs verifies the department scheduling and returns report back to the department; non-negotiable process. | 3               |\n| TOTAL   |                                       |                                                                                                                                                                           | 47          |"
+  },
+  {
+   "id": "64cb4826deea",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "Table III summarizes the recorded durations for the existing scheduling process. The total recorded duration is 47 days, consisting of 15 days for preparation of the initial scheduling matrix, 22 days for program-schedule rework combined with portal encoding and re-encoding, and 10 days for the subsequent university-level review stages. The 10-day review period comprises three days for the Registrar, four days for the Audit Department, and three days for the Office of the Vice President for Academic and Research Affairs (OVPAR). These figures should be retained only if they match the source records and the process stages were measured using consistent start and end points.\n\nThe first 37 days represent 78.7% of the recorded 47-day duration, while the university-level review stages account for the remaining 10 days, or 21.3%. These percentages describe the distribution of recorded elapsed time; they do not represent the percentage of waste or the amount of time that could necessarily be saved. In particular, the 22-day entry combines rework and portal encoding, so the time attributable to each activity cannot be separated from the available data. The results therefore indicate an opportunity to improve early validation and reduce avoidable revisions, but they do not quantify potential time savings."
+  },
+  {
+   "id": "f21d5ae9f0df",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "Research on university course timetabling describes scheduling as a constrained allocation problem in which multiple requirements must be considered together [22]. In the College of Engineering, these requirements include faculty specialization and availability, teaching assignments, room and laboratory capacity, section schedules, and required contact hours. A decision-support system could help staff identify conflicts before portal submission. However, the extent to which it reduces preparation time or revisions must be established through testing against the documented manual baseline. The recorded 47 days should also be identified as calendar days or working days, and the study should clarify whether any process stages overlap.\n\n2. Results of Survey"
+  },
+  {
+   "id": "832673422743",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "The survey was conducted within the College of Engineering. Printed questionnaires were distributed to faculty members, while online questionnaires were administered to first- and second-year engineering students. A total of 23 faculty members responded from a population of 44, equivalent to 52.27% of the faculty population. The student survey received 349 responses, exceeding the stated target of 278. The results are presented descriptively to identify reported scheduling experiences and requirements. Because participation depended on respondent availability and the student survey covered only first- and second-year students, the findings should not automatically be generalized to every faculty member or student in the department.\n\nFig. 6. Classification of Faculty Members\n\nFig. 7. Teaching Units of Faculty Members\n\nFig. 8. Number of Teaching Years of Faculty Members\n\nFig. 9. Courses Taught by Faculty Members\n\nFig. 10. First- and Second-Year Student Respondents\n\nFig. 11. Number of Regular and Irregular Students"
+  },
+  {
+   "id": "6ecff73867dd",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "Figures 6–9 summarize the faculty respondents' profiles. Of the 23 respondents, 13 were full-time permanent faculty members, eight were full-time non-permanent faculty members, and two were part-time faculty members. Eighteen respondents reported teaching loads of 24 units or more, while eight reported 11–20 years of teaching experience. Professional engineering courses represented the largest reported course category, followed by general engineering, engineering mathematics, and sciences. These responses include faculty members with varied appointment types, teaching loads, and course assignments, supporting the need to maintain accurate faculty availability, workload, and specialization information in the scheduling process. Figures 10–11 present the student respondents' program distribution and regular or irregular status; these profiles describe the respondents and should not be interpreted as proof that the sample represents the full student population.\n\nFig. 12. Feedback of Faculty Members on the Current Scheduling System"
+  },
+  {
+   "id": "d95193b213a0",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "Figure 12 illustrates the rating of the faculty respondents in terms of their satisfaction and experiences in the existing department scheduling. Most of the respondents agreed, while few were absolutely agreed on each situation. Results also imply that some the respondents do not agree on each situation. Likewise, others remain neutral while few are found highly disagreed.\n\nFig. 13. Process Improvement Voting\n\nFig. 14. Process Improvement Voting\n\nFigure 12 summarizes faculty members' ratings of their experiences with the existing scheduling system. The responses include agreement, neutrality, and disagreement across the presented statements. The results therefore indicate varied experiences rather than unanimous dissatisfaction. The interpretation should remain tied to the wording and response scale of each survey item, and the figure should display legible labels and counts or percentages."
+  },
+  {
+   "id": "27e0c4ba43cb",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "As shown in the process-improvement results, 22 of the 23 faculty respondents answered that the existing scheduling system needs significant improvement, while one respondent answered no. Thus, 95.7% of the participating faculty members indicated a perceived need for improvement. The improvement aspects shown in the associated figures include faculty availability and assignment, room or laboratory assignment, schedule preparation, and schedule coordination. These findings support further development of a decision-support tool, but they do not by themselves demonstrate that an AI-based system will be effective.\n\nFig. 15. Problems Encountered in the Scheduling System"
+  },
+  {
+   "id": "6c0b0c60b4b1",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "Figure 15 shows the problems reported by faculty members in the existing scheduling process. Classroom conflicts were selected 19 times, schedule errors 11 times, time lapses 11 times, specialization mismatch seven times, and other problems once. Classroom conflicts were therefore the most frequently selected issue, while schedule errors and time lapses were tied for the next-highest count. Because the item allowed multiple selections, these values are selection counts and should not be interpreted as mutually exclusive categories or summed to estimate a proportion of respondents. The results suggest that the system should check room and laboratory double-booking, time-slot overlap, and schedule consistency while continuing to enforce faculty-specialization requirements as a mandatory assignment rule.\n\nFig. 16. Frequency of Encountered Errors in Faculty Schedule\n\nFig. 17. Frequency of Faculty Reworking on their Schedule\n\nFig. 18. Time-related Causes\n\nFig. 19. Room-related Causes\n\nFig. 20. Room-related Causes"
+  },
+  {
+   "id": "7bd6db857ade",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "For the frequency of errors or conflicts in faculty schedules, six respondents selected \"Rarely,\" 11 selected \"Sometimes,\" and six selected \"Often\"; no respondent selected \"Never\" or \"Very Often.\" For the frequency of schedule revisions or rework, five respondents selected \"Rarely,\" 11 selected \"Sometimes,\" and seven selected \"Often\"; again, no respondent selected \"Never\" or \"Very Often.\" These results show that all 23 participating faculty members reported encountering errors or conflicts and schedule rework at least rarely. The modal response for both items was \"Sometimes.\" The findings indicate recurring issues within the respondent group, but they do not quantify the time or cost associated with each revision."
+  },
+  {
+   "id": "dda2c7edf45c",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "The reported causes span time, room, and subject-related constraints. Time-related selections included overlapping schedules involving faculty, year levels, or sections (15), faculty availability or teaching load not being properly considered (12), and schedule hours not matching required contact hours (six). Room-related selections included room or laboratory availability and double-booking (14), and a mismatch between room capacity or type and the class or subject (12). Subject-related selections included changes in faculty, subject, section, or room after the draft schedule was prepared (15), outdated or incorrect subject information (seven), and faculty-specialization mismatch (six). Since these were multiple-response items, the counts are not mutually exclusive. Collectively, they support the need for reliable input data, early conflict checking, and revalidation whenever an affected assignment changes.\n\nFig. 21. Number of Student Schedule-Change Requests\n\nFig. 22. Types of Schedule-Change Requests"
+  },
+  {
+   "id": "2fa5859cc092",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "The student questionnaire received 349 responses from first- and second-year engineering students. In the schedule-change question, 16.6% of respondents answered yes and 83.4% answered no. Based on 349 responses, these percentages correspond approximately to 58 yes responses and 291 no responses; the exact counts should be confirmed using the raw survey export before submission. The types-of-adjustment chart is based on the 58 responses and allows multiple selections. The most frequently selected adjustment was a change in subject schedule (39 selections, 67.2%), followed by resolution of overlapping schedules (17, 29.3%), family or personal circumstances (14, 24.1%), change of instructor or class section (13, 22.4%), adding or dropping subjects (10, 17.2%), and change of room or laboratory (four, 6.9%)."
+  },
+  {
+   "id": "f0d7065ca8fb",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "The survey result differs substantially from the scheduling officer's approximate estimate that 70% of 903 first- and second-year students request schedule changes. These values come from different sources and should not be combined or treated as equivalent measures. The available information does not establish whether the discrepancy results from different definitions of a schedule-change request, different reporting periods, different populations, or recall and response differences. Unless the researchers can verify a common definition and reporting period, the paper should report both figures with their sources and explicitly state that they are not directly comparable.\n\nThe student responses indicate that subject-time compatibility and overlapping schedules are relevant concerns. However, requests related to family or personal circumstances and adding or dropping subjects may not be preventable through timetable optimization. The student results should therefore inform the system's conflict-checking requirements without implying that every schedule-change request can or should be eliminated.\n\n3. Analysis\n\nFig. 23. Ishikawa Diagram of Scheduling Rework\n\n."
+  },
+  {
+   "id": "644113d1b909",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "The effect examined in the Ishikawa analysis is repeated schedule corrections and prolonged preparation of a feasible department timetable. The interview, time-study, and survey findings indicate potential contributing causes in several connected areas: people and assignment information, scheduling methods, time and section constraints, room and laboratory resources, source-data accuracy, and post-draft changes. The diagram organizes these reported factors for analysis; it does not prove that each factor independently causes rework. A fishbone diagram is commonly used to organize potential causes of a defined problem and support further investigation [23].\n\nFig. 24. Why-Why Analysis Identified Scheduling Problem\n\nThe proposed decision-support system should therefore validate required input fields, check mandatory constraints, flag overlapping assignments, identify the records involved in each conflict, and recheck affected assignments after changes. Final scheduling decisions and exceptions should remain subject to authorized department personnel.\n\nSynthesis and implications for system requirements"
+  },
+  {
+   "id": "e937ea2d91d0",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "The results identify recurring problems involving room conflicts, schedule errors, time lapses, workload and availability, required contact hours, and changes to scheduling information after the initial draft. The interviews emphasize faculty specialization as a difficult planning constraint, while faculty respondents most frequently reported classroom conflicts. These findings are not necessarily contradictory: the interviews describe perceived difficulty in constructing the overall timetable, whereas the survey records problems experienced by individual faculty members. The system should prioritize mandatory constraint checking, data validation, and revalidation after changes. The study should evaluate the prototype using documented criteria such as the number of detected conflicts, the number of unresolved hard-constraint violations, the number of revisions required, preparation and review time, and user feedback. No performance improvement should be claimed until these measures have been tested against the existing process."
+  },
+  {
+   "id": "a114aa850681",
+   "source": "Research Manuscript",
+   "section": "7. Results and Discussion",
+   "priority": 0.85,
+   "text": "In summary, the findings have several limitations. The faculty survey included 23 of 44 faculty members, and the student survey covered first- and second-year students only. The reported 16.6% student schedule-change result differs from the scheduling officer's approximate 70% estimate, and the available information does not establish that the figures use the same definition, population, or reporting period. The time-study record also combines schedule rework and portal encoding into a single 22-day entry, preventing the duration of each activity from being separated. These limitations should be considered when interpreting the results and when designing the subsequent system evaluation.\n\nFurther, the results describe a manual, multi-stage scheduling process with a recorded duration of 47 days and recurring problems associated with time, room, and subject constraints. The findings support developing a decision-support system that assists authorized personnel in validating scheduling data and identifying conflicts before submission. The system's actual effect on preparation time, rework, and schedule quality must be determined through functional testing and comparison with the documented manual baseline."
+  }
+ ]
+}

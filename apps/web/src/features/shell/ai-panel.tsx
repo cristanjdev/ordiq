@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, History, MoreVertical, Plus, SendHorizontal, X } from "lucide-react";
+import { Check, MessageSquare, MoreVertical, Plus, Search, SendHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
@@ -68,6 +68,29 @@ function formatTime(iso: string): string {
     : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
+/** "Just now", "12m ago", "3:20 PM", "Yesterday", "Oct 28" */
+function formatWhen(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const diffMin = Math.round((Date.now() - d.getTime()) / 60_000);
+  if (diffMin < 1) return "Just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+/** A conversation is titled by its first question. */
+function conversationTitle(c: ConversationDto): string {
+  const first = c.messages.find((m) => m.role === "user")?.content.trim();
+  return first ? first.replace(/\s+/g, " ") : "New conversation";
+}
+
 /** Light formatting for model replies: **bold** and "- " / "* " bullets. */
 function RichText({ text }: { text: string }) {
   const lines = text.replace(/\r\n/g, "\n").split("\n");
@@ -118,6 +141,7 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
   const [error, setError] = React.useState<string | null>(null);
   const [lastMode, setLastMode] = React.useState<ChatTurnDto | null>(null);
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [sessionQuery, setSessionQuery] = React.useState("");
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -157,7 +181,13 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
   const conversation = conversationId
     ? conversations.find((c) => c.id === conversationId)
     : undefined;
-  const latestConversation = conversations[0];
+  const sessions = React.useMemo(() => {
+    const q = sessionQuery.trim().toLowerCase();
+    return [...conversations]
+      .filter((c) => c.messages.length > 0)
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .filter((c) => !q || c.messages.some((m) => m.content.toLowerCase().includes(q)));
+  }, [conversations, sessionQuery]);
   const messages = conversation?.messages ?? [];
 
   const chat = useMutation({
@@ -218,13 +248,38 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
     chat.mutate(prompt);
   };
 
+  const closeMenu = () => {
+    setMenuOpen(false);
+    setSessionQuery("");
+  };
+
   const startNewConversation = () => {
     setConversationId(null);
     setError(null);
     setLastMode(null);
-    setMenuOpen(false);
+    closeMenu();
     inputRef.current?.focus();
   };
+
+  const openSession = (id: string) => {
+    setConversationId(id);
+    setError(null);
+    setLastMode(null);
+    closeMenu();
+  };
+
+  // Escape closes the menu first, not the whole panel.
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        closeMenu();
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [menuOpen]);
 
   const showStarters = messages.length === 0 && !pendingPrompt;
 
@@ -252,50 +307,121 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
           </span>
           <button
             type="button"
-            aria-label="Assistant options"
+            aria-label="Conversations"
+            title="Conversations"
+            aria-haspopup="menu"
             aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((o) => !o)}
-            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-[var(--ordiq-muted)] transition hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)]"
+            onClick={() => (menuOpen ? closeMenu() : setMenuOpen(true))}
+            className={cn(
+              "flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-[var(--ordiq-muted)] transition hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)]",
+              menuOpen && "bg-[var(--ordiq-surface-muted)] text-[var(--ordiq-ink)]",
+            )}
           >
             <MoreVertical className="h-4 w-4" />
           </button>
           {menuOpen && (
             <>
-              <div className="fixed inset-0 z-10" aria-hidden="true" onClick={() => setMenuOpen(false)} />
+              <div className="fixed inset-0 z-10" aria-hidden="true" onClick={closeMenu} />
               <div
                 role="menu"
-                className="absolute right-0 top-8 z-20 w-48 overflow-hidden rounded-lg border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] py-1 text-xs shadow-lg"
+                aria-label="Conversations"
+                className="absolute right-0 top-9 z-20 flex max-h-[min(28rem,calc(100dvh-10rem))] w-[min(20rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] text-xs shadow-xl animate-info-pop"
               >
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={startNewConversation}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[var(--ordiq-surface-muted)]"
-                >
-                  <Plus className="h-3.5 w-3.5" /> New conversation
-                </button>
-                {latestConversation && latestConversation.id !== conversation?.id && (
+                <div className="shrink-0 p-1.5">
                   <button
                     type="button"
                     role="menuitem"
-                    onClick={() => {
-                      setConversationId(latestConversation.id);
-                      setError(null);
-                      setMenuOpen(false);
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[var(--ordiq-surface-muted)]"
+                    onClick={startNewConversation}
+                    className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-left font-semibold text-[var(--ordiq-maroon)] transition hover:bg-[var(--ordiq-surface-muted)] dark:text-[var(--ordiq-orange)]"
                   >
-                    <History className="h-3.5 w-3.5" /> Continue last conversation
+                    <Plus className="h-3.5 w-3.5" /> New conversation
                   </button>
-                )}
-                <Link
-                  role="menuitem"
-                  href="/assistant"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex w-full items-center gap-2 px-3 py-2 hover:bg-[var(--ordiq-surface-muted)]"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" /> Open full assistant
-                </Link>
+                </div>
+
+                <div className="shrink-0 border-t border-[var(--ordiq-border)] px-3 pt-2.5 pb-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--ordiq-muted)]">
+                      Recent
+                    </span>
+                    {conversations.length > 0 && (
+                      <span className="text-[10px] text-[var(--ordiq-muted)]">{conversations.length}</span>
+                    )}
+                  </div>
+                  {conversations.length > 5 && (
+                    <div className="relative mt-2">
+                      <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-[var(--ordiq-muted)]" />
+                      <input
+                        type="search"
+                        value={sessionQuery}
+                        onChange={(e) => setSessionQuery(e.target.value)}
+                        placeholder="Search conversations"
+                        aria-label="Search conversations"
+                        className="h-8 w-full rounded-lg border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] pr-2.5 pl-8 text-xs outline-none focus:border-[var(--ordiq-maroon)]/40 focus:ring-2 focus:ring-[var(--ordiq-maroon)]/10"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto p-1.5 pt-0">
+                  {aiQuery.isLoading ? (
+                    <div className="space-y-1.5 p-1">
+                      {[0, 1, 2].map((i) => (
+                        <SkeletonBlock key={i} className="h-10 w-full rounded-lg" />
+                      ))}
+                    </div>
+                  ) : sessions.length === 0 ? (
+                    <p className="px-2.5 py-4 text-center text-[11px] text-[var(--ordiq-muted)]">
+                      {sessionQuery ? "No matches." : "No conversations yet."}
+                    </p>
+                  ) : (
+                    <ul className="space-y-0.5">
+                      {sessions.map((c) => {
+                        const active = c.id === conversation?.id;
+                        return (
+                          <li key={c.id}>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => openSession(c.id)}
+                              aria-current={active ? "true" : undefined}
+                              className={cn(
+                                "flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition",
+                                active
+                                  ? "bg-[var(--ordiq-maroon)]/8 dark:bg-[var(--ordiq-orange)]/15"
+                                  : "hover:bg-[var(--ordiq-surface-muted)]",
+                              )}
+                            >
+                              <MessageSquare
+                                className={cn(
+                                  "h-3.5 w-3.5 shrink-0",
+                                  active
+                                    ? "text-[var(--ordiq-maroon)] dark:text-[var(--ordiq-orange)]"
+                                    : "text-[var(--ordiq-muted)]",
+                                )}
+                              />
+                              <span className="min-w-0 flex-1">
+                                <span
+                                  className={cn(
+                                    "block truncate",
+                                    active ? "font-semibold text-[var(--ordiq-ink)]" : "text-[var(--ordiq-ink)]",
+                                  )}
+                                >
+                                  {conversationTitle(c)}
+                                </span>
+                                <span className="block text-[10px] text-[var(--ordiq-muted)]">
+                                  {formatWhen(c.updatedAt)} · {c.messages.length} messages
+                                </span>
+                              </span>
+                              {active && (
+                                <Check className="h-3.5 w-3.5 shrink-0 text-[var(--ordiq-maroon)] dark:text-[var(--ordiq-orange)]" />
+                              )}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
               </div>
             </>
           )}
@@ -367,7 +493,7 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
               )}
               {!isUser && proposal && (
                 <Link
-                  href="/assistant"
+                  href="/assistant?tab=proposals"
                   className="rounded-full border border-[var(--ordiq-maroon)] px-3 py-1 text-[11px] font-medium text-[var(--ordiq-maroon)] hover:bg-[var(--ordiq-maroon)]/5 dark:border-[var(--ordiq-orange)] dark:text-[var(--ordiq-orange)]"
                 >
                   Review the proposed change →
