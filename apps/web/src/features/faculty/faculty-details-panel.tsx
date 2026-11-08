@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpenCheck, CalendarClock, Heart, Plus, Trash2, X } from "lucide-react";
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
@@ -182,6 +183,9 @@ export function FacultyDetailsPanel({
   const [pendingDelete, setPendingDelete] = React.useState<PendingDelete | null>(null);
   const [deleting, setDeleting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  const closeRef = React.useRef<HTMLButtonElement>(null);
+  const titleId = React.useId();
 
   const availabilityEditor = useRecordEditor<AvailabilityItem>();
   const qualificationEditor = useRecordEditor<QualificationItem>();
@@ -226,8 +230,33 @@ export function FacultyDetailsPanel({
     pendingDelete !== null;
 
   React.useEffect(() => {
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus instanceof HTMLElement) previousFocus.focus();
+    };
+  }, []);
+
+  React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !anyDialogOpen) onClose();
+      if (anyDialogOpen) return;
+      if (e.key === "Escape") onClose();
+      if (e.key !== "Tab") return;
+      const controls = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), [tabindex="0"]',
+      );
+      const first = controls?.[0];
+      const last = controls?.[controls.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -341,33 +370,47 @@ export function FacultyDetailsPanel({
   const loadError =
     availabilityQuery.isError || qualificationsQuery.isError || preferencesQuery.isError;
 
-  return (
-    <div className="fixed inset-0 z-40 flex justify-end" role="dialog" aria-modal="true" aria-label={`${faculty.name} details`}>
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6">
       <button
         type="button"
         aria-label="Close details"
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs"
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+        tabIndex={-1}
+        disabled={anyDialogOpen}
         onClick={onClose}
       />
-      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] shadow-2xl">
-        <header className="flex items-start justify-between gap-3 border-b border-[var(--ordiq-border)] p-4">
-          <div>
-            <h2 className="text-base font-bold text-[var(--ordiq-ink)]">{faculty.name}</h2>
-            <p className="font-mono text-[11px] text-[var(--ordiq-muted)]">
-              {faculty.code} · Term {termCode}
-            </p>
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative flex h-[640px] max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] shadow-2xl"
+      >
+        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--ordiq-border)] p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--ordiq-maroon)] text-white">
+              <CalendarClock className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h2 id={titleId} className="text-base font-semibold text-[var(--ordiq-ink)]">{faculty.name}</h2>
+              <p className="mt-1 text-xs text-[var(--ordiq-muted)]">
+                {faculty.code} · {termCode}
+              </p>
+            </div>
           </div>
           <button
+            ref={closeRef}
             type="button"
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--ordiq-muted)] hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)]"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--ordiq-muted)] hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ordiq-orange)]"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
         </header>
 
-        <div className="grid grid-cols-3 gap-1.5 bg-[var(--ordiq-surface-muted)]/70 p-2">
+        <div className="grid shrink-0 grid-cols-3 gap-1.5 bg-[var(--ordiq-surface-muted)]/70 p-2">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -375,6 +418,7 @@ export function FacultyDetailsPanel({
               <button
                 key={t.id}
                 type="button"
+                aria-pressed={active}
                 onClick={() => setTab(t.id)}
                 className={cn(
                   "flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs transition-all",
@@ -393,11 +437,11 @@ export function FacultyDetailsPanel({
           })}
         </div>
 
-        <div className="flex items-center justify-between gap-2 px-4 py-3">
-          <p className="text-[11px] text-[var(--ordiq-muted)]">
-            {tab === "availability" && "Faculty are scheduled only inside Available windows (HC-06). With no windows, the whole teaching day counts as available."}
-            {tab === "qualifications" && "Faculty teach only subjects listed here (HC-09)."}
-            {tab === "preferences" && "Preferences guide the solver (SC-01, SC-04) but are never forced."}
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <p className="min-w-0 flex-1 basis-64 text-xs leading-relaxed text-[var(--ordiq-muted)]">
+            {tab === "availability" && "Set teaching hours. Without any windows, the whole teaching day is available."}
+            {tab === "qualifications" && "Subjects this faculty member is qualified to teach."}
+            {tab === "preferences" && "Scheduling preferences are considered when possible."}
           </p>
           <div className="flex shrink-0 items-center gap-2">
             {tab === "preferences" && (
@@ -451,7 +495,7 @@ export function FacultyDetailsPanel({
             (q) => q.isFetching && !q.isLoading,
           )}
         />
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="min-h-0 flex-1 overflow-auto px-5 pb-5">
           {loadError ? (
             <p className="py-10 text-center text-xs text-[var(--ordiq-muted)]">
               Sign in with the Dean account (/login) to view these records.
@@ -610,7 +654,7 @@ export function FacultyDetailsPanel({
             </table>
           )}
         </div>
-      </aside>
+      </div>
 
       <RecordFormDialog
         open={availabilityEditor.state !== null}
@@ -664,7 +708,8 @@ export function FacultyDetailsPanel({
         variant="danger"
         icon={<Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />}
       />
-    </div>
+    </div>,
+    document.body,
   );
 }
 

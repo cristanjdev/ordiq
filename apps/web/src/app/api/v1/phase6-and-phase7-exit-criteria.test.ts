@@ -174,6 +174,17 @@ describe("Phase 6 (Dashboard, Analytics & Reports) & Phase 7 (Evaluation & Secur
         actor: "dean@mseuf.edu.ph",
       });
       expect(rep.buffer.byteLength).toBeGreaterThan(100);
+      const exportedWorkbook = new ExcelJS.Workbook();
+      await exportedWorkbook.xlsx.load(rep.buffer as unknown as ExcelJS.Buffer);
+      const exportedSheet = exportedWorkbook.worksheets[0];
+      if (!exportedSheet) throw new Error("Missing exported worksheet");
+      expect(exportedSheet.getCell("A5").fill).toMatchObject({
+        fgColor: { argb: "FF7A121B" },
+      });
+      expect(exportedSheet.views[0]).toMatchObject({ state: "frozen", ySplit: 5 });
+      expect(exportedSheet.getCell("A2").text).toContain(rep.watermark);
+      expect(exportedSheet.getCell("A1").isMerged).toBe(true);
+      expect(exportedSheet.autoFilter).toBeTruthy();
     }
     const exportAudits = recordedAudits.filter(
       (a) => a.action === "REPORT_EXPORTED",

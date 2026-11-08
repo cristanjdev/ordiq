@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-07T01:20:11.565Z",
+ "generatedAt": "2026-11-08T08:33:02.699Z",
  "passageCount": 203,
  "passages": [
   {
@@ -80,11 +80,11 @@
    "text": "This page has five tabs:\n\n- Hard Constraints: the fixed rules HC-01 to HC-15 that every schedule must meet. The rules themselves cannot be edited; the \"Adjust In\" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).\n- Objective Weights: how much each soft preference (SC-01 to SC-16) counts when the solver builds candidates.\n- Dean Directives: extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is hard or soft.\n- Locked Fixed Blocks: time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.\n- Readiness Gate: the data readiness check (ISO/IEC 25012: completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed."
   },
   {
-   "id": "b7602d3fd2b3",
+   "id": "e358c01175b5",
    "source": "ORDIQ In-App Guide",
    "section": "Reports page",
    "priority": 1.35,
-   "text": "Reports can be downloaded as PDF or Excel (.xlsx): College Schedule Summary, Class Schedule per Section, per Faculty and per Room, Faculty Load Report, Room Utilization Report, Conflict and Exception Report, Validation & Unmet Preferences Report, Candidate Comparison, Revision History, and the Portal Encoding Export. The Portal Encoding Export is an Excel sheet laid out for the scheduling officer to encode manually; ORDIQ never connects to the university portal itself."
+   "text": "At the top of the Reports page, Schedule used in the reports picks which schedule the reports are built from. It starts on the accepted schedule; a draft candidate can be chosen instead, and its reports then carry a \"not official\" notice. Reports are grouped as follows. Class timetables: Schedule per Section, per Faculty and per Room, each grouped by section, faculty member or room in day and time order, with a filter to print just one section, faculty member or room. Load and utilization: Faculty Load and Room Utilization. Summary and compliance: College Schedule Summary, Conflicts and Exceptions (problems to fix, approved exceptions with their reasons, classes not scheduled), Data Quality and Preferences, and Candidate Comparison (the accepted schedule and all draft candidates side by side). Working files, Excel only: Portal Encoding Export and Revision History. View PDF opens a printable PDF in a new tab; Download Excel saves an .xlsx file. The Portal Encoding Export is laid out for the scheduling officer to encode manually; ORDIQ never connects to the university portal itself."
   },
   {
    "id": "ac1bb1318e65",
@@ -238,7 +238,7 @@
    "source": "ORDIQ FAQ",
    "section": "What is a waived exception?",
    "priority": 1.3,
-   "text": "Also asked: waive, documented exception, override a rule.\n\nA waived exception lets a waivable hard rule (HC-04 to HC-15) be broken on purpose, with a written reason that is kept in the record and shown in the Conflict and Exception Report. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived."
+   "text": "Also asked: waive, documented exception, override a rule.\n\nA waived exception lets a waivable hard rule (HC-04 to HC-15) be broken on purpose, with a written reason that is kept in the record and shown in the Conflicts and Exceptions report. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived."
   },
   {
    "id": "80773d704c8b",
@@ -311,11 +311,11 @@
    "text": "Also asked: paano i-export, portal encoding, Excel para sa portal.\n\nOpen Reports and download the Portal Encoding Export (Excel). It is laid out for the scheduling officer to encode manually. ORDIQ never connects to the university portal directly."
   },
   {
-   "id": "4f7bf48f3098",
+   "id": "43d0ff376aca",
    "source": "ORDIQ FAQ",
    "section": "What reports are available?",
    "priority": 1.3,
-   "text": "Also asked: anong reports, download PDF, print schedule.\n\nCollege Schedule Summary; Class Schedule per Section, per Faculty and per Room; Faculty Load Report; Room Utilization Report; Conflict and Exception Report; Validation & Unmet Preferences Report; Candidate Comparison; Revision History; and the Portal Encoding Export. Each downloads as PDF or Excel from the Reports page."
+   "text": "Also asked: anong reports, download PDF, print schedule, print one faculty schedule, print a section's schedule.\n\nClass timetables (Schedule per Section, per Faculty and per Room), Faculty Load, Room Utilization, College Schedule Summary, Conflicts and Exceptions, Data Quality and Preferences, Candidate Comparison, and two Excel-only working files: the Portal Encoding Export and Revision History. On the Reports page, choose the schedule at the top (the accepted one by default), then use View PDF or Download Excel on a report. To print one section, faculty member or room, pick it in the filter on that timetable card first."
   },
   {
    "id": "ce1fbeeb74de",

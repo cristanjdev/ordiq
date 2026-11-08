@@ -93,6 +93,36 @@ export const HARD_CONSTRAINT_NAMES: Record<string, string> = {
   "HC-15": "Clashes with a fixed block",
 };
 
+/** Short names for the soft preferences, matching the Rules page. */
+export const SOFT_CONSTRAINT_NAMES: Record<string, string> = {
+  "SC-01": "Preferred days and times",
+  "SC-02": "Balanced faculty loads",
+  "SC-03": "Minimal gaps",
+  "SC-04": "Preferred rooms",
+  "SC-05": "Even spread across the week and day",
+  "SC-06": "Stability on regeneration",
+  "SC-07": "Faculty fit score",
+  "SC-08": "Room efficiency",
+  "SC-09": "No evening classes for lower years",
+  "SC-10": "Lower-year priority",
+  "SC-11": "Labs away from late hours",
+  "SC-12": "Spread major and math subjects",
+  "SC-13": "Breaks between long classes",
+  "SC-14": "No late-then-early turnarounds",
+  "SC-15": "PATHFIT late or before a vacant period",
+  "SC-16": "Few very early starts",
+};
+
+/** "SC-04 · Preferred rooms" or "HC-06 · Faculty not available". */
+export const ruleLabel = (code: string): string => {
+  const name = HARD_CONSTRAINT_NAMES[code] ?? SOFT_CONSTRAINT_NAMES[code];
+  return name ? `${code} · ${name}` : code;
+};
+
+/** "1st Semester, AY 2026 – 2027", matching the term picker. */
+export const termDisplayLabel = (academicYear: string, semester: number): string =>
+  `${semester === 1 ? "1st" : semester === 2 ? "2nd" : "Summer"} Semester, AY ${academicYear.replace("-", " – ")}`;
+
 /** "HC-06 · Faculty not available"; unknown codes are shown as is. */
 export const hardConstraintLabel = (code: string): string =>
   HARD_CONSTRAINT_NAMES[code] ? `${code} · ${HARD_CONSTRAINT_NAMES[code]}` : code;

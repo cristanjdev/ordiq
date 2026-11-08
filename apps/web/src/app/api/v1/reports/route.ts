@@ -47,7 +47,7 @@ export const GET = withDeanRoute(async (req, ctx) => {
       status: 200,
       headers: {
         "Content-Type": result.mimeType,
-        "Content-Disposition": `attachment; filename="${result.fileName}"`,
+        "Content-Disposition": `${parsed.format === "PDF" ? "inline" : "attachment"}; filename="${result.fileName}"`,
       },
     });
   } catch (err) {

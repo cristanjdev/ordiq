@@ -1,5 +1,7 @@
 "use client";
 
+import { downloadExcelExport } from "@/lib/excel-export";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
@@ -117,21 +119,13 @@ export function RoomsWorkspace() {
   const labRooms = rooms.filter((r) => r.type === "LAB");
   const totalCapacity = rooms.reduce((acc, r) => acc + (r.capacity || 0), 0);
 
-  // Export to CSV
-  const handleExportCsv = () => {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Code,Name,Type,Capacity,Equipment,Restrictions,Status\n";
-    rooms.forEach((r) => {
-      csvContent += `"${r.code}","${r.name}","${roomTypeLabel(r.type)}",${r.capacity},"${r.equipment.join("; ")}","${r.restrictions}","${titleCase(r.status)}"\n`;
-    });
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `mseuf-rooms-${selectedTerm.id}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const handleExportExcel = () => downloadExcelExport({
+    fileName: `mseuf-rooms-${selectedTerm.id}.xlsx`,
+    sheetName: "Rooms",
+    headers: ["Code", "Name", "Type", "Capacity", "Equipment", "Restrictions", "Status"],
+    rows: rooms.map((r) => [r.code, r.name, roomTypeLabel(r.type), r.capacity,
+      r.equipment.join("; "), r.restrictions, titleCase(r.status)]),
+  });
 
   // Filtered Rooms
   const filteredRooms = rooms.filter((room) => {
@@ -273,7 +267,7 @@ export function RoomsWorkspace() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleExportCsv}
+              onClick={handleExportExcel}
               className="border-[var(--ordiq-border)] text-xs font-semibold hover:border-[var(--ordiq-maroon)]"
             >
               <Download className="h-3.5 w-3.5 text-[var(--ordiq-muted)]" />
@@ -455,8 +449,8 @@ export function RoomsWorkspace() {
         open={showImportModal}
         onClose={() => setShowImportModal(false)}
         termCode={selectedTerm.id}
-        title="Import Rooms Workbook (.xlsx)"
-        sheetsHint={["Rooms"]}
+        title="Import Rooms"
+        templateScope="rooms"
         onImported={async (summary) => {
           await queryClient.invalidateQueries({ queryKey: ["rooms-data"] });
           await queryClient.invalidateQueries({ queryKey: ["options"] });

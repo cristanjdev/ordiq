@@ -1,5 +1,7 @@
 "use client";
 
+import { downloadExcelExport } from "@/lib/excel-export";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
@@ -306,32 +308,23 @@ export function CurriculumWorkspace() {
   const sectionsPagination = usePagination(filteredSections, 15);
   const offeringsPagination = usePagination(filteredOfferings, 15);
 
-  // Export to CSV
-  const handleExportCsv = () => {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    if (activeTab === "subjects") {
-      csvContent += "Code,Name,Program,Year,Category,Units,Lecture Hours,Laboratory Hours,Curriculum\n";
-      subjects.forEach((s) => {
-        csvContent += `"${s.code}","${s.name}","${s.programCode ?? "All programs"}",${s.yearLevel},"${subjectCategoryLabel(s.category)}",${s.units},${s.lectureHours},${s.labHours},"${s.curriculumVersion}"\n`;
-      });
-    } else if (activeTab === "sections") {
-      csvContent += "Code,Program,Year,Students\n";
-      sections.forEach((sec) => {
-        csvContent += `"${sec.code}","${sec.programCode}",${sec.yearLevel},${sec.studentCount}\n`;
-      });
-    } else {
-      csvContent += "Code,Term,Section,Subject,Component,Meetings per Week,Minutes per Meeting,Days,Room Type,Pre-assigned Faculty\n";
-      offerings.forEach((o) => {
-        csvContent += `"${o.code}","${o.termCode}","${o.sectionCode}","${o.subjectCode}","${componentLabel(o.component)}",${o.meetingsPerWeek},${o.minutesPerMeeting},"${meetingPatternLabel(o.meetingPattern)}","${roomTypeLabel(o.requiredRoomType)}","${o.preassignedFacultyCode ?? "Solver chooses"}"\n`;
-      });
-    }
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `mseuf-${activeTab}-${selectedTerm.id}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportExcel = () => {
+    const data = activeTab === "subjects" ? {
+      headers: ["Code", "Name", "Program", "Year", "Category", "Units", "Lecture Hours", "Laboratory Hours", "Curriculum"],
+      rows: subjects.map((s) => [s.code, s.name, s.programCode ?? "All programs", s.yearLevel,
+        subjectCategoryLabel(s.category), s.units, s.lectureHours, s.labHours, s.curriculumVersion]),
+    } : activeTab === "sections" ? {
+      headers: ["Code", "Program", "Year", "Students"],
+      rows: sections.map((s) => [s.code, s.programCode, s.yearLevel, s.studentCount]),
+    } : {
+      headers: ["Code", "Term", "Section", "Subject", "Component", "Meetings per Week", "Minutes per Meeting", "Days", "Room Type", "Pre-assigned Faculty"],
+      rows: offerings.map((o) => [o.code, o.termCode, o.sectionCode, o.subjectCode,
+        componentLabel(o.component), o.meetingsPerWeek, o.minutesPerMeeting,
+        meetingPatternLabel(o.meetingPattern), roomTypeLabel(o.requiredRoomType),
+        o.preassignedFacultyCode ?? "Solver chooses"]),
+    };
+    return downloadExcelExport({ fileName: `mseuf-${activeTab}-${selectedTerm.id}.xlsx`,
+      sheetName: activeTab, ...data });
   };
 
   const programs = Array.from(
@@ -505,7 +498,7 @@ export function CurriculumWorkspace() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleExportCsv}
+              onClick={handleExportExcel}
               className="border-[var(--ordiq-border)] text-xs font-semibold hover:border-[var(--ordiq-maroon)]"
             >
               <Download className="h-3.5 w-3.5 text-[var(--ordiq-muted)]" />
@@ -904,8 +897,8 @@ export function CurriculumWorkspace() {
         open={showImportModal}
         onClose={() => setShowImportModal(false)}
         termCode={selectedTerm.id}
-        title="Import Curriculum Workbook (.xlsx)"
-        sheetsHint={["Programs", "Subjects", "Sections", "Offerings", "FixedBlocks"]}
+        title={activeTab === "subjects" ? "Import Subjects" : activeTab === "sections" ? "Import Sections" : "Import Offerings"}
+        templateScope={activeTab}
         onImported={async (summary) => {
           await queryClient.invalidateQueries({ queryKey: ["subjects-data"] });
           await queryClient.invalidateQueries({ queryKey: ["sections-data"] });

@@ -110,7 +110,7 @@ On the Schedules page, press Undo Edit to reverse the last change to the open sc
 
 Also asked: waive, documented exception, override a rule.
 
-A waived exception lets a waivable hard rule (HC-04 to HC-15) be broken on purpose, with a written reason that is kept in the record and shown in the Conflict and Exception Report. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.
+A waived exception lets a waivable hard rule (HC-04 to HC-15) be broken on purpose, with a written reason that is kept in the record and shown in the Conflicts and Exceptions report. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.
 
 ## What is a Dean directive?
 
@@ -174,9 +174,9 @@ Open Reports and download the Portal Encoding Export (Excel). It is laid out for
 
 ## What reports are available?
 
-Also asked: anong reports, download PDF, print schedule.
+Also asked: anong reports, download PDF, print schedule, print one faculty schedule, print a section's schedule.
 
-College Schedule Summary; Class Schedule per Section, per Faculty and per Room; Faculty Load Report; Room Utilization Report; Conflict and Exception Report; Validation & Unmet Preferences Report; Candidate Comparison; Revision History; and the Portal Encoding Export. Each downloads as PDF or Excel from the Reports page.
+Class timetables (Schedule per Section, per Faculty and per Room), Faculty Load, Room Utilization, College Schedule Summary, Conflicts and Exceptions, Data Quality and Preferences, Candidate Comparison, and two Excel-only working files: the Portal Encoding Export and Revision History. On the Reports page, choose the schedule at the top (the accepted one by default), then use View PDF or Download Excel on a report. To print one section, faculty member or room, pick it in the filter on that timetable card first.
 
 ## How is Faculty Load Balance calculated?
 

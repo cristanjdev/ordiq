@@ -1,4 +1,7 @@
 import ExcelJS from "exceljs";
+import { WORKBOOK_TEMPLATE_SHEETS, type WorkbookTemplateScope } from "@/lib/workbook-templates";
+import { workbookColumnLabel, workbookHeaderKeys } from "./workbook-labels";
+import { styleExcelWorksheet } from "@/lib/excel-style";
 import { withAudit } from "../../platform/audit";
 import { sha256Hex } from "../../platform/crypto";
 import type { PastScheduleRowInput } from "../fixtures/fixture.generator";
@@ -772,6 +775,7 @@ export async function importWorkbookPayload(
  */
 export async function buildWorkbookBuffer(
   payload: WorkbookSheetsPayload,
+  options: { scope?: WorkbookTemplateScope } = {},
 ): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "ORDIQ Scheduling System";
@@ -912,12 +916,13 @@ export async function buildWorkbookBuffer(
     },
   ];
 
+  const includedSheets: readonly string[] | null = WORKBOOK_TEMPLATE_SHEETS[options.scope ?? "all"];
   for (const def of sheetDefs) {
+    if (includedSheets && !includedSheets.includes(def.name)) continue;
     const ws = wb.addWorksheet(def.name);
     ws.columns = def.columns.map((col) => ({
-      header: col,
+      header: workbookColumnLabel(def.name, col),
       key: col,
-      width: 22,
     }));
     for (const r of def.rows) {
       const normalizedRow: Record<string, unknown> = {};
@@ -927,6 +932,7 @@ export async function buildWorkbookBuffer(
       }
       ws.addRow(normalizedRow);
     }
+    styleExcelWorksheet(ws, { columnCount: def.columns.length });
   }
 
   const arrayBuffer = await wb.xlsx.writeBuffer();
@@ -948,9 +954,11 @@ export async function parseWorkbookBuffer(
     const ws = wb.getWorksheet(sheetName);
     if (!ws) return [];
     const headers: string[] = [];
+    const headerKeys = workbookHeaderKeys(sheetName);
     const headerRow = ws.getRow(1);
     headerRow.eachCell((cell, colNumber) => {
-      headers[colNumber] = String(cell.value ?? "").trim();
+      const label = String(cell.value ?? "").trim().replace(/\s+/g, " ");
+      headers[colNumber] = headerKeys.get(label.toLowerCase()) ?? label;
     });
 
     const rows: Record<string, unknown>[] = [];

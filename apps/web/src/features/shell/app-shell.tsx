@@ -9,7 +9,6 @@ import {
   FileBarChart2,
   Home,
   Landmark,
-  Loader2,
   LogOut,
   Menu,
   Moon,
@@ -29,6 +28,7 @@ import { MseufLogo } from "@/components/ui/mseuf-logo";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
 import { useAuthSession } from "@/features/auth/auth-session-provider";
 import { cn } from "@/lib/utils";
+import { PageLoadingSkeleton } from "./page-loading-skeleton";
 import { AiAssistantPanel } from "./ai-panel";
 import { NotificationsMenu } from "./notifications-menu";
 import { useShell } from "./providers";
@@ -124,6 +124,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     setNavigatingHref(null);
   }, [pathname]);
+
+  // Any in-app link (sidebar, notifications, page links) shows the page
+  // loading state in the body until the new route has rendered.
+  React.useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const anchor = (e.target as Element | null)?.closest?.("a[href]");
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      if ((anchor.target && anchor.target !== "_self") || anchor.hasAttribute("download")) return;
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin !== window.location.origin) return;
+      if (url.pathname === window.location.pathname) return;
+      if (url.pathname.startsWith("/api/")) return;
+      setNavigatingHref(url.pathname);
+    }
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, []);
+
+  // Safety net: never leave the loading state up if a navigation is abandoned.
+  React.useEffect(() => {
+    if (!navigatingHref) return;
+    const timer = window.setTimeout(() => setNavigatingHref(null), 20_000);
+    const onPop = () => setNavigatingHref(null);
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("popstate", onPop);
+    };
+  }, [navigatingHref]);
 
   // Sync darkMode with document class on mount
   React.useEffect(() => {
@@ -391,17 +421,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 item.href === "/"
                   ? pathname === "/"
                   : pathname.startsWith(item.href);
-              const isItemActive = isActive;
-              const isPending = navigatingHref === item.href;
+              const isPending =
+                navigatingHref !== null &&
+                (item.href === "/" ? navigatingHref === "/" : navigatingHref.startsWith(item.href));
+              const isItemActive = navigatingHref ? isPending : isActive;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => {
-                    if (pathname !== item.href && !pathname.startsWith(item.href)) {
-                      setNavigatingHref(item.href);
-                    }
-                  }}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs font-medium transition-all relative group",
                     isItemActive
@@ -411,18 +438,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         : "text-white/75 hover:bg-white/10 hover:text-white",
                   )}
                 >
-                  {isPending ? (
-                    <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-400" />
-                  ) : (
-                    <Icon
-                      className={cn(
-                        "h-4 w-4 shrink-0 transition-colors",
-                        isItemActive
-                          ? "text-amber-400"
-                          : "text-white/70 group-hover:text-white",
-                      )}
-                    />
-                  )}
+                  <Icon
+                    className={cn(
+                      "h-4 w-4 shrink-0 transition-colors",
+                      isItemActive || isPending
+                        ? "text-amber-400"
+                        : "text-white/70 group-hover:text-white",
+                    )}
+                  />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -482,18 +505,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     item.href === "/"
                       ? pathname === "/"
                       : pathname.startsWith(item.href);
-                  const isItemActive = isActive;
-                  const isPending = navigatingHref === item.href;
+                  const isPending =
+                    navigatingHref !== null &&
+                    (item.href === "/" ? navigatingHref === "/" : navigatingHref.startsWith(item.href));
+                  const isItemActive = navigatingHref ? isPending : isActive;
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={() => {
-                        setMobileNavOpen(false);
-                        if (pathname !== item.href && !pathname.startsWith(item.href)) {
-                          setNavigatingHref(item.href);
-                        }
-                      }}
+                      onClick={() => setMobileNavOpen(false)}
                       className={cn(
                         "flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs font-medium transition-all relative group",
                         isItemActive
@@ -503,18 +523,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                             : "text-white/75 hover:bg-white/10 hover:text-white",
                       )}
                     >
-                      {isPending ? (
-                        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-400" />
-                      ) : (
-                        <Icon
-                          className={cn(
-                            "h-4 w-4 shrink-0 transition-colors",
-                            isItemActive
-                              ? "text-amber-400"
-                              : "text-white/70 group-hover:text-white",
-                          )}
-                        />
-                      )}
+                      <Icon
+                        className={cn(
+                          "h-4 w-4 shrink-0 transition-colors",
+                          isItemActive || isPending
+                            ? "text-amber-400"
+                            : "text-white/70 group-hover:text-white",
+                        )}
+                      />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -541,7 +557,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             isDocked && !aiPanelClosed && "mr-92",
           )}
         >
-          <div className="mx-auto max-w-7xl">{children}</div>
+          <div className="mx-auto max-w-7xl">
+            {navigatingHref && <PageLoadingSkeleton />}
+            {/* Kept mounted so an abandoned navigation returns to the same state */}
+            <div className={navigatingHref ? "hidden" : undefined}>{children}</div>
+          </div>
         </main>
 
         {/* AI Assistant: docked beside the page at 2xl, a drawer over it below */}

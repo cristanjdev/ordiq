@@ -81,7 +81,7 @@ This page has five tabs:
 
 ## Reports page
 
-Reports can be downloaded as PDF or Excel (.xlsx): College Schedule Summary, Class Schedule per Section, per Faculty and per Room, Faculty Load Report, Room Utilization Report, Conflict and Exception Report, Validation & Unmet Preferences Report, Candidate Comparison, Revision History, and the Portal Encoding Export. The Portal Encoding Export is an Excel sheet laid out for the scheduling officer to encode manually; ORDIQ never connects to the university portal itself.
+At the top of the Reports page, Schedule used in the reports picks which schedule the reports are built from. It starts on the accepted schedule; a draft candidate can be chosen instead, and its reports then carry a "not official" notice. Reports are grouped as follows. Class timetables: Schedule per Section, per Faculty and per Room, each grouped by section, faculty member or room in day and time order, with a filter to print just one section, faculty member or room. Load and utilization: Faculty Load and Room Utilization. Summary and compliance: College Schedule Summary, Conflicts and Exceptions (problems to fix, approved exceptions with their reasons, classes not scheduled), Data Quality and Preferences, and Candidate Comparison (the accepted schedule and all draft candidates side by side). Working files, Excel only: Portal Encoding Export and Revision History. View PDF opens a printable PDF in a new tab; Download Excel saves an .xlsx file. The Portal Encoding Export is laid out for the scheduling officer to encode manually; ORDIQ never connects to the university portal itself.
 
 ## AI Assistant page
 

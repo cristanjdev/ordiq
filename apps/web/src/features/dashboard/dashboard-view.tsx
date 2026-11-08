@@ -1,5 +1,7 @@
 "use client";
 
+import { downloadExcelExport } from "@/lib/excel-export";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -53,7 +55,6 @@ import {
   type ScheduleDto,
   type SectionDto,
   type SubjectDto,
-  toCsv,
   visibleWeekdays,
   WEEKDAY_SHORT,
   type WeekdayCode,
@@ -586,15 +587,14 @@ function DataTabsCard(props: {
     setCurrentPage(1);
   }, [activeTab, setCurrentPage]);
 
-  const exportCsv = () => {
-    const csv = toCsv(rows.map((r) => r.csv));
-    if (!csv) return;
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `ordiq-${activeTab}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const exportExcel = () => {
+    const first = rows[0];
+    if (!first) return;
+    const headers = Object.keys(first.csv);
+    return downloadExcelExport({
+      fileName: `ordiq-${activeTab}.xlsx`, sheetName: activeTab, headers,
+      rows: rows.map((r) => headers.map((key) => r.csv[key])),
+    });
   };
 
   const tabs = [
@@ -648,9 +648,9 @@ function DataTabsCard(props: {
             {model.linkLabel}
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
-          <Button variant="outline" size="sm" onClick={exportCsv} disabled={rows.length === 0} className="text-xs font-semibold">
+          <Button variant="outline" size="sm" onClick={exportExcel} disabled={rows.length === 0} className="text-xs font-semibold">
             <Download className="mr-1 h-3.5 w-3.5" />
-            Export CSV
+            Export Excel
           </Button>
         </div>
         <div className="relative w-full sm:w-72">

@@ -1,5 +1,7 @@
 "use client";
 
+import { downloadExcelExport } from "@/lib/excel-export";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarClock,
@@ -199,21 +201,14 @@ export function FacultyWorkspace() {
     new Set(facultyList.map((f) => f.programCode).filter(Boolean)),
   ).sort() as string[];
 
-  // Export to CSV
-  const handleExportCsv = () => {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Code,Alias,Name,Program,Type,Teaching Load (Units),Teaching Load (Hours),Specialization,Education,Status\n";
-    facultyList.forEach((f) => {
-      csvContent += `"${f.code}","${f.alias}","${f.name}","${f.programCode ?? "General"}","${EMPLOYMENT_TYPE_LABELS[f.employmentType] ?? titleCase(f.employmentType)}",${f.maxLoadUnits},${f.maxLoadHours},"${f.specialization}","${f.education}","${titleCase(f.status)}"\n`;
-    });
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `mseuf-faculty-export-${selectedTerm.id}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const handleExportExcel = () => downloadExcelExport({
+    fileName: `mseuf-faculty-export-${selectedTerm.id}.xlsx`,
+    sheetName: "Faculty",
+    headers: ["Code", "Alias", "Name", "Program", "Type", "Teaching Load (Units)", "Teaching Load (Hours)", "Specialization", "Education", "Status"],
+    rows: facultyList.map((f) => [f.code, f.alias, f.name, f.programCode ?? "General",
+      EMPLOYMENT_TYPE_LABELS[f.employmentType] ?? titleCase(f.employmentType),
+      f.maxLoadUnits, f.maxLoadHours, f.specialization, f.education, titleCase(f.status)]),
+  });
 
   return (
     <div className="space-y-5">
@@ -340,7 +335,7 @@ export function FacultyWorkspace() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleExportCsv}
+              onClick={handleExportExcel}
               className="border-[var(--ordiq-border)] text-xs font-semibold hover:border-[var(--ordiq-maroon)]"
             >
               <Download className="h-3.5 w-3.5 text-[var(--ordiq-muted)]" />
@@ -501,7 +496,8 @@ export function FacultyWorkspace() {
                           type="button"
                           onClick={() => setDetailsFor(faculty)}
                           className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ordiq-muted)] transition-colors hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-maroon)]"
-                          title={`Availability, qualifications and preferences of ${faculty.name}`}
+                          title="Availability & preferences"
+                          aria-haspopup="dialog"
                           aria-label={`Open details for ${faculty.name}`}
                         >
                           <CalendarClock className="h-3.5 w-3.5" />
@@ -560,8 +556,8 @@ export function FacultyWorkspace() {
         open={showImportModal}
         onClose={() => setShowImportModal(false)}
         termCode={selectedTerm.id}
-        title="Import Faculty Workbook (.xlsx)"
-        sheetsHint={["Faculty", "FacultyAvailability", "FacultyQualifications", "FacultyPreferences"]}
+        title="Import Faculty"
+        templateScope="faculty"
         onImported={async (summary) => {
           await queryClient.invalidateQueries({ queryKey: ["faculty-data"] });
           await queryClient.invalidateQueries({ queryKey: ["faculty-availability"] });

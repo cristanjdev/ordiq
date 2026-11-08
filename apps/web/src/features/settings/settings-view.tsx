@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Bot,
-  CircleAlert,
   CheckCircle2,
   Loader2,
   Lock,
@@ -12,11 +11,11 @@ import {
   Server,
   ShieldCheck,
   Timer,
-  X,
   type LucideIcon,
 } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { InfoTip } from "@/components/ui/info-tip";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SkeletonBlock } from "@/components/ui/table-skeleton";
 import { fetchSystemHealth } from "@/features/shell/app-shell";
@@ -122,88 +121,6 @@ function NumberField({
   );
 }
 
-/**
- * Exclamation button that opens the setting's explanation: a floating bubble
- * under the title on larger screens, a card at the bottom on phones.
- * Closes on a second click, an outside click or Escape.
- */
-function InfoTip({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = React.useState(false);
-  const wrapRef = React.useRef<HTMLSpanElement>(null);
-  const id = React.useId();
-
-  React.useEffect(() => {
-    if (!open) return;
-    const onPointer = (e: PointerEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  return (
-    <span ref={wrapRef} className="relative inline-flex align-middle">
-      <button
-        type="button"
-        aria-label={`About ${title}`}
-        aria-expanded={open}
-        aria-controls={id}
-        onClick={() => setOpen((o) => !o)}
-        className={cn(
-          "inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full transition-colors",
-          open
-            ? "bg-[var(--ordiq-maroon)]/10 text-[var(--ordiq-maroon)] dark:bg-[var(--ordiq-orange)]/20 dark:text-[var(--ordiq-orange)]"
-            : "text-[var(--ordiq-muted)] hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-maroon)] dark:hover:text-[var(--ordiq-orange)]",
-        )}
-      >
-        <CircleAlert className="h-4 w-4" />
-      </button>
-      {open && (
-        <>
-          {/* Phones: dim the page behind the bottom card */}
-          <span className="fixed inset-0 z-40 bg-black/30 sm:hidden" aria-hidden="true" />
-          <span
-            id={id}
-            role="dialog"
-            aria-label={title}
-            className={cn(
-              "z-50 block rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] p-4 text-left shadow-xl animate-info-pop",
-              "fixed inset-x-3 bottom-3",
-              "sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-full sm:mt-2 sm:w-80 sm:-translate-x-1/2",
-            )}
-          >
-            {/* Bubble tail (larger screens) */}
-            <span
-              aria-hidden="true"
-              className="absolute -top-1.5 left-1/2 hidden h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] sm:block"
-            />
-            <span className="flex items-start justify-between gap-3">
-              <span className="text-sm font-semibold text-[var(--ordiq-ink)]">{title}</span>
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={() => setOpen(false)}
-                className="-mr-1 -mt-1 inline-flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-[var(--ordiq-muted)] hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)]"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </span>
-            <span className="mt-1.5 block text-xs font-normal leading-relaxed text-[var(--ordiq-muted)]">
-              {children}
-            </span>
-          </span>
-        </>
-      )}
-    </span>
-  );
-}
 
 function SettingRow({
   title,
