@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import * as React from "react";
 
 export const metadata: Metadata = {
-  title: "Sign in — ORDIQ",
+  title: "Sign In",
   description: "Secure gateway for ORDIQ Dean Portal.",
 };
 

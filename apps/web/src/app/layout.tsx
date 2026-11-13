@@ -4,7 +4,17 @@ import "./globals.css";
 import { AppProviders } from "@/features/shell/providers";
 
 export const metadata: Metadata = {
-  title: "ORDIQ — Order Meets Intelligence | MSEUF College of Engineering",
+  title: {
+    default: "ORDIQ",
+    template: "ORDIQ - %s",
+  },
+  icons: {
+    icon: [
+      { url: "/ordiq-icon-maroon.png", type: "image/png", media: "(prefers-color-scheme: light)" },
+      { url: "/ordiq-icon-white.png", type: "image/png", media: "(prefers-color-scheme: dark)" },
+    ],
+    apple: "/ordiq-icon.png",
+  },
   description:
     "AI-based class scheduling decision-support system for the College of Engineering, Manuel S. Enverga University Foundation.",
 };
