@@ -7,7 +7,14 @@ import {
   type KnowledgeHit,
   searchKnowledge,
 } from "./knowledge/knowledge.service";
-import { createLanguageModel, type LlmConfig, type ProviderLanguageModel } from "./llm-provider";
+import { logger } from "../../platform/logger";
+import {
+  createLanguageModel,
+  isTransientLlmError,
+  type LlmConfig,
+  providerOptionsFor,
+  type ProviderLanguageModel,
+} from "./llm-provider";
 import {
   assertWithinTokenBudget,
   createPrivacyMiddleware,
@@ -191,15 +198,37 @@ export async function runLiveAssistantTurn(input: {
     isDocumentationQuestion(latestQuestion) ? 6000 : 2500,
   );
 
-  const result = await generateText({
-    model,
-    instructions: liveInstructions(input.systemPrompt, { ...input, knowledge }),
-    messages,
-    tools,
-    stopWhen: isStepCount(6),
-    maxOutputTokens: 1500,
-    timeout: { totalMs: 120_000, stepMs: 45_000 },
-  });
+  const instructions = liveInstructions(input.systemPrompt, { ...input, knowledge });
+  const providerOptions = providerOptionsFor(input.config);
+  const attempt = () =>
+    generateText({
+      model,
+      instructions,
+      messages,
+      tools,
+      stopWhen: isStepCount(6),
+      maxOutputTokens: 1500,
+      timeout: { totalMs: 60_000, stepMs: 25_000 },
+      ...(providerOptions ? { providerOptions } : {}),
+    });
+
+  // One retry on a timeout or dropped connection before the caller falls back
+  // to the built-in assistant. Tool calls are read-only, so repeating them is
+  // safe; the first attempt's records are discarded.
+  let result: Awaited<ReturnType<typeof attempt>>;
+  try {
+    result = await attempt();
+  } catch (error) {
+    if (!isTransientLlmError(error)) throw error;
+    logger.warn("ai_provider_retry", {
+      provider: input.config.provider,
+      model: input.config.model,
+      error: error instanceof Error ? error.name : "unknown",
+    });
+    toolResults.length = 0;
+    toolCalls.length = 0;
+    result = await attempt();
+  }
 
   const tokensIn = result.totalUsage.inputTokens ?? 0;
   const tokensOut = result.totalUsage.outputTokens ?? 0;

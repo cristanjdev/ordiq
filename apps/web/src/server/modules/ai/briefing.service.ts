@@ -7,7 +7,7 @@ import {
   getMasterDataState,
   type ScheduleEntryRecord,
 } from "../master-data/master-data.store";
-import { createLanguageModel, resolveLlmConfig } from "./llm-provider";
+import { createLanguageModel, providerOptionsFor, resolveLlmConfig } from "./llm-provider";
 import {
   assertWithinTokenBudget,
   createPrivacyMiddleware,
@@ -327,12 +327,14 @@ export async function generateBriefingSummary(briefing: TermBriefing): Promise<B
         model: createLanguageModel(config),
         middleware: createPrivacyMiddleware({ provider: config.provider, model: config.model }),
       });
+      const providerOptions = providerOptionsFor(config);
       const result = await generateText({
         model,
         instructions: SUMMARY_INSTRUCTIONS,
         prompt: `Facts (JSON):\n${JSON.stringify(facts)}`,
         maxOutputTokens: 400,
         timeout: { totalMs: 45_000 },
+        ...(providerOptions ? { providerOptions } : {}),
       });
       recordLlmUsage(
         config.provider,

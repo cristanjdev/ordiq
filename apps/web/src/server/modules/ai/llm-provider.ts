@@ -2,7 +2,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogle } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import type { wrapLanguageModel } from "ai";
+import type { generateText, wrapLanguageModel } from "ai";
 
 /** A concrete provider model (what `wrapLanguageModel` accepts). */
 export type ProviderLanguageModel = Parameters<typeof wrapLanguageModel>[0]["model"];
@@ -112,6 +112,33 @@ export function createLanguageModel(config: LlmConfig): ProviderLanguageModel {
         ...(config.apiKey ? { apiKey: config.apiKey } : {}),
       }).chatModel(config.model);
   }
+}
+
+type GenerateTextProviderOptions = NonNullable<Parameters<typeof generateText>[0]["providerOptions"]>;
+
+/**
+ * Per-provider request options. Gemini "thinks" before answering by default,
+ * which can take longer than the assistant's timeout even for a greeting; the
+ * assistant's questions are answered from tool results, so light thinking is
+ * enough and keeps replies fast. Gemini 2.5 takes a token budget, Gemini 3 and
+ * later take a level.
+ */
+export function providerOptionsFor(config: LlmConfig): GenerateTextProviderOptions | undefined {
+  if (config.provider !== "gemini") return undefined;
+  const thinkingConfig = /^gemini-2(\.|-)/.test(config.model)
+    ? { thinkingBudget: 1024 }
+    : { thinkingLevel: "low" };
+  return { google: { thinkingConfig } };
+}
+
+/** True for errors worth one more attempt: a timeout or a dropped connection. */
+export function isTransientLlmError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.name === "TimeoutError" ||
+    error.name === "AbortError" ||
+    /timed? ?out|ECONNRESET|socket hang up|fetch failed/i.test(error.message)
+  );
 }
 
 /** Estimated cost in PHP per 1,000 tokens; override with LLM_COST_PHP_PER_1K_IN / _OUT. */

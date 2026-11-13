@@ -5,7 +5,7 @@ import { generateSmallFixture, loadFixtureIntoStore } from "../fixtures/fixture.
 import { getMasterDataState, resetMasterDataState } from "../master-data/master-data.store";
 import { runAiAssistantTurn, SYSTEM_PROMPT_V1 } from "./ai-orchestrator";
 import { runLiveAssistantTurn } from "./live-assistant";
-import { DEFAULT_LLM_MODELS, type LlmConfig, resolveLlmConfig } from "./llm-provider";
+import { DEFAULT_LLM_MODELS, type LlmConfig, providerOptionsFor, resolveLlmConfig } from "./llm-provider";
 import { clearCapturedLlmEgressPayloads, getCapturedLlmEgressPayloads } from "./privacy-gateway";
 
 const TERM = "AY2026-2027-S1";
@@ -79,6 +79,54 @@ describe("live assistant turn (mock provider)", () => {
 
   afterEach(() => {
     setAuditSinkForTests(null);
+  });
+
+  it("asks Gemini for light thinking and retries once after a timeout", async () => {
+    const seenOptions: unknown[] = [];
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async (options) => {
+        calls += 1;
+        seenOptions.push(options.providerOptions);
+        if (calls === 1) {
+          const timeout = new Error("The operation timed out.");
+          timeout.name = "TimeoutError";
+          throw timeout;
+        }
+        return {
+          content: [{ type: "text", text: "Good day, Dean." }],
+          finishReason: { unified: "stop", raw: undefined },
+          usage,
+          warnings: [],
+        };
+      },
+    });
+
+    const result = await runLiveAssistantTurn({
+      config: { provider: "gemini", model: "gemini-3.5-flash", live: true, apiKey: "test" },
+      systemPrompt: SYSTEM_PROMPT_V1,
+      history: [
+        {
+          id: "u1",
+          conversationId: "c1",
+          role: "user" as const,
+          content: "hi",
+          parts: [],
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      termCode: TERM,
+      actor: "dean",
+      languageModel: model,
+    });
+
+    expect(calls).toBe(2);
+    expect(result.text).toBe("Good day, Dean.");
+    expect(seenOptions[1]).toMatchObject({ google: { thinkingConfig: { thinkingLevel: "low" } } });
+    expect(providerOptionsFor({ provider: "gemini", model: "gemini-2.5-flash", live: true })).toEqual({
+      google: { thinkingConfig: { thinkingBudget: 1024 } },
+    });
+    expect(providerOptionsFor(LIVE_CONFIG)).toBeUndefined();
   });
 
   it("runs the tool loop with only pseudonymized text leaving ORDIQ and restores names in the reply", async () => {
