@@ -146,7 +146,7 @@ const TABS = [
   { id: "briefing", label: "Briefing", icon: Sparkles },
   { id: "proposals", label: "Proposals", icon: ShieldCheck },
   { id: "history", label: "History", icon: History },
-  { id: "usage", label: "Usage & model", icon: BarChart3 },
+  { id: "usage", label: "Usage & learning", icon: BarChart3 },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
@@ -162,10 +162,6 @@ function formatWhen(iso: string | null | undefined): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-}
-
-function providerName(p: string): string {
-  return p === "gemini" ? "Google Gemini" : p === "openai" ? "OpenAI" : p === "anthropic" ? "Anthropic" : titleCase(p);
 }
 
 function StatTile({
@@ -430,9 +426,7 @@ function BriefingTab({ termCode }: { termCode: string }) {
             <>
               <p className="text-sm leading-relaxed text-[var(--ordiq-ink)]">{current.text}</p>
               <p className="text-[11px] text-[var(--ordiq-muted)]">
-                {current.mode === "live"
-                  ? `${providerName(current.provider)} · ${formatWhen(current.generatedAt)}`
-                  : "Built-in summary"}
+                Updated {formatWhen(current.generatedAt)}
               </p>
             </>
           ) : null}
@@ -816,7 +810,10 @@ function UsageTab({
   const data = query.data;
   const usage = data?.usage;
   const provider = data?.provider;
-  const pct = usage && usage.monthTokenBudget > 0 ? Math.min(100, (usage.monthTokensUsed / usage.monthTokenBudget) * 100) : 0;
+  const pct = usage && usage.monthTokenBudget > 0
+    ? Math.max(0, Math.min(100, (usage.monthTokensUsed / usage.monthTokenBudget) * 100))
+    : null;
+  const usageLabel = pct === null ? "No monthly limit set" : pct >= 100 ? "Monthly allowance used" : pct >= 90 ? "Approaching the monthly limit" : "Within the monthly allowance";
   const ml = mlQuery.data?.evaluation;
   const percent = (v: number) => `${(v * 100).toFixed(1)}%`;
 
@@ -824,55 +821,70 @@ function UsageTab({
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">AI provider & usage</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Sparkles aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--ordiq-maroon)] dark:text-[var(--ordiq-orange)]" />
+            Your AI assistant
+          </CardTitle>
+          <CardDescription>Availability and activity at a glance.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {query.isLoading || !usage || !provider ? (
+          {query.isError ? (
+            <div role="status" className="space-y-3 rounded-xl bg-[var(--ordiq-surface-muted)] p-4">
+              <p className="text-sm text-[var(--ordiq-muted)]">Assistant activity is temporarily unavailable.</p>
+              <Button variant="outline" size="sm" onClick={() => void query.refetch()} disabled={query.isFetching}>
+                Try again
+              </Button>
+            </div>
+          ) : query.isLoading || !usage || !provider ? (
             <SkeletonBlock className="h-32 w-full rounded-xl" />
           ) : (
             <>
-              {/* Provider: name and model stacked on the left, status on the right */}
-              <div className="flex items-center justify-between gap-3 rounded-xl bg-[var(--ordiq-surface-muted)]/60 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[var(--ordiq-ink)]">{providerName(provider.provider)}</p>
-                  <p className="truncate font-mono text-[11px] text-[var(--ordiq-muted)]">{provider.model}</p>
-                  {!provider.live && provider.offlineReason && (
-                    <p className="mt-1 text-[11px] text-[var(--ordiq-muted)]">{provider.offlineReason}</p>
-                  )}
-                </div>
+              <div className="flex items-start gap-3 rounded-xl bg-[var(--ordiq-surface-muted)]/60 p-4">
                 <span
                   className={cn(
-                    "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                    "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                     provider.live
                       ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
                       : "bg-amber-500/15 text-amber-800 dark:text-amber-300",
                   )}
                 >
-                  <span className={cn("h-1.5 w-1.5 rounded-full", provider.live ? "bg-emerald-500" : "bg-amber-500")} />
-                  {provider.live ? "Connected" : "Offline"}
+                  {provider.live ? <CheckCircle2 aria-hidden="true" className="h-4 w-4" /> : <Info aria-hidden="true" className="h-4 w-4" />}
                 </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--ordiq-ink)]">{provider.live ? "Ready to help" : "Limited assistance"}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-[var(--ordiq-muted)]">
+                    {provider.live
+                      ? "Ask questions about schedules, faculty assignments, and room availability."
+                      : "Basic assistance is available. Some answers may be limited until the full service returns."}
+                  </p>
+                </div>
               </div>
               <div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-[var(--ordiq-muted)]">Tokens this month</span>
-                  <span className="font-semibold text-[var(--ordiq-ink)]">
-                    {usage.monthTokensUsed.toLocaleString()} / {usage.monthTokenBudget.toLocaleString()}
-                  </span>
+                <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs">
+                  <span className="font-semibold text-[var(--ordiq-ink)]">Monthly usage</span>
+                  {pct !== null && <span className="text-[var(--ordiq-muted)]">{pct.toLocaleString(undefined, { maximumFractionDigits: 1 })}% used</span>}
                 </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--ordiq-surface-muted)]">
+                {pct !== null && <div
+                  role="progressbar"
+                  aria-label="Monthly assistant allowance used"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={pct}
+                  className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--ordiq-surface-muted)]"
+                >
                   <div
                     className={cn("h-full rounded-full", pct >= 90 ? "bg-red-500" : pct >= 70 ? "bg-amber-500" : "bg-[var(--ordiq-maroon)] dark:bg-[var(--ordiq-orange)]")}
                     style={{ width: `${pct}%` }}
                   />
-                </div>
+                </div>}
+                <p className="mt-2 text-xs text-[var(--ordiq-muted)]">{usageLabel}</p>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <StatTile label="Requests" value={usage.requestCount.toLocaleString()} />
-                <StatTile label="Tokens (all time)" value={usage.totalTokensUsed.toLocaleString()} />
-                <StatTile label="Est. cost" value={`₱${usage.totalEstimatedCostPhp.toFixed(2)}`} />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <StatTile label="Times used" value={usage.requestCount.toLocaleString()} hint="Includes chats and summaries" />
+                <StatTile label="Saved conversations" value={(data?.conversations.length ?? 0).toLocaleString()} hint="For the selected academic term" />
               </div>
               <Link href="/settings" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--ordiq-maroon)] hover:underline dark:text-[var(--ordiq-orange)]">
-                Manage in Settings <ArrowRight className="h-3.5 w-3.5" />
+                Assistant settings <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </>
           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, MessageSquare, MoreVertical, Plus, Search, SendHorizontal, X } from "lucide-react";
+import { Check, LoaderCircle, MessageSquare, MoreVertical, Plus, Search, SendHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
@@ -41,9 +41,20 @@ interface AiStateDto {
 
 interface ChatTurnDto {
   conversationId: string;
-  mode?: "live" | "offline" | "offline-fallback";
-  provider?: string;
-  model?: string;
+}
+
+// Describe the requested topic, without claiming that a backend tool is running.
+function pendingReplyLabel(prompt: string): string {
+  if (/\b(faculty|teacher|instructor|professor|teaching load)\b/i.test(prompt)) {
+    return "Preparing a response about faculty";
+  }
+  if (/\b(room|rooms|laboratory|laboratories)\b/i.test(prompt)) {
+    return "Preparing a response about rooms";
+  }
+  if (/\b(schedule|schedules|scheduling|conflict|conflicts|unscheduled|timetable|time slots?)\b/i.test(prompt)) {
+    return "Preparing a response about the schedule";
+  }
+  return "Preparing your reply";
 }
 
 const STARTER_PROMPTS = [
@@ -139,7 +150,6 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
   const [conversationId, setConversationId] = React.useState<string | null>(null);
   const [pendingPrompt, setPendingPrompt] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [lastMode, setLastMode] = React.useState<ChatTurnDto | null>(null);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [sessionQuery, setSessionQuery] = React.useState("");
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -165,7 +175,6 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
     lastTermRef.current = termCode;
     setConversationId(null);
     setError(null);
-    setLastMode(null);
   }, [termCode]);
 
   const aiQuery = useQuery<AiStateDto>({
@@ -214,7 +223,6 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
     },
     onSuccess: async (data) => {
       setConversationId(data.conversationId);
-      setLastMode(data);
       await queryClient.invalidateQueries({ queryKey: ["ai-state"] });
       // Tools like generate_schedule or add_directive change workspace data.
       void queryClient.invalidateQueries({ queryKey: ["schedules"] });
@@ -256,7 +264,6 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
   const startNewConversation = () => {
     setConversationId(null);
     setError(null);
-    setLastMode(null);
     closeMenu();
     inputRef.current?.focus();
   };
@@ -264,7 +271,6 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
   const openSession = (id: string) => {
     setConversationId(id);
     setError(null);
-    setLastMode(null);
     closeMenu();
   };
 
@@ -513,14 +519,15 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
             </div>
             <div
               role="status"
-              className="flex w-fit items-center gap-2 rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] px-3 py-2 text-[var(--ordiq-muted)]"
+              aria-live="polite"
+              aria-atomic="true"
+              className="flex w-fit max-w-full items-center gap-2.5 rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] px-3.5 py-3 text-[var(--ordiq-muted)]"
             >
-              <span className="flex gap-1">
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--ordiq-maroon)]" />
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--ordiq-maroon)] [animation-delay:0.2s]" />
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--ordiq-maroon)] [animation-delay:0.4s]" />
-              </span>
-              <span>The assistant is checking the schedule data…</span>
+              <LoaderCircle
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0 motion-safe:animate-spin text-[var(--ordiq-maroon)] dark:text-[var(--ordiq-orange)]"
+              />
+              <span className="min-w-0 break-words">{pendingReplyLabel(pendingPrompt)}</span>
             </div>
           </>
         )}
@@ -583,11 +590,6 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
           </button>
         </form>
         <p className="mt-2 text-center text-[10px] text-[var(--ordiq-muted)]">
-          {lastMode?.mode === "live"
-            ? `Answered by ${lastMode.provider} · ${lastMode.model}. `
-            : lastMode?.mode
-              ? "Answered by the built-in assistant (AI provider unavailable). "
-              : ""}
           AI can make mistakes. Please verify important information.
         </p>
       </div>
