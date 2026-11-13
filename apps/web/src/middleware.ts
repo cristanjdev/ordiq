@@ -144,6 +144,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
+  // Vercel Services does not support the Edge runtime, so the guard runs on
+  // Node.js (stable in Next.js 15.5).
+  runtime: "nodejs",
   matcher: [
     // Everything except API routes (self-protecting), Next.js internals, and
     // public static assets (logos/icons used by the sign-in screen).
