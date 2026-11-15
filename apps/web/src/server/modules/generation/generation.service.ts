@@ -413,9 +413,16 @@ export async function runScheduleGeneration(
     const modelBugViolations = independentCheck.violations.filter(
       (v) => !v.waived && v.code !== "HC-08",
     );
-    if (modelBugViolations.length > 0) {
+    // A generated meeting must always name a faculty member and a room; only an
+    // imported schedule may leave them blank.
+    const unassigned =
+      (independentCheck.unassigned_faculty_count ?? 0) + (independentCheck.unassigned_room_count ?? 0);
+    if (modelBugViolations.length > 0 || unassigned > 0) {
       run.status = "SOLVER_MODEL_BUG";
-      run.error = `Independent validator rejected solver output: ${modelBugViolations.map((v) => v.code).join(", ")}`;
+      run.error =
+        modelBugViolations.length > 0
+          ? `Independent validator rejected solver output: ${modelBugViolations.map((v) => v.code).join(", ")}`
+          : `Solver output left ${unassigned} meeting assignment(s) without a faculty member or room.`;
       run.completedAt = new Date().toISOString();
       store.generationRuns.set(runId, run);
       throw new AppError("SOLVER_MODEL_BUG", run.error, 500, {

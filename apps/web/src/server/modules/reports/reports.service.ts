@@ -49,7 +49,7 @@ export interface ReportExportResult {
   summaryMetrics: {
     classesScheduled: number;
     conflictsDetected: number;
-    facultyLoadBalanceScore: number;
+    facultyLoadBalanceScore: number | null;
     roomUtilizationPct: number;
     unmetPreferencesCount: number;
   };

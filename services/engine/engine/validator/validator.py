@@ -31,6 +31,20 @@ def _overlaps(start_a: int, end_a: int, start_b: int, end_b: int) -> bool:
     return start_a < end_b and start_b < end_a
 
 
+def _has_faculty(e: ScheduledMeetingEntry) -> bool:
+    """False when an imported schedule names no faculty for the meeting (blank code).
+
+    Faculty checks skip such meetings: treating every blank as one person would report
+    double-bookings and loads that do not exist. Generated schedules always name a faculty.
+    """
+    return e.faculty_code != ""
+
+
+def _has_room(e: ScheduledMeetingEntry) -> bool:
+    """False when an imported schedule names no college room for the meeting (blank code)."""
+    return e.room_code != ""
+
+
 def _same_combined_group(
     a: ScheduledMeetingEntry,
     b: ScheduledMeetingEntry,
@@ -58,7 +72,8 @@ def check_hc_01_faculty_overlap(
     offering_map = {o.code: o for o in problem.offerings}
     by_fac_day: dict[tuple[str, Weekday], list[ScheduledMeetingEntry]] = defaultdict(list)
     for e in entries:
-        by_fac_day[(e.faculty_code, e.weekday)].append(e)
+        if _has_faculty(e):
+            by_fac_day[(e.faculty_code, e.weekday)].append(e)
 
     violations: list[Violation] = []
     for (fac_code, day), group in by_fac_day.items():
@@ -99,7 +114,8 @@ def check_hc_02_room_overlap(
     offering_map = {o.code: o for o in problem.offerings}
     by_room_day: dict[tuple[str, Weekday], list[ScheduledMeetingEntry]] = defaultdict(list)
     for e in entries:
-        by_room_day[(e.room_code, e.weekday)].append(e)
+        if _has_room(e):
+            by_room_day[(e.room_code, e.weekday)].append(e)
 
     violations: list[Violation] = []
     for (room_code, day), group in by_room_day.items():
@@ -409,7 +425,7 @@ def check_hc_09_faculty_qualification(
     violations: list[Violation] = []
     for e in entries:
         off = offering_map.get(e.offering_code)
-        if not off:
+        if not off or not _has_faculty(e):
             continue
         if (e.faculty_code, off.subject_code) not in qualified_pairs:
             violations.append(
@@ -945,6 +961,8 @@ def compute_quality_report(
     w_sc02 = weights.get(SoftConstraintCode.SC_02, 8.0)
     hours_by_fac: dict[str, float] = {f.code: 0.0 for f in problem.faculty}
     for e in entries:
+        if not _has_faculty(e):
+            continue
         hours_by_fac[e.faculty_code] = hours_by_fac.get(e.faculty_code, 0.0) + (
             (e.end_min - e.start_min) / 60.0
         )
@@ -1184,4 +1202,6 @@ def validate_schedule(
         waived_violation_count=waived_count,
         violations=violations,
         quality=quality,
+        unassigned_faculty_count=sum(1 for e in entries if not _has_faculty(e)),
+        unassigned_room_count=sum(1 for e in entries if not _has_room(e)),
     )

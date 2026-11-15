@@ -15,6 +15,8 @@ import {
 } from "../generation/generation.service";
 import {
   getMasterDataState,
+  hasNoFaculty,
+  hasNoRoom,
   type ScheduleChangeRecord,
   type ScheduleEntryRecord,
   type ScheduleExceptionRecord,
@@ -146,7 +148,7 @@ export async function editScheduleEntry(
 
   // Phase 5C: Record LearningEvent from Dean edit
   const editedOffering = store.offerings.get(afterEntry.offeringCode);
-  if (editedOffering && afterEntry.facultyCode !== "EXTERNAL") {
+  if (editedOffering && !hasNoFaculty(afterEntry)) {
     recordLearningEvent({
       termCode: sched.termCode,
       scheduleId: sched.id,
@@ -372,7 +374,7 @@ export async function acceptCandidateSchedule(
 
   // Phase 5C: Record LearningEvents from accepted schedule and retrain ML fit model
   for (const entry of accepted.entries) {
-    if (entry.facultyCode === "EXTERNAL") continue;
+    if (hasNoFaculty(entry)) continue;
     const off = store.offerings.get(entry.offeringCode);
     if (off) {
       recordLearningEvent({
@@ -478,8 +480,8 @@ export function compareCandidateSchedules(scheduleIds: string[]) {
     const roomsUsed = new Set<string>();
     for (const e of sched.entries) {
       const h = (e.endMin - e.startMin) / 60;
-      hoursByFac.set(e.facultyCode, (hoursByFac.get(e.facultyCode) ?? 0) + h);
-      roomsUsed.add(e.roomCode);
+      if (!hasNoFaculty(e)) hoursByFac.set(e.facultyCode, (hoursByFac.get(e.facultyCode) ?? 0) + h);
+      if (!hasNoRoom(e)) roomsUsed.add(e.roomCode);
     }
     const loadValues = Array.from(hoursByFac.values());
     const avgLoadHours =

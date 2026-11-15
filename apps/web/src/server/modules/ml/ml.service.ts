@@ -8,6 +8,7 @@ import { withAudit } from "../../platform/audit";
 import {
   type FacultyPreferenceRecord,
   getMasterDataState,
+  hasNoFaculty,
   type LearningEventRecord,
   type ModelVersionRecord,
 } from "../master-data/master-data.store";
@@ -61,7 +62,7 @@ function collectHistoricalSamples(
     if (sched.status === "ACCEPTED" || sched.source === "IMPORTED") {
       if (!termCode || sched.termCode === termCode) {
         for (const entry of sched.entries) {
-          if (entry.facultyCode === "EXTERNAL") continue;
+          if (hasNoFaculty(entry)) continue;
           const off = state.offerings.get(entry.offeringCode);
           if (off) {
             const key = `${entry.facultyCode}:::${off.subjectCode}`;

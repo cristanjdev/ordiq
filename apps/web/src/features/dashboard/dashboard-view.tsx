@@ -354,8 +354,8 @@ function KpiRow({
       <KpiCard
         label="Faculty Load Balance"
         icon={<Users className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />}
-        value={show && m ? `${m.facultyLoadBalanceScore}` : empty}
-        suffix={show ? "/ 100" : undefined}
+        value={show && m ? (m.facultyLoadBalanceScore == null ? "—" : `${m.facultyLoadBalanceScore}`) : empty}
+        suffix={show && m?.facultyLoadBalanceScore != null ? "/ 100" : undefined}
         title={analytics?.metricFormulas.facultyLoadBalanceScore}
       />
       <KpiCard
@@ -992,7 +992,7 @@ function AnalyticsCard({ analytics, hasSchedule }: { analytics: AnalyticsDto | u
       ? [
           { label: "Meetings placed", value: `${m.scheduledPct}%`, dot: "bg-[#0d9488]" },
           { label: "Room utilization", value: `${m.roomUtilizationPct}%`, dot: "bg-[#b91c1c]" },
-          { label: "Faculty load balance", value: `${m.facultyLoadBalanceScore}`, dot: "bg-amber-500" },
+          { label: "Faculty load balance", value: m.facultyLoadBalanceScore == null ? "—" : `${m.facultyLoadBalanceScore}`, dot: "bg-amber-500" },
           { label: "Unmet preferences", value: String(m.unmetPreferencesCount), dot: "bg-slate-400" },
         ]
       : [];

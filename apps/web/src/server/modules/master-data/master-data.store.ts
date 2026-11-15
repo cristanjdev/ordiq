@@ -162,12 +162,27 @@ export interface ScheduleEntryRecord {
   id: string;
   offeringCode: string;
   meetingIndex?: number;
+  /** Empty when an imported schedule names no faculty for the class. */
   facultyCode: string;
+  /** Empty when an imported schedule names no college room for the class. */
   roomCode: string;
   weekday: Weekday;
   startMin: number;
   endMin: number;
   pinned: boolean;
+}
+
+/**
+ * True when an entry names no college faculty member: left blank in an
+ * imported schedule, or taught outside the college ("EXTERNAL").
+ */
+export function hasNoFaculty(entry: Pick<ScheduleEntryRecord, "facultyCode">): boolean {
+  return entry.facultyCode === "" || entry.facultyCode === "EXTERNAL";
+}
+
+/** True when an entry names no college room (blank in an imported schedule, or outside the college). */
+export function hasNoRoom(entry: Pick<ScheduleEntryRecord, "roomCode">): boolean {
+  return entry.roomCode === "" || entry.roomCode === "EXTERNAL";
 }
 
 export interface UnscheduledMeetingRecord {

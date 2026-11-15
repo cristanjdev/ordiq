@@ -357,6 +357,8 @@ export interface components {
     "ValidationResponse": {
       "hard_violation_count": number;
       "quality": components["schemas"]["QualityReport"];
+      "unassigned_faculty_count": number;
+      "unassigned_room_count": number;
       "valid": boolean;
       "violations": Array<components["schemas"]["Violation"]>;
       "waived_violation_count": number;

@@ -35,6 +35,7 @@ from engine.domain.models import (
     RoomType,
     ScheduledMeetingEntry,
     SectionModel,
+    SoftConstraintCode,
     SubjectModel,
     TermConfig,
     UnscheduledReasonCode,
@@ -400,6 +401,49 @@ def test_each_hard_constraint_hc01_to_hc15_can_be_violated_and_detected() -> Non
     )
     res_hc15 = validate_schedule(prob_hc15, base_ent)
     assert any(v.code == HardConstraintCode.HC_15 for v in res_hc15.violations)
+
+
+def test_blank_faculty_and_room_in_an_imported_schedule_are_not_treated_as_one_person() -> None:
+    """An imported schedule may leave faculty or room blank; blanks never invent conflicts."""
+    prob = _base_problem()
+    base = _valid_entries()
+    # Both sections meet at the same time, each with no faculty and no room named.
+    blank = [
+        base[0].model_copy(update={"faculty_code": "", "room_code": ""}),
+        base[1].model_copy(update={"faculty_code": "", "room_code": ""}),
+        base[2].model_copy(
+            update={"faculty_code": "", "room_code": "", "weekday": Weekday.MONDAY,
+                    "start_min": 450, "end_min": 540}
+        ),
+        base[3].model_copy(update={"faculty_code": "", "room_code": ""}),
+    ]
+    res = validate_schedule(prob, blank)
+    codes = {v.code for v in res.violations}
+    assert HardConstraintCode.HC_01 not in codes
+    assert HardConstraintCode.HC_02 not in codes
+    assert HardConstraintCode.HC_09 not in codes
+    assert res.unassigned_faculty_count == 4
+    assert res.unassigned_room_count == 4
+    assert res.quality.penalties_by_code[SoftConstraintCode.SC_02] == 0
+
+    # Named faculty and rooms are still checked alongside the blanks.
+    mixed = [
+        *blank[:2],
+        base[2].model_copy(
+            update={"faculty_code": "FAC-1", "room_code": "LEC-1", "weekday": Weekday.MONDAY,
+                    "start_min": 450, "end_min": 540}
+        ),
+        base[0],
+    ]
+    mixed_codes = {v.code for v in validate_schedule(prob, mixed).violations}
+    assert HardConstraintCode.HC_01 in mixed_codes
+    assert HardConstraintCode.HC_02 in mixed_codes
+    assert HardConstraintCode.HC_09 in mixed_codes
+
+    # A fully assigned schedule reports no blanks.
+    clean = validate_schedule(prob, base)
+    assert clean.unassigned_faculty_count == 0
+    assert clean.unassigned_room_count == 0
 
 
 @given(

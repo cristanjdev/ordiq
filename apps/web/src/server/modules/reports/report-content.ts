@@ -62,6 +62,8 @@ export function clock(min: number): string {
 const timeRange = (start: number, end: number) => `${clock(start)} – ${clock(end)}`;
 const day = (weekday: string) => titleCase(weekday);
 const pct = (value: number) => `${Number(value.toFixed(1))}%`;
+/** A percentage that may be unavailable (no faculty named in the schedule). */
+const pctOrDash = (value: number | null) => (value == null ? "—" : pct(value));
 const count = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const hours = (minutes: number) => {
   const h = minutes / 60;
@@ -304,7 +306,7 @@ function facultyLoad(ctx: ReportContext): ReportContent {
       { label: "Average load", value: pct(avg) },
       { label: "Over maximum", value: String(loads.filter((l) => l.statusLabel === "EXCEEDS_MAX").length) },
       { label: "With overload", value: String(loads.filter((l) => l.overloadUnits > 0).length) },
-      { label: "Load balance score", value: pct(ctx.analytics.metrics.facultyLoadBalanceScore) },
+      { label: "Load balance score", value: pctOrDash(ctx.analytics.metrics.facultyLoadBalanceScore) },
     ],
     sections: [
       { heading: `Faculty with classes (${teaching.length})`, headers, align, rows: teaching.map(row), emptyText: ctx.sched ? "No faculty member has classes in this schedule." : NO_SCHEDULE },
@@ -359,8 +361,14 @@ function collegeSummary(ctx: ReportContext): ReportContent {
     ["Classes scheduled", `${metrics.classesScheduled} of ${metrics.totalMeetings} (${pct(metrics.scheduledPct)})`, "Class meetings placed ÷ class meetings required by this term's offerings."],
     ["Unresolved conflicts", String(metrics.conflictsDetected), "Hard-rule violations (HC-01 to HC-15) found by the independent validator and not waived."],
     ["Waived exceptions", String(metrics.waivedExceptionsCount), "Rule exceptions the Dean approved with a written reason. One approval can cover several class meetings."],
-    ["Faculty load balance", pct(metrics.facultyLoadBalanceScore), "100 minus the standard deviation of faculty load percentages. Higher means loads are more even."],
-    ["Average faculty load", pct(metrics.averageFacultyUtilizationPct), "Average of assigned units ÷ regular maximum units."],
+    ["Faculty load balance", pctOrDash(metrics.facultyLoadBalanceScore), "100 minus the standard deviation of faculty load percentages. Higher means loads are more even. Not available when the schedule names no faculty."],
+    ["Average faculty load", pctOrDash(metrics.averageFacultyUtilizationPct), "Average of assigned units ÷ regular maximum units."],
+    ...(metrics.meetingsWithoutFaculty > 0
+      ? [["Classes with no faculty named", String(metrics.meetingsWithoutFaculty), "Left blank in the imported schedule. Faculty checks do not apply to them."]]
+      : []),
+    ...(metrics.meetingsWithoutRoom > 0
+      ? [["Classes with no college room named", String(metrics.meetingsWithoutRoom), "Left blank in the imported schedule, or held outside the college's rooms. Room checks do not apply to them."]]
+      : []),
     ["Room utilization", pct(metrics.roomUtilizationPct), "Average over all rooms of scheduled minutes ÷ available teaching minutes per week."],
     ["Unmet preferences", String(metrics.unmetPreferencesCount), "Soft preferences (SC-01 to SC-16) the schedule could not satisfy."],
     ["Quality score", ctx.sched?.qualityScore == null ? "—" : String(metrics.qualityScore), "Solver score from 0 to 100 that weighs the soft preferences."],
@@ -386,7 +394,7 @@ function collegeSummary(ctx: ReportContext): ReportContent {
     summary: [
       { label: "Classes scheduled", value: pct(metrics.scheduledPct) },
       { label: "Unresolved conflicts", value: String(metrics.conflictsDetected) },
-      { label: "Load balance", value: pct(metrics.facultyLoadBalanceScore) },
+      { label: "Load balance", value: pctOrDash(metrics.facultyLoadBalanceScore) },
       { label: "Room utilization", value: pct(metrics.roomUtilizationPct) },
       { label: "Unmet preferences", value: String(metrics.unmetPreferencesCount) },
     ],
@@ -534,7 +542,7 @@ function candidateComparison(ctx: ReportContext): ReportContent {
         `${m.classesScheduled} of ${m.totalMeetings}`,
         String(m.conflictsDetected),
         String(m.unmetPreferencesCount),
-        failed ? "—" : pct(m.facultyLoadBalanceScore),
+        failed ? "—" : pctOrDash(m.facultyLoadBalanceScore),
         failed ? "—" : pct(m.roomUtilizationPct),
         failed || s.qualityScore == null ? "—" : String(s.qualityScore),
       ],

@@ -41,8 +41,9 @@ export interface AnalyticsDto {
     scheduledPct: number;
     conflictsDetected: number;
     waivedExceptionsCount: number;
-    facultyLoadBalanceScore: number;
-    averageFacultyUtilizationPct: number;
+    /** Null when no class in the schedule names a faculty member. */
+    facultyLoadBalanceScore: number | null;
+    averageFacultyUtilizationPct: number | null;
     roomUtilizationPct: number;
     qualityScore: number;
     unmetPreferencesCount: number;

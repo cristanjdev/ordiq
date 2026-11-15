@@ -447,6 +447,10 @@ class ValidationResponse(BaseModel):
     waived_violation_count: int = 0
     violations: list[Violation]
     quality: QualityReport
+    # Meetings that name no faculty or no room (blank in an imported schedule). Faculty and room
+    # checks cannot apply to them; a generated schedule must always report zero.
+    unassigned_faculty_count: int = 0
+    unassigned_room_count: int = 0
 
 
 class UnscheduledMeetingResult(BaseModel):

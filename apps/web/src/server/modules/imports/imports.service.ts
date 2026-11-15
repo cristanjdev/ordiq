@@ -494,7 +494,9 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         message: `PastSchedule row references unknown offering "${offeringCode}".`,
       });
     }
-    if (!facultyCode || !knownFaculty.has(facultyCode)) {
+    // A blank faculty or room is kept blank: the college's own schedule does not
+    // always name them, and ORDIQ never guesses. A code that is given must exist.
+    if (facultyCode && !knownFaculty.has(facultyCode)) {
       errors.push({
         sheet: "PastSchedule",
         row: rowNum,
@@ -502,7 +504,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         message: `PastSchedule row references unknown faculty "${facultyCode}".`,
       });
     }
-    if (!roomCode || !knownRooms.has(roomCode)) {
+    if (roomCode && !knownRooms.has(roomCode)) {
       errors.push({
         sheet: "PastSchedule",
         row: rowNum,
@@ -530,10 +532,8 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
     if (
       offeringCode &&
       knownOfferings.has(offeringCode) &&
-      facultyCode &&
-      knownFaculty.has(facultyCode) &&
-      roomCode &&
-      knownRooms.has(roomCode) &&
+      (!facultyCode || knownFaculty.has(facultyCode)) &&
+      (!roomCode || knownRooms.has(roomCode)) &&
       dayParsed.success &&
       Number.isInteger(startMin) &&
       Number.isInteger(endMin) &&

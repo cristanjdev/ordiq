@@ -1806,6 +1806,16 @@
           "quality": {
             "$ref": "#/components/schemas/QualityReport"
           },
+          "unassigned_faculty_count": {
+            "default": 0,
+            "title": "Unassigned Faculty Count",
+            "type": "integer"
+          },
+          "unassigned_room_count": {
+            "default": 0,
+            "title": "Unassigned Room Count",
+            "type": "integer"
+          },
           "valid": {
             "title": "Valid",
             "type": "boolean"

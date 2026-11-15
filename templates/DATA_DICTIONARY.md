@@ -161,8 +161,8 @@ Imports the 1st Semester A.Y. 2026–2027 manual schedule as a read-only `Schedu
 | Column | Type | Required | Natural Key | Description & Allowed Values |
 |---|---|---|---|---|
 | `offeringCode` | `string` | Yes | FK → `Offerings.code` | Offering placed by this schedule entry. |
-| `facultyCode` | `string` | Yes | FK → `Faculty.code` | Assigned faculty member. |
-| `roomCode` | `string` | Yes | FK → `Rooms.code` | Assigned classroom or laboratory. |
+| `facultyCode` | `string` | No | FK → `Faculty.code` | Assigned faculty member. Leave blank when the schedule names none; ORDIQ then skips faculty checks (HC-01, HC-09, load) for that class and does not learn from it. |
+| `roomCode` | `string` | No | FK → `Rooms.code` | Assigned classroom or laboratory. Leave blank when none is named or the class is held outside the college's rooms; ORDIQ then skips room checks for that class. |
 | `weekday` | `enum` | Yes | | `MONDAY`..`SATURDAY`. |
 | `startMin` | `integer` | Yes | | Start time in minutes from midnight. |
 | `endMin` | `integer` | Yes | | End time in minutes from midnight. |

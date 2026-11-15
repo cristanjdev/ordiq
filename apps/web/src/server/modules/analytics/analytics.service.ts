@@ -1,5 +1,7 @@
 import {
   getMasterDataState,
+  hasNoFaculty,
+  hasNoRoom,
   type ScheduleRecord,
 } from "../master-data/master-data.store";
 import { getTermReadinessReport } from "../readiness/readiness.service";
@@ -50,6 +52,9 @@ export interface ManualComparisonDto {
   manualQualityScore: number;
   currentQualityScore: number;
   hardViolationsEliminated: number;
+  /** Meetings in the imported schedule with no faculty or room named; faculty and room checks skip them. */
+  manualMeetingsWithoutFaculty: number;
+  manualMeetingsWithoutRoom: number;
 }
 
 export interface ScheduleAnalyticsReportDto {
@@ -65,11 +70,15 @@ export interface ScheduleAnalyticsReportDto {
     scheduledPct: number;
     conflictsDetected: number;
     waivedExceptionsCount: number;
-    facultyLoadBalanceScore: number;
-    averageFacultyUtilizationPct: number;
+    /** Null when no class in the schedule names a faculty member (an imported schedule without faculty). */
+    facultyLoadBalanceScore: number | null;
+    averageFacultyUtilizationPct: number | null;
     roomUtilizationPct: number;
     qualityScore: number;
     unmetPreferencesCount: number;
+    /** Class meetings that name no faculty member or no college room (left blank in an imported schedule). */
+    meetingsWithoutFaculty: number;
+    meetingsWithoutRoom: number;
   };
   metricFormulas: {
     classesScheduled: string;
@@ -143,7 +152,7 @@ export function computeFacultyLoads(
 
   const facultyOfferings = new Map<string, Set<string>>();
   for (const entry of entries) {
-    if (entry.facultyCode === "EXTERNAL") continue;
+    if (hasNoFaculty(entry)) continue;
     const set = facultyOfferings.get(entry.facultyCode) ?? new Set<string>();
     set.add(entry.offeringCode);
     facultyOfferings.set(entry.facultyCode, set);
@@ -223,7 +232,7 @@ export function computeRoomUtilizations(
 
   const roomMinutes = new Map<string, { minutes: number; count: number }>();
   for (const entry of entries) {
-    if (entry.roomCode === "EXTERNAL") continue;
+    if (hasNoRoom(entry)) continue;
     const duration = Math.max(0, entry.endMin - entry.startMin);
     const cur = roomMinutes.get(entry.roomCode) ?? { minutes: 0, count: 0 };
     cur.minutes += duration;
@@ -272,9 +281,14 @@ export function computeScheduleAnalytics(
     totalOfferingMeetings += off.meetingsPerWeek;
   }
 
+  // Classes taught by another department do not count; a college class whose
+  // faculty was left blank in an imported schedule still does.
   const classesScheduled = (sched?.entries ?? []).filter(
     (e) => e.facultyCode !== "EXTERNAL",
   ).length;
+  const meetingsWithoutFaculty = (sched?.entries ?? []).filter((e) => e.facultyCode === "").length;
+  const meetingsWithoutRoom = (sched?.entries ?? []).filter((e) => e.roomCode === "").length;
+  const namesFaculty = (sched?.entries ?? []).some((e) => !hasNoFaculty(e));
   const unscheduledCount = sched?.unscheduled?.length ?? 0;
   const totalMeetings = Math.max(
     totalOfferingMeetings,
@@ -353,6 +367,8 @@ export function computeScheduleAnalytics(
       manualQualityScore: manualSched.qualityScore ?? 0,
       currentQualityScore: sched.qualityScore ?? 0,
       hardViolationsEliminated: Math.max(0, manualHard - currentHard),
+      manualMeetingsWithoutFaculty: manualSched.entries.filter((e) => e.facultyCode === "").length,
+      manualMeetingsWithoutRoom: manualSched.entries.filter((e) => e.roomCode === "").length,
     };
   }
 
@@ -369,11 +385,14 @@ export function computeScheduleAnalytics(
       scheduledPct,
       conflictsDetected: unwaivedHardViolations.length,
       waivedExceptionsCount,
-      facultyLoadBalanceScore,
-      averageFacultyUtilizationPct: Number(avgFacUtil.toFixed(1)),
+      facultyLoadBalanceScore: classesScheduled > 0 && !namesFaculty ? null : facultyLoadBalanceScore,
+      averageFacultyUtilizationPct:
+        classesScheduled > 0 && !namesFaculty ? null : Number(avgFacUtil.toFixed(1)),
       roomUtilizationPct: avgRoomUtil,
       qualityScore: sched?.qualityScore ?? 0,
       unmetPreferencesCount: unmetPreferences.length,
+      meetingsWithoutFaculty,
+      meetingsWithoutRoom,
     },
     metricFormulas: {
       classesScheduled:
@@ -381,7 +400,7 @@ export function computeScheduleAnalytics(
       conflictsDetected:
         "Count of unwaived hard constraint violations (HC-01 to HC-15) verified by the independent Python validator.",
       facultyLoadBalanceScore:
-        "100 minus the population standard deviation of assigned faculty teaching load utilization percentages (assignedUnits / regularMaxUnits * 100).",
+        "100 minus the population standard deviation of assigned faculty teaching load utilization percentages (assignedUnits / regularMaxUnits * 100). Not available when the schedule names no faculty.",
       roomUtilizationPct:
         "Mean percentage of weekly scheduled room minutes divided by available teaching window minutes across all college rooms.",
       studentChangeRequestRisk:

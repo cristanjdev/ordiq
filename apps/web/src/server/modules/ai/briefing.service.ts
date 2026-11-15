@@ -83,9 +83,12 @@ export function describeEntry(entry: ScheduleEntryRecord): string {
   const faculty =
     entry.facultyCode === "EXTERNAL"
       ? "External department"
-      : (state.faculty.get(entry.facultyCode)?.name ?? entry.facultyCode);
+      : entry.facultyCode === ""
+        ? "No faculty named"
+        : (state.faculty.get(entry.facultyCode)?.name ?? entry.facultyCode);
+  const room = entry.roomCode === "" ? "No room named" : entry.roomCode;
   const day = dayName(entry.weekday);
-  return `${day}, ${clock(entry.startMin)} – ${clock(entry.endMin)} · ${entry.roomCode} · ${faculty}`;
+  return `${day}, ${clock(entry.startMin)} – ${clock(entry.endMin)} · ${room} · ${faculty}`;
 }
 
 /** "CPE 101 lecture, section CPE-1A" */
