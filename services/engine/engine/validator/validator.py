@@ -25,6 +25,9 @@ from engine.domain.models import (
 )
 from engine.domain.spread import SPREAD_PENALTY_FACTOR, daytime_peak_target
 
+# Average soft-constraint penalty per meeting at which the quality score is 50.
+QUALITY_HALF_POINT = 10.0
+
 
 def _overlaps(start_a: int, end_a: int, start_b: int, end_b: int) -> bool:
     """Return True if half-open intervals [start_a, end_a) and [start_b, end_b) overlap."""
@@ -1160,7 +1163,14 @@ def compute_quality_report(
             penalties_by_code[SoftConstraintCode.SC_12] += pen
 
     total_penalty = round(sum(penalties_by_code.values()), 2)
-    quality_score = round(max(0.0, 100.0 - min(100.0, total_penalty)), 2)
+    # Normalized by schedule size: penalties grow with the number of meetings, so
+    # "100 - total penalty" reached 0 on any full term (the college's 554 meetings
+    # carry ~1,400 points) and could not tell candidates apart. An average penalty
+    # of QUALITY_HALF_POINT per meeting scores 50; no penalty scores 100.
+    size = max(1, len(entries))
+    quality_score = round(
+        100.0 * (1.0 - total_penalty / (total_penalty + QUALITY_HALF_POINT * size)), 2
+    )
 
     return QualityReport(
         total_penalty=total_penalty,

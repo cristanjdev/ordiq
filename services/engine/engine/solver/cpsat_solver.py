@@ -39,6 +39,8 @@ from engine.domain.spread import SPREAD_PENALTY_FACTOR, daytime_peak_target
 from engine.validator.validator import validate_schedule
 
 UNSCHEDULED_PENALTY = 100_000
+# Above this many meetings CP-SAT presolve is skipped (see solve_problem).
+LARGE_MODEL_MEETINGS = 200
 DAY_MINUTES = 1440
 
 
@@ -771,6 +773,7 @@ def solve_problem(
             while pos < end:
                 covering[(day, pos)].append(t)
                 pos += slot
+    peak_vars: list[tuple[cp_model.IntVar, list[cp_model.IntVar]]] = []
     if slot_unit > 0:
         for (day, slot_start), lits in covering.items():
             if len(lits) <= peak_target:
@@ -780,10 +783,20 @@ def solve_problem(
             )
             model.add(excess >= sum(lits) - peak_target)
             objective_terms.append(slot_unit * excess)
+            peak_vars.append((excess, lits))
 
     hints = _add_greedy_hints(
         model, problem, ordered, meetings, fac_choice, fac_map, units_of, prior_lookup, avail
     )
+    # The SC-05 excess counters complete the hint. With every variable hinted, CP-SAT
+    # starts from the greedy schedule as its first solution and improves on it;
+    # an incomplete hint is discarded, and on a full term the search then often
+    # finds no solution in time and every profile falls back to the same greedy result.
+    for excess, lits in peak_vars:
+        used = sum(hints[lit.index][1] for lit in lits if lit.index in hints)
+        value = max(0, used - peak_target)
+        hints[excess.index] = (excess, value)
+        model.add_hint(excess, value)
 
     model.minimize(sum(objective_terms))
 
@@ -799,6 +812,13 @@ def solve_problem(
     # Presolve probing scales badly with the many optional intervals of a full term
     # (it consumed the whole budget at ~300 meetings); search works better without it.
     solver.parameters.cp_model_probing_level = 0
+    # On a full term (the college's real data: 585 meetings) presolve alone ran past a
+    # 25-second budget, so the search never started and every profile returned the
+    # same greedy fallback. Without presolve the search starts from the complete
+    # greedy hint at once and improves on it; small problems keep presolve, which
+    # helps prove optimality.
+    if len(meetings) > LARGE_MODEL_MEETINGS:
+        solver.parameters.cp_model_presolve = False
 
     raw_status = solver.solve(model)
     elapsed_ms = int((time.perf_counter() - t0) * 1000)

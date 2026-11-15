@@ -24,6 +24,9 @@ const generationActionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
+// Generating three candidates on a full term takes about a minute (20 s per profile).
+export const maxDuration = 300;
+
 export const GET = withDeanRoute(async (request) => {
   const { searchParams } = new URL(request.url);
   const termCode = searchParams.get("termCode") ?? "AY2026-2027-S1";

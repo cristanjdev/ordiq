@@ -390,7 +390,9 @@ export async function runScheduleGeneration(
     const jobResp = await client.startSolveJob({
       problem,
       profile_name: profileName,
-      time_limit_seconds: options?.timeLimitSeconds ?? 10,
+      // 20 s per profile: on the college's full term (585 meetings) 10 s was used up
+      // building the model, so every profile fell back to the same first-fit schedule.
+      time_limit_seconds: options?.timeLimitSeconds ?? 20,
     });
 
     const solution: EngineSolution | null | undefined = jobResp.solution;
