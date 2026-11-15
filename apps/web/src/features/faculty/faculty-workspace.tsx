@@ -30,7 +30,7 @@ import {
 import { TablePagination, usePagination } from "@/components/ui/table-pagination";
 import { ApiRequestError, saveRecord } from "@/features/data/record-api";
 import { titleCase } from "@/lib/display-labels";
-import { EMPLOYMENT_TYPE_LABELS, facultyFields } from "@/features/data/record-fields";
+import { EMPLOYMENT_TYPE_LABELS, facultyFields, isOnRecord } from "@/features/data/record-fields";
 import { useCodeOptions, useRecordEditor } from "@/features/data/use-record-editor";
 import { ImportWorkbookDialog } from "@/features/data/import-workbook-dialog";
 import { useShell } from "@/features/shell/providers";
@@ -397,7 +397,8 @@ export function FacultyWorkspace() {
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">AI Alias</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Department</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Employment Type</th>
-                <th className="px-4 py-2.5 text-center whitespace-nowrap">Specialization & Education</th>
+                <th className="px-4 py-2.5 text-center whitespace-nowrap">Specialization</th>
+                <th className="px-4 py-2.5 text-center whitespace-nowrap">Highest Degree</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Max Load</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Status</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Actions</th>
@@ -406,15 +407,15 @@ export function FacultyWorkspace() {
             <tbody>
               {facultyQuery.isLoading ? (
                 <TableSkeletonRows
-                  columns={8}
+                  columns={9}
                   rows={skeletonRowCount(pageSize)}
-                  actionColumns={[7]}
+                  actionColumns={[8]}
                   label="Loading faculty"
                 />
               ) : filteredFaculty.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-4 py-12 text-center text-xs text-[var(--ordiq-muted)]"
                   >
                     {facultyQuery.isError
@@ -458,13 +459,19 @@ export function FacultyWorkspace() {
                           {empType.label}
                         </Badge>
                       </td>
-                      <td className="px-4 py-2.5 text-center min-w-[200px]">
-                        <div className="text-[var(--ordiq-ink)]">
-                          {faculty.specialization}
-                        </div>
-                        <div className="text-[11px] text-[var(--ordiq-muted)]">
-                          {faculty.education}
-                        </div>
+                      <td className="px-4 py-2.5 text-center min-w-[180px] text-[var(--ordiq-ink)]">
+                        {isOnRecord(faculty.specialization) ? (
+                          faculty.specialization
+                        ) : (
+                          <span className="text-[11px] italic text-[var(--ordiq-muted)]">Not on record</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-center whitespace-nowrap text-[var(--ordiq-ink)]">
+                        {isOnRecord(faculty.education) ? (
+                          faculty.education
+                        ) : (
+                          <span className="text-[11px] italic text-[var(--ordiq-muted)]">Not on record</span>
+                        )}
                       </td>
                       <td className="px-4 py-2.5 text-center whitespace-nowrap">
                         <div className="font-semibold text-[var(--ordiq-ink)]">
@@ -545,7 +552,7 @@ export function FacultyWorkspace() {
         mode={editor.state?.mode ?? "create"}
         entityLabel="Faculty Member"
         description="Load limits are checked by the solver (HC-07). Status On Leave or Inactive keeps the member out of new schedules."
-        fields={facultyFields(programOptions)}
+        fields={facultyFields(programOptions, editor.state?.values?.education as string | undefined)}
         initialValues={editor.state?.values}
         onClose={editor.close}
         onSubmit={saveFaculty}

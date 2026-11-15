@@ -27,7 +27,7 @@ Defines the 44 engineering faculty members. ORDIQ automatically assigns a separa
 | `programCode` | `string` | No | FK → `Programs.code` | Home engineering program code. |
 | `employmentType` | `enum` | Yes | | `FULL_TIME_PERMANENT` \| `FULL_TIME_NON_PERMANENT` \| `PART_TIME` \| `VISITING`. |
 | `specialization` | `string` | Yes | | Declared area of specialization (used for `HC-09` and ML matching). |
-| `education` | `string` | Yes | | Highest degree / educational background. |
+| `education` | `string` | Yes | | Highest degree: `Doctoral degree` \| `Master's degree` \| `Bachelor's degree` \| `Not on record` (the values offered on the faculty form). |
 | `maxLoadUnits` | `integer` | Yes | | Maximum allowed teaching units for the semester (`HC-07`). |
 | `maxLoadHours` | `integer` | Yes | | Maximum allowed weekly contact hours (`HC-07`). |
 | `status` | `enum` | Yes | | `ACTIVE` \| `ON_LEAVE` \| `INACTIVE`. |

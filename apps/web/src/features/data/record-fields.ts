@@ -69,7 +69,28 @@ export function termFields(): FormField[] {
   ];
 }
 
-export function facultyFields(programs: FieldOption[]): FormField[] {
+/** Highest-degree choices on the faculty form. "Not on record" keeps a member
+ * whose degree the college has not given yet (the field is required). */
+export const DEGREE_OPTIONS: FieldOption[] = [
+  { value: "Doctoral degree", label: "Doctoral degree (PhD / DEng)" },
+  { value: "Master's degree", label: "Master's degree (MS / MEng)" },
+  { value: "Bachelor's degree", label: "Bachelor's degree (BS)" },
+  { value: "Not on record", label: "Not on record" },
+];
+
+/** False for blank values and the placeholders an import uses when a file gives none. */
+export function isOnRecord(value: string | null | undefined): boolean {
+  const v = (value ?? "").trim().toLowerCase();
+  return v !== "" && v !== "not on record" && v !== "not provided";
+}
+
+/** Degree options, keeping a value entered before the list existed (e.g. "MS Civil Engineering"). */
+function degreeOptions(current?: string | null): FieldOption[] {
+  if (!current || DEGREE_OPTIONS.some((o) => o.value === current)) return DEGREE_OPTIONS;
+  return [...DEGREE_OPTIONS, { value: current, label: isOnRecord(current) ? current : "Not on record (imported)" }];
+}
+
+export function facultyFields(programs: FieldOption[], currentEducation?: string | null): FormField[] {
   return [
     { name: "name", label: "Full name and title", kind: "text", required: true, maxLength: 120, wide: true, placeholder: "e.g. Engr. Maria Clara Santos" },
     { name: "code", label: "Faculty code", kind: "text", required: true, lockedOnEdit: true, maxLength: 30, placeholder: "e.g. FAC-045" },
@@ -77,7 +98,7 @@ export function facultyFields(programs: FieldOption[]): FormField[] {
     { name: "employmentType", label: "Employment type", kind: "select", required: true, options: EMPLOYMENT_TYPES.map((v) => ({ value: v, label: EMPLOYMENT_TYPE_LABELS[v] ?? titleCase(v) })) },
     { name: "status", label: "Status", kind: "select", required: true, options: enumOptions(["ACTIVE", "ON_LEAVE", "INACTIVE"]) },
     { name: "specialization", label: "Specialization", kind: "text", required: true, maxLength: 160, wide: true },
-    { name: "education", label: "Highest degree", kind: "text", required: true, maxLength: 160, wide: true },
+    { name: "education", label: "Highest degree", kind: "select", required: true, options: degreeOptions(currentEducation) },
     { name: "maxLoadUnits", label: "Max load (units)", kind: "number", required: true, min: 1, max: 36 },
     { name: "maxLoadHours", label: "Max load (hours / week)", kind: "number", required: true, min: 1, max: 48 },
   ];
