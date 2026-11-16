@@ -31,6 +31,11 @@ const aiActionSchema = z.discriminatedUnion("action", [
     action: z.literal("delete_conversation"),
     conversationId: z.string().min(1),
   }),
+  z.object({
+    action: z.literal("rename_conversation"),
+    conversationId: z.string().min(1),
+    title: z.string().trim().min(1).max(120),
+  }),
 ]);
 
 export const GET = withDeanRoute(async (req) => {
@@ -126,6 +131,26 @@ export const POST = withDeanRoute(async (req, ctx) => {
         before: { title: conv.title, termCode: conv.termCode, messageCount: conv.messages.length },
       });
       return NextResponse.json({ deleted: conv.id });
+    }
+
+    if (body.action === "rename_conversation") {
+      const state = getMasterDataState();
+      const conv = state.conversations.get(body.conversationId);
+      if (!conv) {
+        throw new AppError("NOT_FOUND", "The conversation no longer exists.", 404);
+      }
+      const before = conv.title;
+      // Renaming does not change updatedAt, so the conversation keeps its place in Recents.
+      conv.title = body.title;
+      await recordAudit({
+        actor: ctx.user.username,
+        action: "AI_CONVERSATION_RENAMED",
+        entity: "Conversation",
+        entityId: conv.id,
+        before: { title: before },
+        after: { title: conv.title },
+      });
+      return NextResponse.json({ conversation: { id: conv.id, title: conv.title } });
     }
 
     const updatedProposal = await reviewChangeProposal({

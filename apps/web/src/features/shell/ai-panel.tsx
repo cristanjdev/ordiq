@@ -1,10 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, LoaderCircle, MessageSquare, MoreVertical, Plus, Search, SendHorizontal, X } from "lucide-react";
+import { Check, LoaderCircle, Maximize2, MessageSquare, MoreVertical, Plus, Search, SendHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
+import { conversationTitle } from "@/features/ai/assistant-chat";
 import { SkeletonBlock } from "@/components/ui/table-skeleton";
 import { titleCase } from "@/lib/display-labels";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,9 @@ interface MessageDto {
 
 interface ConversationDto {
   id: string;
+  title: string;
   messages: MessageDto[];
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -94,12 +97,6 @@ function formatWhen(iso: string): string {
   yesterday.setDate(now.getDate() - 1);
   if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
   return d.toLocaleDateString([], { month: "short", day: "numeric" });
-}
-
-/** A conversation is titled by its first question. */
-function conversationTitle(c: ConversationDto): string {
-  const first = c.messages.find((m) => m.role === "user")?.content.trim();
-  return first ? first.replace(/\s+/g, " ") : "New conversation";
 }
 
 /** Light formatting for model replies: **bold** and "- " / "* " bullets. */
@@ -195,7 +192,12 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
     return [...conversations]
       .filter((c) => c.messages.length > 0)
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-      .filter((c) => !q || c.messages.some((m) => m.content.toLowerCase().includes(q)));
+      .filter(
+        (c) =>
+          !q ||
+          conversationTitle(c).toLowerCase().includes(q) ||
+          c.messages.some((m) => m.content.toLowerCase().includes(q)),
+      );
   }, [conversations, sessionQuery]);
   const messages = conversation?.messages ?? [];
 
@@ -311,6 +313,14 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
           <span className="mr-1.5 inline-flex h-6 items-center rounded-md bg-[var(--ordiq-maroon)]/10 px-2 text-[10px] font-semibold leading-none text-[var(--ordiq-maroon)] dark:bg-[var(--ordiq-orange)]/20 dark:text-[var(--ordiq-orange)]">
             Beta
           </span>
+          <Link
+            href={conversation ? `/assistant?c=${encodeURIComponent(conversation.id)}` : "/assistant"}
+            aria-label="Open in the full AI Assistant page"
+            title="Open in the full page"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--ordiq-muted)] transition hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)]"
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+          </Link>
           <button
             type="button"
             aria-label="Conversations"
@@ -499,7 +509,7 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
               )}
               {!isUser && proposal && (
                 <Link
-                  href="/assistant?tab=proposals"
+                  href="/assistant?view=proposals"
                   className="rounded-full border border-[var(--ordiq-maroon)] px-3 py-1 text-[11px] font-medium text-[var(--ordiq-maroon)] hover:bg-[var(--ordiq-maroon)]/5 dark:border-[var(--ordiq-orange)] dark:text-[var(--ordiq-orange)]"
                 >
                   Review the proposed change →

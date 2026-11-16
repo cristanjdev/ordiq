@@ -216,7 +216,7 @@ export function buildTermBriefing(termCode: string): TermBriefing {
       title: `${plural(pending.length, "AI-proposed change")} awaiting review`,
       detail: "The assistant cannot apply changes; each one needs the Dean's decision.",
       examples: pending.slice(0, 5).map((p) => describeOffering(p.offeringCode)),
-      href: "/assistant?tab=proposals",
+      href: "/assistant?view=proposals",
       actionLabel: "Review proposals",
     });
   }

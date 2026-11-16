@@ -234,9 +234,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     () => SIDEBAR_NAV_ITEMS.filter((item) => aiEnabled || item.href !== "/assistant"),
     [aiEnabled],
   );
+  // The AI Assistant page is itself a full chat, so the side panel and its
+  // launcher are not shown there, and the page fills the workspace edge to edge.
+  const onAssistantPage = pathname.startsWith("/assistant");
   React.useEffect(() => {
-    if (!aiEnabled) setAiPanelOpen(false);
-  }, [aiEnabled, setAiPanelOpen]);
+    if (!aiEnabled || onAssistantPage) setAiPanelOpen(false);
+  }, [aiEnabled, onAssistantPage, setAiPanelOpen]);
 
   const healthQuery = useQuery({
     queryKey: ["system-health"],
@@ -551,16 +554,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Center Main Workspace */}
         <main
           className={cn(
-            "flex-1 min-h-0 h-full overflow-y-auto p-3 sm:p-5 lg:p-6",
+            "flex-1 min-h-0 h-full",
+            onAssistantPage ? "overflow-hidden" : "overflow-y-auto p-3 sm:p-5 lg:p-6",
             // Docked: the page makes room as the panel starts opening and
             // takes the space back once it has slid away.
             isDocked && !aiPanelClosed && "mr-92",
           )}
         >
-          <div className="mx-auto max-w-7xl">
-            {navigatingHref && <PageLoadingSkeleton />}
+          <div className={onAssistantPage ? "h-full" : "mx-auto max-w-7xl"}>
+            {navigatingHref && (
+              <div className={onAssistantPage ? "h-full overflow-y-auto p-3 sm:p-5 lg:p-6" : undefined}>
+                <PageLoadingSkeleton />
+              </div>
+            )}
             {/* Kept mounted so an abandoned navigation returns to the same state */}
-            <div className={navigatingHref ? "hidden" : undefined}>{children}</div>
+            <div className={cn(navigatingHref && "hidden", onAssistantPage && "h-full")}>{children}</div>
           </div>
         </main>
 
@@ -604,7 +612,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Floating AI launcher icon button when closed */}
-        {aiEnabled && !aiPanelOpen && aiPanelClosed && (
+        {aiEnabled && !onAssistantPage && !aiPanelOpen && aiPanelClosed && (
           <button
             type="button"
             onClick={() => setAiPanelOpen(true)}

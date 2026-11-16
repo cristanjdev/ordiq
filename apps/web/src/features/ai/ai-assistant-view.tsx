@@ -5,18 +5,14 @@ import {
   AlertOctagon,
   AlertTriangle,
   ArrowRight,
-  BarChart3,
   BrainCircuit,
   CheckCircle2,
-  History,
   Info,
   Loader2,
-  MessageSquareText,
+  PanelLeft,
+  Plus,
   RefreshCw,
-  Search,
-  ShieldCheck,
   Sparkles,
-  Trash2,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -25,13 +21,19 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { SkeletonBlock } from "@/components/ui/table-skeleton";
 import { useSystemSettings } from "@/features/settings/settings-api";
-import { requestOpenConversation } from "@/features/shell/ai-panel";
+import { useAuthSession } from "@/features/auth/auth-session-provider";
 import { useShell } from "@/features/shell/providers";
 import { titleCase } from "@/lib/display-labels";
 import { cn } from "@/lib/utils";
+import {
+  AssistantRail,
+  type AssistantView,
+  type ChatConversationDto,
+  ChatPane,
+  conversationTitle,
+} from "./assistant-chat";
 
 // ---------------------------------------------------------------------------
 // API shapes
@@ -73,21 +75,6 @@ interface BriefingSummaryDto {
   fingerprint: string;
 }
 
-interface MessageDto {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  createdAt: string;
-}
-
-interface ConversationDto {
-  id: string;
-  title: string;
-  messages: MessageDto[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface ProposalDto {
   id: string;
   scheduleId: string;
@@ -106,7 +93,7 @@ interface ProposalDto {
 }
 
 interface AiStateDto {
-  conversations: ConversationDto[];
+  conversations: ChatConversationDto[];
   proposals: ProposalDto[];
   usage: {
     requestCount: number;
@@ -141,14 +128,6 @@ async function readJson<T>(res: Response, fallback: string): Promise<T> {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const TABS = [
-  { id: "briefing", label: "Briefing", icon: Sparkles },
-  { id: "proposals", label: "Proposals", icon: ShieldCheck },
-  { id: "history", label: "History", icon: History },
-  { id: "usage", label: "Usage & learning", icon: BarChart3 },
-] as const;
-type TabId = (typeof TABS)[number]["id"];
 
 const SEVERITY_STYLE: Record<Severity, { icon: React.ComponentType<{ className?: string }>; tone: string; label: string }> = {
   critical: { icon: AlertOctagon, tone: "text-red-600 dark:text-red-400", label: "Urgent" },
@@ -198,23 +177,48 @@ function StatTile({
 // Page
 // ---------------------------------------------------------------------------
 
+const VIEW_TITLES: Record<AssistantView, { title: string; description: string }> = {
+  briefing: { title: "Briefing", description: "What needs attention this term." },
+  proposals: { title: "Proposals", description: "Changes the assistant suggested, waiting for the Dean's review." },
+  usage: { title: "Usage & learning", description: "Assistant availability, usage and the faculty matching model." },
+};
+
+function readView(params: URLSearchParams): AssistantView | null {
+  // `tab` is the older parameter; links to ?tab=proposals keep working.
+  const v = params.get("view") ?? params.get("tab");
+  return v === "briefing" || v === "proposals" || v === "usage" ? v : null;
+}
+
 export function AiAssistantView() {
-  const { selectedTerm, setAiPanelOpen } = useShell();
+  const { selectedTerm } = useShell();
   const termCode = selectedTerm.id;
   const { settings } = useSystemSettings();
+  const { user } = useAuthSession();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
-  const tab: TabId = TABS.some((t) => t.id === tabParam) ? (tabParam as TabId) : "briefing";
+  const view = readView(searchParams);
+  const conversationId = view ? null : searchParams.get("c");
+  const [railOpen, setRailOpen] = React.useState(false); // below lg: the rail is a drawer
+  const [railHidden, setRailHidden] = React.useState(false); // lg and up: the rail can be collapsed
 
-  const setTab = (next: TabId) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (next === "briefing") params.delete("tab");
-    else params.set("tab", next);
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  };
+  const displayName = React.useMemo(() => {
+    const raw = user?.username?.trim();
+    if (!raw) return "Dean";
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }, [user?.username]);
+
+  const navigate = React.useCallback(
+    (next: { c?: string | null; view?: AssistantView | null }) => {
+      const params = new URLSearchParams();
+      if (next.view) params.set("view", next.view);
+      else if (next.c) params.set("c", next.c);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      setRailOpen(false);
+    },
+    [pathname, router],
+  );
 
   const aiQuery = useQuery<AiStateDto>({
     queryKey: ["ai-state", termCode],
@@ -224,90 +228,152 @@ export function AiAssistantView() {
         "The assistant data could not load.",
       ),
   });
+  const conversations = aiQuery.data?.conversations ?? [];
   const pendingCount = (aiQuery.data?.proposals ?? []).filter((p) => p.status === "PENDING").length;
+  const conversation = conversationId ? conversations.find((c) => c.id === conversationId) : undefined;
+
+  // A different term has its own conversations: start fresh when the term changes.
+  const lastTermRef = React.useRef(termCode);
+  React.useEffect(() => {
+    if (lastTermRef.current === termCode) return;
+    lastTermRef.current = termCode;
+    if (conversationId) navigate({});
+  }, [termCode, conversationId, navigate]);
+
+  // Escape closes the rail drawer.
+  React.useEffect(() => {
+    if (!railOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setRailOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [railOpen]);
 
   if (!settings.ai.assistantEnabled) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>The AI Assistant is turned off</CardTitle>
-          <CardDescription>It can be turned back on in Settings.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link href="/settings" className="text-sm font-semibold text-[var(--ordiq-maroon)] hover:underline dark:text-[var(--ordiq-orange)]">
-            Open Settings →
-          </Link>
-        </CardContent>
-      </Card>
+      <div className="p-3 sm:p-5 lg:p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>The AI Assistant is turned off</CardTitle>
+            <CardDescription>It can be turned back on in Settings.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/settings" className="text-sm font-semibold text-[var(--ordiq-maroon)] hover:underline dark:text-[var(--ordiq-orange)]">
+              Open Settings →
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
+  const rail = (onClose?: () => void) => (
+    <AssistantRail
+      termLabel={selectedTerm.label}
+      conversations={conversations}
+      loading={aiQuery.isLoading}
+      activeConversationId={conversationId}
+      activeView={view}
+      pendingProposals={pendingCount}
+      onNewConversation={() => navigate({})}
+      onOpenConversation={(id) => navigate({ c: id })}
+      onOpenView={(v) => navigate({ view: v })}
+      onDeleted={(id) => {
+        if (id === conversationId) navigate({});
+      }}
+      onClose={onClose}
+    />
+  );
+
+  const headerTitle = view
+    ? VIEW_TITLES[view].title
+    : conversation
+      ? conversationTitle(conversation)
+      : conversationId
+        ? ""
+        : "New conversation";
+
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--ordiq-ink)]">AI Assistant</h1>
-          <p className="mt-0.5 text-xs text-[var(--ordiq-muted)]">{selectedTerm.label}</p>
+    <div className="relative flex h-full min-h-0">
+      {/* Rail: a column from lg up, a drawer below */}
+      <aside
+        aria-label="Conversations"
+        className={cn(
+          "hidden w-64 shrink-0 border-r border-[var(--ordiq-border)] xl:w-72",
+          !railHidden && "lg:flex",
+        )}
+      >
+        {rail()}
+      </aside>
+      {railOpen && (
+        <div className="fixed inset-0 top-16 z-40 flex lg:hidden">
+          <div className="absolute inset-0 bg-black/45" aria-hidden="true" onClick={() => setRailOpen(false)} />
+          <aside aria-label="Conversations" className="relative flex w-72 max-w-[85vw] border-r border-[var(--ordiq-border)] shadow-2xl">
+            {rail(() => setRailOpen(false))}
+          </aside>
         </div>
-        <Button size="sm" onClick={() => setAiPanelOpen(true)}>
-          <MessageSquareText className="mr-1.5 h-3.5 w-3.5" /> Ask the assistant
-        </Button>
-      </div>
-
-      {/* Tabs (same style as the Dashboard and Rules tabs) */}
-      <Card className="overflow-hidden">
-        <div className="bg-[var(--ordiq-surface-muted)]/70 p-2 sm:p-2.5">
-        <div role="tablist" aria-label="AI Assistant sections" className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-4 sm:gap-2">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
-            const count =
-              t.id === "proposals" ? pendingCount : t.id === "history" ? (aiQuery.data?.conversations.length ?? 0) : null;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(t.id)}
-                className={cn(
-                  "flex cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs transition-all",
-                  active
-                    ? "bg-[var(--ordiq-surface)] font-bold text-[var(--ordiq-maroon)] shadow-xs ring-1 ring-[var(--ordiq-border)] dark:text-[var(--ordiq-orange)]"
-                    : "font-medium text-[var(--ordiq-muted)] hover:bg-[var(--ordiq-surface)]/60 hover:text-[var(--ordiq-ink)]",
-                )}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="truncate">{t.label}</span>
-                {count !== null && (
-                  <span
-                    className={cn(
-                      "ml-1 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold transition-colors",
-                      active
-                        ? "bg-[var(--ordiq-maroon)]/10 text-[var(--ordiq-maroon)] dark:bg-[var(--ordiq-orange)]/20 dark:text-[var(--ordiq-orange)]"
-                        : "border border-[var(--ordiq-border)]/40 bg-[var(--ordiq-surface)] text-[var(--ordiq-muted)]",
-                    )}
-                  >
-                    {aiQuery.isLoading ? "…" : count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-        </div>
-      </Card>
-
-      {aiQuery.isError && (
-        <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-xs text-red-700 dark:text-red-300">
-          {aiQuery.error instanceof Error ? aiQuery.error.message : "The assistant data could not load."}
-        </p>
       )}
 
-      {tab === "briefing" && <BriefingTab termCode={termCode} />}
-      {tab === "proposals" && <ProposalsTab termCode={termCode} query={aiQuery} />}
-      {tab === "history" && <HistoryTab query={aiQuery} onOpen={() => setAiPanelOpen(true)} />}
-      {tab === "usage" && <UsageTab termCode={termCode} query={aiQuery} />}
+      <section className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[var(--ordiq-border)] px-3 sm:px-4">
+          <button
+            type="button"
+            onClick={() => setRailOpen(true)}
+            aria-label="Show conversations"
+            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[var(--ordiq-muted)] transition hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)] lg:hidden"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setRailHidden((h) => !h)}
+            aria-label={railHidden ? "Show conversations" : "Hide conversations"}
+            title={railHidden ? "Show conversations" : "Hide conversations"}
+            className="hidden h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[var(--ordiq-muted)] transition hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)] lg:flex"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </button>
+          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--ordiq-ink)]">{headerTitle}</h1>
+          {(view || conversationId) && (
+            <button
+              type="button"
+              onClick={() => navigate({})}
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[var(--ordiq-maroon)] transition hover:bg-[var(--ordiq-maroon)]/5 dark:text-[var(--ordiq-orange)]"
+            >
+              <Plus className="h-3.5 w-3.5" /> New conversation
+            </button>
+          )}
+        </header>
+
+        {aiQuery.isError && (
+          <p className="m-3 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-xs text-red-700 dark:text-red-300">
+            {aiQuery.error instanceof Error ? aiQuery.error.message : "The assistant data could not load."}
+          </p>
+        )}
+
+        {view ? (
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-5xl space-y-4 p-3 sm:p-5 lg:p-6">
+              <p className="text-xs text-[var(--ordiq-muted)]">{VIEW_TITLES[view].description}</p>
+              {view === "briefing" && <BriefingTab termCode={termCode} />}
+              {view === "proposals" && <ProposalsTab termCode={termCode} query={aiQuery} />}
+              {view === "usage" && <UsageTab termCode={termCode} query={aiQuery} />}
+            </div>
+          </div>
+        ) : (
+          <ChatPane
+            termCode={termCode}
+            termLabel={selectedTerm.label}
+            displayName={displayName}
+            conversation={conversation}
+            conversationId={conversationId}
+            loading={aiQuery.isLoading}
+            onConversationStarted={(id) => navigate({ c: id })}
+            onOpenProposals={() => navigate({ view: "proposals" })}
+          />
+        )}
+      </section>
     </div>
   );
 }
@@ -651,129 +717,6 @@ function ProposalsTab({
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// History
-// ---------------------------------------------------------------------------
-
-function HistoryTab({
-  query,
-  onOpen,
-}: {
-  query: ReturnType<typeof useQuery<AiStateDto>>;
-  onOpen: () => void;
-}) {
-  const queryClient = useQueryClient();
-  const [search, setSearch] = React.useState("");
-  const [toDelete, setToDelete] = React.useState<ConversationDto | null>(null);
-  const remove = useMutation({
-    mutationFn: async (conversationId: string) =>
-      readJson(
-        await fetch("/api/v1/ai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "delete_conversation", conversationId }),
-        }),
-        "The conversation could not be deleted.",
-      ),
-    onSuccess: async () => {
-      setToDelete(null);
-      await queryClient.invalidateQueries({ queryKey: ["ai-state"] });
-    },
-  });
-
-  const q = search.trim().toLowerCase();
-  const conversations = (query.data?.conversations ?? []).filter(
-    (c) => !q || c.title.toLowerCase().includes(q) || c.messages.some((m) => m.content.toLowerCase().includes(q)),
-  );
-
-  return (
-    <div className="space-y-4">
-      <div className="relative max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--ordiq-muted)]" />
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search conversations…"
-          aria-label="Search conversations"
-          className="h-9 w-full rounded-lg border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] pl-8 pr-3 text-xs focus:border-[var(--ordiq-maroon)] focus:outline-none focus:ring-2 focus:ring-[var(--ordiq-maroon)]/15"
-        />
-      </div>
-
-      {query.isLoading ? (
-        <div className="space-y-2" role="status" aria-label="Loading conversations">
-          {[0, 1, 2, 3].map((i) => <SkeletonBlock key={i} className="h-20 rounded-xl" />)}
-        </div>
-      ) : conversations.length === 0 ? (
-        <Card>
-          <CardContent className="p-5 text-xs text-[var(--ordiq-muted)]">
-            {q ? "No matches." : "No conversations yet."}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-2">
-          {conversations.map((c) => {
-            const firstUser = c.messages.find((m) => m.role === "user");
-            const title = c.title && c.title !== "New Conversation" ? c.title : (firstUser?.content ?? "Conversation");
-            return (
-              <Card key={c.id}>
-                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[var(--ordiq-ink)]">{title}</p>
-                    <p className="mt-0.5 text-[11px] text-[var(--ordiq-muted)]">
-                      {c.messages.length} messages · {formatWhen(c.updatedAt)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        requestOpenConversation(c.id);
-                        onOpen();
-                      }}
-                    >
-                      <MessageSquareText className="mr-1.5 h-3.5 w-3.5" /> Continue
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-label="Delete conversation"
-                      className="text-[var(--ordiq-muted)] hover:text-red-600"
-                      onClick={() => setToDelete(c)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {remove.isError && (
-        <p className="text-xs text-red-700 dark:text-red-300">
-          {remove.error instanceof Error ? remove.error.message : "The conversation could not be deleted."}
-        </p>
-      )}
-
-      <ConfirmationModal
-        isOpen={toDelete !== null}
-        onClose={() => setToDelete(null)}
-        onConfirm={() => {
-          if (toDelete) remove.mutate(toDelete.id);
-        }}
-        title="Delete this conversation?"
-        description="This permanently removes the conversation."
-        confirmText="Delete"
-        variant="danger"
-        isLoading={remove.isPending}
-      />
     </div>
   );
 }
