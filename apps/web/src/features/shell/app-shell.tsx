@@ -6,6 +6,7 @@ import {
   Building2,
   CalendarDays,
   ChevronDown,
+  ChevronLeft,
   FileBarChart2,
   Home,
   Landmark,
@@ -27,7 +28,7 @@ import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { MseufLogo } from "@/components/ui/mseuf-logo";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
 import { useAuthSession } from "@/features/auth/auth-session-provider";
-import { overlayBackdrop, usePresence } from "@/lib/use-presence";
+import { usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 import { PageLoadingSkeleton } from "./page-loading-skeleton";
 import { AiAssistantPanel } from "./ai-panel";
@@ -119,6 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setMobileNavOpen,
   } = useShell();
   const [darkMode, setDarkMode] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const [navigatingHref, setNavigatingHref] = React.useState<string | null>(null);
 
   // Clear navigating state when pathname updates
@@ -189,13 +191,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // AI panel animation. The panel is mounted on first open and then kept
   // mounted, so opening again only flips classes (no rebuild mid-animation).
-  // Only transform and opacity animate, which the GPU handles without
-  // re-laying out the page on every frame.
+  // The docked workspace margin follows the same timing as the panel slide.
   const isDocked = useIsDockedViewport();
   const [aiPanelMounted, setAiPanelMounted] = React.useState(aiPanelOpen);
   const [aiPanelShown, setAiPanelShown] = React.useState(aiPanelOpen);
   // True once the closing slide has finished; the panel is then hidden from
-  // focus and screen readers, and the docked space is given back to the page.
+  // focus and screen readers.
   const [aiPanelClosed, setAiPanelClosed] = React.useState(!aiPanelOpen);
   React.useEffect(() => {
     if (aiPanelOpen) {
@@ -238,7 +239,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // The AI Assistant page is itself a full chat, so the side panel and its
   // launcher are not shown there, and the page fills the workspace edge to edge.
   const onAssistantPage = pathname.startsWith("/assistant");
-  const mobileNav = usePresence(mobileNavOpen);
+  const mobileNav = usePresence(mobileNavOpen, AI_PANEL_TRANSITION_MS);
   React.useEffect(() => {
     if (!aiEnabled || onAssistantPage) setAiPanelOpen(false);
   }, [aiEnabled, onAssistantPage, setAiPanelOpen]);
@@ -284,9 +285,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       await signOut();
     } catch {
       // Never pretend to be signed out while the server session is still live.
-      setLogoutError(
-        "Could not reach the server to end your session. Please try again.",
-      );
+      setLogoutError("Could not reach the server to end your session. Please try again.");
       setIsLoggingOut(false);
     }
   };
@@ -303,6 +302,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             type="button"
             onClick={() => setMobileNavOpen(!mobileNavOpen)}
             aria-label="Toggle navigation menu"
+            aria-expanded={mobileNavOpen}
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white transition hover:bg-white/20 lg:hidden"
           >
             {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -379,12 +379,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {userInitial}
             </div>
             <div className="hidden text-left leading-tight sm:block">
-              <div className="text-xs font-bold text-white">
-                Hi, {displayName}
-              </div>
-              <div className="text-[10px] text-white/75">
-                {roleLabel}
-              </div>
+              <div className="text-xs font-bold text-white">Hi, {displayName}</div>
+              <div className="text-[10px] text-white/75">{roleLabel}</div>
             </div>
           </div>
 
@@ -415,77 +411,148 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main 3-Column Body: Left Sidebar + Center Workspace + Persistent/Responsive Right AI Panel */}
       <div className="flex flex-1 min-h-0 h-[calc(100dvh-4rem)] overflow-hidden relative">
         {/* Left Desktop Navigation Sidebar */}
-        <aside className="relative hidden w-64 shrink-0 h-full min-h-0 flex-col justify-between overflow-hidden border-r border-white/10 bg-gradient-to-b from-[#4a0a0f] via-[#38070b] to-[#230306] text-white lg:flex">
-          <nav
-            aria-label="Primary Sidebar Navigation"
-            className="relative z-10 flex flex-1 min-h-0 flex-col gap-1 p-3 pt-4 overflow-y-auto"
-          >
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
-              const isPending =
-                navigatingHref !== null &&
-                (item.href === "/" ? navigatingHref === "/" : navigatingHref.startsWith(item.href));
-              const isItemActive = navigatingHref ? isPending : isActive;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs font-medium transition-all relative group",
-                    isItemActive
-                      ? "bg-white/15 text-white shadow-xs font-semibold ring-1 ring-white/15"
-                      : isPending
-                        ? "bg-white/10 text-white font-semibold ring-1 ring-white/10"
-                        : "text-white/75 hover:bg-white/10 hover:text-white",
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      "h-4 w-4 shrink-0 transition-colors",
-                      isItemActive || isPending
-                        ? "text-amber-400"
-                        : "text-white/70 group-hover:text-white",
-                    )}
-                  />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+        <div
+          className={cn(
+            "group/sidebar relative z-40 hidden h-full shrink-0 bg-[#230306] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:block",
+            sidebarOpen ? "w-64" : "w-[72px]",
+          )}
+        >
+          <div className="h-full overflow-hidden">
+            <aside
+              id="desktop-navigation"
+              className="relative flex w-full h-full min-h-0 flex-col justify-between overflow-hidden bg-gradient-to-b from-[#4a0a0f] via-[#38070b] to-[#230306] text-white"
+            >
+              <nav
+                aria-label="Primary Sidebar Navigation"
+                className="relative z-10 flex flex-1 min-h-0 flex-col gap-1 px-3 py-4 overflow-x-hidden overflow-y-auto"
+              >
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive =
+                    item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                  const isPending =
+                    navigatingHref !== null &&
+                    (item.href === "/"
+                      ? navigatingHref === "/"
+                      : navigatingHref.startsWith(item.href));
+                  const isItemActive = navigatingHref ? isPending : isActive;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-label={item.label}
+                      title={!sidebarOpen ? item.label : undefined}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "flex h-9 shrink-0 items-center overflow-hidden rounded-md text-xs font-medium transition-colors relative group focus-visible:outline-2 focus-visible:outline-amber-400",
+                        !sidebarOpen
+                          ? "text-white/75 hover:text-white"
+                          : isItemActive
+                            ? "bg-white/10 text-white font-semibold"
+                            : isPending
+                              ? "bg-white/10 text-white font-semibold"
+                              : "text-white/75 hover:bg-white/5 hover:text-white",
+                      )}
+                    >
+                      <span className="flex h-9 w-12 shrink-0 items-center justify-center">
+                        <Icon
+                          className={cn(
+                            "h-[18px] w-[18px] shrink-0 transition-colors",
+                            isItemActive || isPending
+                              ? "text-amber-400"
+                              : "text-white/70 group-hover:text-white",
+                          )}
+                        />
+                      </span>
+                      <span
+                        aria-hidden={!sidebarOpen}
+                        className={cn(
+                          "whitespace-nowrap pr-3 transition-opacity duration-200 motion-reduce:transition-none",
+                          sidebarOpen ? "opacity-100" : "opacity-0",
+                        )}
+                      >
+                        {item.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </nav>
 
-          {/* Institutional Footer */}
-          <div className="relative z-10 shrink-0 bg-gradient-to-b from-transparent via-black/15 to-black/35 px-4 pt-6 pb-4 text-xs text-white/80">
-            <div className="flex items-center gap-2 font-medium text-white">
-              <Landmark className="h-4 w-4 text-[#ea580c] shrink-0" />
-              <span className="font-semibold text-xs">College of Engineering</span>
-            </div>
-            <div className="mt-1 text-[11px] text-white/70">
-              Manuel S. Enverga University Foundation
-            </div>
-            <div className="text-[10px] text-white/50">Lucena City</div>
-            <div className="mt-2.5 text-[10px] text-white/50 flex justify-between items-center">
-              <span>Version 1.0.0</span>
-              <span className={cn("font-mono text-[10px] flex items-center gap-1", engineConnected ? "text-emerald-400" : "text-amber-400")}>
-                <span className={cn("h-1.5 w-1.5 rounded-full", engineConnected ? "bg-emerald-400" : "bg-amber-400")} />
-                {engineConnected ? "Ready" : "Standby"}
-              </span>
-            </div>
+              {/* Institutional Footer */}
+              <div
+                aria-hidden={!sidebarOpen}
+                className={cn(
+                  "relative z-10 w-64 shrink-0 bg-gradient-to-b from-transparent via-black/15 to-black/35 px-4 pt-6 pb-4 text-xs text-white/80 transition-opacity duration-200 motion-reduce:transition-none",
+                  sidebarOpen ? "opacity-100" : "opacity-0",
+                )}
+              >
+                <div className="flex items-center gap-2 font-medium text-white">
+                  <Landmark className="h-4 w-4 text-[#ea580c] shrink-0" />
+                  <span className="font-semibold text-xs">College of Engineering</span>
+                </div>
+                <div className="mt-1 text-[11px] text-white/70">
+                  Manuel S. Enverga University Foundation
+                </div>
+                <div className="text-[10px] text-white/50">Lucena City</div>
+                <div className="mt-2.5 text-[10px] text-white/50 flex justify-between items-center">
+                  <span>Version 1.0.0</span>
+                  <span
+                    className={cn(
+                      "font-mono text-[10px] flex items-center gap-1",
+                      engineConnected ? "text-emerald-400" : "text-amber-400",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "h-1.5 w-1.5 rounded-full",
+                        engineConnected ? "bg-emerald-400" : "bg-amber-400",
+                      )}
+                    />
+                    {engineConnected ? "Ready" : "Standby"}
+                  </span>
+                </div>
+              </div>
+            </aside>
           </div>
-        </aside>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((open) => !open)}
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            aria-expanded={sidebarOpen}
+            aria-controls="desktop-navigation"
+            className="absolute top-1/2 -right-4 z-20 flex h-11 w-8 -translate-x-1.5 -translate-y-1/2 cursor-pointer items-center justify-end border-0 bg-transparent p-0 text-white/70 opacity-0 transition-[opacity,translate,color] duration-300 ease-in-out group-hover/sidebar:translate-x-0 group-hover/sidebar:opacity-100 focus-visible:translate-x-0 focus-visible:opacity-100 [@media(hover:none)]:translate-x-0 [@media(hover:none)]:opacity-100 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ordiq-orange)] motion-reduce:transition-none"
+          >
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute right-1 top-1/2 h-12 w-9 -translate-y-1/2 rounded-full bg-[#38070b] [clip-path:inset(0_0_0_23px)]"
+            />
+            <ChevronLeft
+              strokeWidth={2.5}
+              className={cn(
+                "pointer-events-none relative mr-1.5 h-4 w-4 transition-transform duration-300 ease-in-out motion-reduce:transition-none",
+                !sidebarOpen && "rotate-180",
+              )}
+              aria-hidden="true"
+            />
+          </button>
+        </div>
 
         {/* Mobile Slide-Over Navigation Drawer (< lg) */}
         {mobileNav.mounted && (
           <div
             inert={!mobileNavOpen}
-            className={cn("fixed inset-0 top-16 z-50 flex lg:hidden", !mobileNav.shown && "pointer-events-none")}
+            className={cn(
+              "fixed inset-0 top-16 z-50 flex lg:hidden",
+              !mobileNav.shown && "pointer-events-none",
+            )}
           >
             {/* Backdrop */}
             <div
-              className={cn("fixed inset-0 top-16 bg-black/60 backdrop-blur-xs", overlayBackdrop(mobileNav.shown))}
+              className={cn(
+                "fixed inset-0 top-16 bg-black/60 backdrop-blur-xs transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+                mobileNav.shown ? "opacity-100" : "opacity-0",
+              )}
               onClick={() => setMobileNavOpen(false)}
               aria-hidden="true"
             />
@@ -494,8 +561,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div
               className={cn(
                 "relative z-50 flex h-full w-72 max-w-[85vw] min-h-0 flex-col justify-between bg-gradient-to-b from-[#4a0a0f] via-[#38070b] to-[#230306] text-white shadow-2xl",
-                "transform-gpu transition-[translate,opacity] duration-200 ease-out motion-reduce:transition-none",
-                mobileNav.shown ? "translate-x-0 opacity-100" : "-translate-x-full opacity-60",
+                "transform-gpu transition-[translate] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+                mobileNav.shown ? "translate-x-0" : "-translate-x-full",
               )}
             >
               <div className="flex items-center justify-between border-b border-white/10 px-4 py-3.5 shrink-0">
@@ -516,12 +583,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive =
-                    item.href === "/"
-                      ? pathname === "/"
-                      : pathname.startsWith(item.href);
+                    item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
                   const isPending =
                     navigatingHref !== null &&
-                    (item.href === "/" ? navigatingHref === "/" : navigatingHref.startsWith(item.href));
+                    (item.href === "/"
+                      ? navigatingHref === "/"
+                      : navigatingHref.startsWith(item.href));
                   const isItemActive = navigatingHref ? isPending : isActive;
                   return (
                     <Link
@@ -565,28 +632,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Center Main Workspace */}
         <main
           className={cn(
-            "flex-1 min-h-0 h-full",
+            "flex-1 min-w-0 min-h-0 h-full transition-[margin-right] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
             onAssistantPage ? "overflow-hidden" : "overflow-y-auto p-3 sm:p-5 lg:p-6",
-            // Docked: the page makes room as the panel starts opening and
-            // takes the space back once it has slid away.
-            isDocked && !aiPanelClosed && "mr-92",
+            // Resize alongside the slide in both directions, without an end-of-close jump.
+            isDocked && aiPanelShown && "mr-92",
           )}
         >
           <div className={onAssistantPage ? "h-full" : "mx-auto max-w-7xl"}>
             {navigatingHref && (
-              <div className={onAssistantPage ? "h-full overflow-y-auto p-3 sm:p-5 lg:p-6" : undefined}>
+              <div
+                className={onAssistantPage ? "h-full overflow-y-auto p-3 sm:p-5 lg:p-6" : undefined}
+              >
                 <PageLoadingSkeleton />
               </div>
             )}
             {/* Kept mounted so an abandoned navigation returns to the same state */}
-            <div className={cn(navigatingHref && "hidden", onAssistantPage && "h-full")}>{children}</div>
+            <div className={cn(navigatingHref && "hidden", onAssistantPage && "h-full")}>
+              {children}
+            </div>
           </div>
         </main>
 
         {/* AI Assistant: docked beside the page at 2xl, a drawer over it below */}
         {aiEnabled && aiPanelMounted && (
           <div
-            inert={aiPanelClosed}
+            inert={!aiPanelOpen}
             className={cn(
               isDocked
                 ? "absolute inset-y-0 right-0 z-30 w-92"
@@ -598,7 +668,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {!isDocked && (
               <div
                 className={cn(
-                  "absolute inset-0 bg-black/45 transition-opacity duration-300 ease-out motion-reduce:transition-none",
+                  "absolute inset-0 bg-black/45 transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
                   aiPanelShown ? "opacity-100" : "opacity-0",
                 )}
                 onClick={() => setAiPanelOpen(false)}
@@ -610,14 +680,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "relative flex h-full min-h-0 flex-col border-l border-[var(--ordiq-border)] bg-[var(--ordiq-surface)]",
                 isDocked ? "w-full shadow-xs" : "w-full max-w-sm sm:max-w-md shadow-2xl",
-                "transform-gpu transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none",
-                aiPanelShown ? "translate-x-0 opacity-100" : "translate-x-full opacity-60",
+                "transform-gpu transition-[translate] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+                aiPanelShown ? "translate-x-0" : "translate-x-full",
               )}
             >
-              <AiAssistantPanel
-                isMobileDrawer={!isDocked}
-                onClose={() => setAiPanelOpen(false)}
-              />
+              <AiAssistantPanel isMobileDrawer={!isDocked} onClose={() => setAiPanelOpen(false)} />
             </aside>
           </div>
         )}
@@ -656,15 +723,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           description={
             <>
               <p>
-                Are you sure you want to sign out of the Dean scheduling portal?
-                Your active session token will be invalidated and you will be
-                returned to the sign-in screen.
+                Are you sure you want to sign out of the Dean scheduling portal? Your active session
+                token will be invalidated and you will be returned to the sign-in screen.
               </p>
               {logoutError && (
-                <p
-                  role="alert"
-                  className="mt-2 font-medium text-red-600 dark:text-red-400"
-                >
+                <p role="alert" className="mt-2 font-medium text-red-600 dark:text-red-400">
                   {logoutError}
                 </p>
               )}

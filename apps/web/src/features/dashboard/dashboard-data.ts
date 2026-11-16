@@ -4,13 +4,7 @@
  * data here (CLAUDE.md: never show the Figure 4 mockup numbers as metrics).
  */
 
-export type WeekdayCode =
-  | "MONDAY"
-  | "TUESDAY"
-  | "WEDNESDAY"
-  | "THURSDAY"
-  | "FRIDAY"
-  | "SATURDAY";
+export type WeekdayCode = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY";
 
 export const WEEKDAY_ORDER: readonly WeekdayCode[] = [
   "MONDAY",
@@ -28,6 +22,15 @@ export const WEEKDAY_SHORT: Record<WeekdayCode, string> = {
   THURSDAY: "Thu",
   FRIDAY: "Fri",
   SATURDAY: "Sat",
+};
+
+export const WEEKDAY_FULL: Record<WeekdayCode, string> = {
+  MONDAY: "Monday",
+  TUESDAY: "Tuesday",
+  WEDNESDAY: "Wednesday",
+  THURSDAY: "Thursday",
+  FRIDAY: "Friday",
+  SATURDAY: "Saturday",
 };
 
 export interface AnalyticsDto {
@@ -261,6 +264,235 @@ export function visibleWeekdays(meetings: DashboardMeeting[]): WeekdayCode[] {
   return WEEKDAY_ORDER.filter((d) => d !== "SATURDAY" || usesSaturday);
 }
 
+export function displayFacultyLabel(facultyCode: string, facultyName: string): string {
+  if (facultyCode === "EXTERNAL") return "External";
+  if (!facultyName.trim()) return "Unassigned";
+  return facultyName;
+}
+
+export function displayRoomLabel(roomCode: string): string {
+  if (roomCode === "EXTERNAL") return "External";
+  if (!roomCode.trim()) return "Unassigned";
+  return roomCode;
+}
+
+export interface CellSubjectGroup {
+  subjectCode: string;
+  subjectName: string;
+  representative: DashboardMeeting;
+  meetings: DashboardMeeting[];
+  hasConflict: boolean;
+}
+
+/** Collapse multiple meetings of the same subject in one cell into a single chip entry. */
+export function groupCellSubjects(meetings: DashboardMeeting[]): CellSubjectGroup[] {
+  const bySubject = new Map<string, CellSubjectGroup>();
+  for (const m of meetings) {
+    const existing = bySubject.get(m.subjectCode);
+    if (existing) {
+      existing.meetings.push(m);
+      if (m.hasConflict) existing.hasConflict = true;
+    } else {
+      bySubject.set(m.subjectCode, {
+        subjectCode: m.subjectCode,
+        subjectName: m.subjectName,
+        representative: m,
+        meetings: [m],
+        hasConflict: m.hasConflict,
+      });
+    }
+  }
+  return Array.from(bySubject.values());
+}
+
+export interface WeekdayMeetingGroup {
+  weekday: WeekdayCode;
+  meetings: DashboardMeeting[];
+}
+
+/** Group a list of meetings by weekday in Mon–Sat order. */
+export function groupMeetingsByWeekday(meetings: DashboardMeeting[]): WeekdayMeetingGroup[] {
+  const byDay = new Map<WeekdayCode, DashboardMeeting[]>();
+  for (const m of meetings) {
+    const list = byDay.get(m.weekday);
+    if (list) list.push(m);
+    else byDay.set(m.weekday, [m]);
+  }
+  return WEEKDAY_ORDER.flatMap((weekday) => {
+    const list = byDay.get(weekday);
+    return list ? [{ weekday, meetings: list }] : [];
+  });
+}
+
+export interface SubjectScheduleRow {
+  id: string;
+  sectionCode: string;
+  weekdays: WeekdayCode[];
+  daysLabel: string;
+  startMin: number;
+  endMin: number;
+  timeLabel: string;
+  whenLabel: string;
+  roomLabel: string;
+  facultyLabel: string;
+  component?: DashboardMeeting["component"];
+  hasConflict: boolean;
+}
+
+/**
+ * Combines meetings that share the same section, time range, room, and faculty across weekdays
+ * (e.g., Mon & Wed 1:00 PM - 2:30 PM for G1A1 in CET105 -> "Mon, Wed · 1:00 PM - 2:30 PM").
+ */
+export function groupSubjectSchedules(meetings: DashboardMeeting[]): SubjectScheduleRow[] {
+  const byKey = new Map<string, DashboardMeeting[]>();
+  for (const m of meetings) {
+    const key = [
+      m.sectionCode,
+      m.startMin,
+      m.endMin,
+      m.roomCode,
+      m.facultyCode,
+      m.facultyName,
+      m.component ?? "",
+    ].join("||");
+    const list = byKey.get(key);
+    if (list) list.push(m);
+    else byKey.set(key, [m]);
+  }
+
+  const rows: SubjectScheduleRow[] = [];
+  for (const [key, group] of byKey) {
+    const first = group[0];
+    if (!first) continue;
+    const daySet = new Set(group.map((m) => m.weekday));
+    const weekdays = WEEKDAY_ORDER.filter((d) => daySet.has(d));
+    const daysLabel = weekdays.map((d) => WEEKDAY_FULL[d]).join(", ");
+    const timeLabel = formatTimeRange(first.startMin, first.endMin);
+    rows.push({
+      id: key,
+      sectionCode: first.sectionCode || "—",
+      weekdays,
+      daysLabel,
+      startMin: first.startMin,
+      endMin: first.endMin,
+      timeLabel,
+      whenLabel: `${daysLabel} · ${timeLabel}`,
+      roomLabel: displayRoomLabel(first.roomCode),
+      facultyLabel: displayFacultyLabel(first.facultyCode, first.facultyName),
+      component: first.component,
+      hasConflict: group.some((m) => m.hasConflict),
+    });
+  }
+
+  return rows.sort(
+    (a, b) =>
+      a.sectionCode.localeCompare(b.sectionCode, undefined, { numeric: true }) ||
+      WEEKDAY_ORDER.indexOf(a.weekdays[0] ?? "MONDAY") -
+        WEEKDAY_ORDER.indexOf(b.weekdays[0] ?? "MONDAY") ||
+      a.startMin - b.startMin,
+  );
+}
+
+export interface SubjectTimeSlotGroup {
+  id: string;
+  weekdays: WeekdayCode[];
+  daysLabel: string;
+  startMin: number;
+  endMin: number;
+  timeLabel: string;
+  whenLabel: string;
+  sections: SubjectScheduleRow[];
+  hasConflict: boolean;
+}
+
+/**
+ * Groups a subject's merged section schedules chronologically by (weekdays, startMin, endMin)
+ * so each distinct time schedule header appears only once with its sections listed underneath.
+ */
+export function groupSubjectByTimeSlot(meetings: DashboardMeeting[]): SubjectTimeSlotGroup[] {
+  const rows = groupSubjectSchedules(meetings);
+  const bySlot = new Map<string, SubjectScheduleRow[]>();
+
+  for (const row of rows) {
+    const key = `${row.weekdays.join(",")}||${row.startMin}||${row.endMin}`;
+    const list = bySlot.get(key);
+    if (list) list.push(row);
+    else bySlot.set(key, [row]);
+  }
+
+  const groups: SubjectTimeSlotGroup[] = [];
+  for (const [key, list] of bySlot) {
+    const first = list[0];
+    if (!first) continue;
+    const sections = [...list].sort((a, b) =>
+      a.sectionCode.localeCompare(b.sectionCode, undefined, { numeric: true }),
+    );
+    groups.push({
+      id: key,
+      weekdays: first.weekdays,
+      daysLabel: first.daysLabel,
+      startMin: first.startMin,
+      endMin: first.endMin,
+      timeLabel: first.timeLabel,
+      whenLabel: first.whenLabel,
+      sections,
+      hasConflict: sections.some((s) => s.hasConflict),
+    });
+  }
+
+  return groups.sort(
+    (a, b) =>
+      WEEKDAY_ORDER.indexOf(a.weekdays[0] ?? "MONDAY") -
+        WEEKDAY_ORDER.indexOf(b.weekdays[0] ?? "MONDAY") ||
+      a.startMin - b.startMin ||
+      a.endMin - b.endMin ||
+      a.daysLabel.localeCompare(b.daysLabel),
+  );
+}
+
+export function filterMeetingsBySection(
+  meetings: DashboardMeeting[],
+  selectedSection: string,
+): DashboardMeeting[] {
+  return selectedSection === "ALL"
+    ? meetings
+    : meetings.filter((m) => m.sectionCode === selectedSection);
+}
+
+/** Meetings whose start time falls inside the given 60-minute clock bucket (e.g. hour=7 -> 7:00-7:59 AM). */
+export function meetingsForHourSlot(
+  meetings: DashboardMeeting[],
+  day: WeekdayCode,
+  hour: number,
+): DashboardMeeting[] {
+  return meetings.filter((m) => m.weekday === day && Math.floor(m.startMin / 60) === hour);
+}
+
+/** Filter a slot's classes by subject, section, room, faculty, component, weekday, or time range. */
+export function filterSlotMeetings(
+  meetings: DashboardMeeting[],
+  query: string,
+): DashboardMeeting[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return meetings;
+  return meetings.filter((m) => {
+    const haystack = [
+      m.subjectCode,
+      m.subjectName,
+      m.sectionCode,
+      displayRoomLabel(m.roomCode),
+      displayFacultyLabel(m.facultyCode, m.facultyName),
+      m.component ?? "",
+      WEEKDAY_SHORT[m.weekday],
+      m.weekday,
+      formatTimeRange(m.startMin, m.endMin),
+    ]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(q);
+  });
+}
+
 export function toCsv(rows: Array<Record<string, string | number>>): string {
   const first = rows[0];
   if (!first) return "";
@@ -269,7 +501,8 @@ export function toCsv(rows: Array<Record<string, string | number>>): string {
     const text = String(value);
     return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   };
-  return [headers.join(","), ...rows.map((r) => headers.map((h) => escape(r[h] ?? "")).join(","))].join(
-    "\n",
-  );
+  return [
+    headers.join(","),
+    ...rows.map((r) => headers.map((h) => escape(r[h] ?? "")).join(",")),
+  ].join("\n");
 }
