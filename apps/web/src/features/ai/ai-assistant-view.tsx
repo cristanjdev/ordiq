@@ -35,6 +35,7 @@ import {
   ChatPane,
   conversationTitle,
 } from "./assistant-chat";
+import motion from "./assistant-motion.module.css";
 
 // ---------------------------------------------------------------------------
 // API shapes
@@ -361,7 +362,12 @@ export function AiAssistantView() {
           >
             <PanelLeft className="h-4 w-4" />
           </button>
-          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--ordiq-ink)]">{headerTitle}</h1>
+          <h1
+            key={headerTitle}
+            className={cn("min-w-0 flex-1 truncate text-sm font-semibold text-[var(--ordiq-ink)]", motion.textIn)}
+          >
+            {headerTitle}
+          </h1>
           {(view || conversationId) && (
             <button
               type="button"
@@ -380,7 +386,7 @@ export function AiAssistantView() {
         )}
 
         {view ? (
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div key={view} className={cn("min-h-0 flex-1 overflow-y-auto", motion.screenIn)}>
             <div className="mx-auto w-full max-w-5xl space-y-4 p-3 sm:p-5 lg:p-6">
               <p className="text-xs text-[var(--ordiq-muted)]">{VIEW_TITLES[view].description}</p>
               {view === "briefing" && <BriefingTab termCode={termCode} />}
@@ -393,7 +399,7 @@ export function AiAssistantView() {
             termCode={termCode}
             termLabel={selectedTerm.label}
             displayName={displayName}
-            conversation={conversation}
+            conversations={conversations}
             conversationId={conversationId}
             loading={aiQuery.isLoading}
             onConversationStarted={(id) => navigate({ c: id })}

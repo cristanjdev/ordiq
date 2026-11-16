@@ -22,6 +22,7 @@ import { OrdiqLogo } from "@/components/ui/ordiq-logo";
 import { SkeletonBlock } from "@/components/ui/table-skeleton";
 import { titleCase } from "@/lib/display-labels";
 import { overlayMenu, useLastDefined, usePresence } from "@/lib/use-presence";
+import motion from "./assistant-motion.module.css";
 import { cn } from "@/lib/utils";
 
 /**
@@ -499,7 +500,7 @@ export function AssistantRail({
                     );
                   }
                   return (
-                    <li key={c.id} className="group relative">
+                    <li key={c.id} className={cn("group relative", motion.itemIn)}>
                       <button
                         type="button"
                         onClick={() => onOpenConversation(c.id)}
@@ -624,11 +625,73 @@ const FALLBACK_PROMPTS = [
   "Kumusta ang faculty load ngayong term?",
 ];
 
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+}
+
+/**
+ * Shows a reply that has just arrived word by word, the way a streamed answer
+ * reads. The text is the saved reply; only its display is paced.
+ */
+function RevealReply({
+  text,
+  onProgress,
+  onDone,
+}: {
+  text: string;
+  onProgress: () => void;
+  onDone: () => void;
+}) {
+  const tokens = React.useMemo(() => text.split(/(\s+)/), [text]);
+  const [count, setCount] = React.useState(0);
+  const callbacks = React.useRef({ onProgress, onDone });
+  React.useEffect(() => {
+    callbacks.current = { onProgress, onDone };
+  }, [onProgress, onDone]);
+
+  React.useEffect(() => {
+    const total = tokens.length;
+    if (prefersReducedMotion() || total === 0) {
+      setCount(total);
+      callbacks.current.onDone();
+      return;
+    }
+    // About 90 words a second, between half a second and 2.5 seconds overall.
+    const duration = Math.min(2500, Math.max(500, total * 6));
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration);
+      setCount(Math.ceil(progress * total));
+      callbacks.current.onProgress();
+      if (progress < 1) frame = requestAnimationFrame(tick);
+      else callbacks.current.onDone();
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [tokens]);
+
+  return <FormattedReply text={tokens.slice(0, count).join("")} />;
+}
+
+function TypingIndicator({ label }: { label: string }) {
+  return (
+    <div role="status" className={cn("flex items-center gap-3 text-[var(--ordiq-muted)]", motion.riseIn)}>
+      <span aria-hidden="true" className={cn(motion.dots, "text-[var(--ordiq-maroon)] dark:text-[var(--ordiq-orange)]")}>
+        <span />
+        <span />
+        <span />
+      </span>
+      <span className="text-xs">{label}…</span>
+    </div>
+  );
+}
+
 interface ChatPaneProps {
   termCode: string;
   termLabel: string;
   displayName: string;
-  conversation: ChatConversationDto | undefined;
+  conversations: ChatConversationDto[];
   /** The requested conversation id (from the URL); null for a new conversation. */
   conversationId: string | null;
   loading: boolean;
@@ -640,7 +703,7 @@ export function ChatPane({
   termCode,
   termLabel,
   displayName,
-  conversation,
+  conversations,
   conversationId,
   loading,
   onConversationStarted,
@@ -648,13 +711,31 @@ export function ChatPane({
 }: ChatPaneProps) {
   const queryClient = useQueryClient();
   const [input, setInput] = React.useState("");
-  const [pending, setPending] = React.useState<{ prompt: string; conversationId: string | null } | null>(null);
+  // The message being sent; `sentId` is its saved id once the server answers,
+  // so the placeholder steps aside the moment the saved copy is on screen.
+  const [pending, setPending] = React.useState<{
+    prompt: string;
+    conversationId: string | null;
+    sentId?: string;
+  } | null>(null);
   const [error, setError] = React.useState<{ message: string; conversationId: string | null } | null>(null);
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
+  // The reply that just arrived and is still being revealed.
+  const [revealId, setRevealId] = React.useState<string | null>(null);
+  // A conversation created from the new-conversation screen, shown at once
+  // while the address bar catches up (so the screen never flashes back).
+  const [handoffId, setHandoffId] = React.useState<string | null>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
+  const followRef = React.useRef(true);
+  const lastTopRef = React.useRef(0);
+  const startedRef = React.useRef<string | null>(null);
   const selectedRef = React.useRef(conversationId);
   selectedRef.current = conversationId;
+
+  const activeId = conversationId ?? handoffId;
+  const conversation = activeId ? conversations.find((c) => c.id === activeId) : undefined;
 
   const briefingQuery = useQuery({
     queryKey: ["ai-briefing", termCode],
@@ -680,7 +761,7 @@ export function ChatPane({
 
   const chat = useMutation({
     mutationFn: (vars: { prompt: string; conversationId: string | null }) =>
-      postAi<{ conversationId: string }>(
+      postAi<{ conversationId: string; userMessage?: { id: string }; assistantMessage?: { id: string } }>(
         {
           action: "chat",
           termCode,
@@ -694,12 +775,16 @@ export function ChatPane({
       setError(null);
     },
     onSuccess: async (data, vars) => {
+      setRevealId(data.assistantMessage?.id ?? null);
+      setPending((p) => (p ? { ...p, sentId: data.userMessage?.id } : p));
       await queryClient.invalidateQueries({ queryKey: ["ai-state"] });
       // Tools like generate_schedule or add_directive change workspace data.
       void queryClient.invalidateQueries({ queryKey: ["schedules"] });
       void queryClient.invalidateQueries({ queryKey: ["ai-briefing"] });
       // Open the new conversation only if the Dean is still on the new-conversation screen.
       if (vars.conversationId === null && selectedRef.current === null) {
+        startedRef.current = data.conversationId;
+        setHandoffId(data.conversationId);
         onConversationStarted(data.conversationId);
       }
     },
@@ -714,20 +799,75 @@ export function ChatPane({
   });
 
   const messages = conversation?.messages ?? [];
-  const pendingHere = pending && pending.conversationId === conversationId ? pending : null;
-  const errorHere = error && error.conversationId === conversationId ? error : null;
-  const isEmpty = conversationId === null && !pendingHere;
+  const pendingHere =
+    pending &&
+    pending.conversationId === activeId &&
+    !(pending.sentId && messages.some((m) => m.id === pending.sentId))
+      ? pending
+      : null;
+  const errorHere = error && error.conversationId === activeId ? error : null;
+  const isEmpty = activeId === null && !pendingHere;
 
-  // Keep the newest message in view.
-  React.useEffect(() => {
+  const scrollToEnd = React.useCallback((smooth: boolean) => {
     const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [messages.length, pendingHere, errorHere, conversationId]);
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth && !prefersReducedMotion() ? "smooth" : "auto" });
+  }, []);
 
-  // Focus the composer when switching conversations.
+  // Follow new text only while the Dean is at the bottom; scrolling up to
+  // read stops the follow, and coming back to the bottom resumes it.
+  const onScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    if (atBottom) followRef.current = true;
+    else if (el.scrollTop < lastTopRef.current - 4) followRef.current = false;
+    lastTopRef.current = el.scrollTop;
+  };
+
+  // Opening a different conversation: start at its end and fade it in. The
+  // conversation just created from the greeting screen is already on screen.
+  React.useLayoutEffect(() => {
+    setHandoffId(null);
+    if (conversationId && conversationId === startedRef.current) {
+      startedRef.current = null;
+      return;
+    }
+    setRevealId(null);
+    followRef.current = true;
+    scrollToEnd(false);
+    if (!prefersReducedMotion()) {
+      contentRef.current?.animate(
+        [
+          { opacity: 0, transform: "translateY(6px)" },
+          { opacity: 1, transform: "translateY(0)" },
+        ],
+        { duration: 260, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      );
+    }
+  }, [conversationId, scrollToEnd]);
+
+  // A sent message always brings the thread to the bottom.
+  React.useEffect(() => {
+    if (!pendingHere) return;
+    followRef.current = true;
+    scrollToEnd(true);
+  }, [pendingHere, scrollToEnd]);
+
+  React.useEffect(() => {
+    if (followRef.current) scrollToEnd(true);
+  }, [messages.length, errorHere, scrollToEnd]);
+
+  const followReveal = React.useCallback(() => {
+    const el = scrollRef.current;
+    if (el && followRef.current) el.scrollTop = el.scrollHeight;
+  }, []);
+  const endReveal = React.useCallback(() => setRevealId(null), []);
+
+  // Focus the composer when switching conversations or leaving the greeting screen.
   React.useEffect(() => {
     inputRef.current?.focus();
-  }, [conversationId]);
+  }, [conversationId, isEmpty]);
 
   // Grow the composer with its content, up to about eight lines.
   React.useEffect(() => {
@@ -741,7 +881,7 @@ export function ChatPane({
     const prompt = text.trim();
     if (!prompt || chat.isPending) return;
     setInput("");
-    chat.mutate({ prompt, conversationId });
+    chat.mutate({ prompt, conversationId: activeId });
   };
 
   const copy = async (m: ChatMessageDto) => {
@@ -760,7 +900,7 @@ export function ChatPane({
         e.preventDefault();
         send(input);
       }}
-      className="rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-4 pt-3 pb-2.5 shadow-sm transition focus-within:border-[var(--ordiq-maroon)]/50 focus-within:ring-2 focus-within:ring-[var(--ordiq-maroon)]/10"
+      className="rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-4 pt-3 pb-2.5 shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:border-[var(--ordiq-maroon)]/50 focus-within:ring-2 focus-within:ring-[var(--ordiq-maroon)]/10"
     >
       <textarea
         ref={inputRef}
@@ -783,7 +923,7 @@ export function ChatPane({
           type="submit"
           aria-label="Send message"
           disabled={!input.trim() || chat.isPending}
-          className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[var(--ordiq-maroon)] text-white transition hover:bg-[#480a13] disabled:cursor-not-allowed disabled:opacity-35 dark:bg-[var(--ordiq-orange)] dark:hover:opacity-90"
+          className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[var(--ordiq-maroon)] text-white transition-[background-color,opacity,scale] duration-200 hover:bg-[#480a13] active:scale-90 disabled:cursor-not-allowed disabled:opacity-35 dark:bg-[var(--ordiq-orange)] dark:hover:opacity-90"
         >
           {chat.isPending ? <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" /> : <ArrowUp className="h-4 w-4" />}
         </button>
@@ -799,9 +939,9 @@ export function ChatPane({
 
   if (isEmpty) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <div className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto", motion.screenIn)}>
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-10 sm:px-6">
-          <div className="mb-6 flex items-center justify-center gap-3">
+          <div className={cn("mb-6 flex items-center justify-center gap-3", motion.riseIn)}>
             <OrdiqLogo size={40} variant="maroon" alt="" className="shrink-0 dark:hidden" />
             <OrdiqLogo size={40} variant="white" alt="" className="hidden shrink-0 dark:block" />
             <h2 className="text-2xl font-semibold tracking-tight text-[var(--ordiq-ink)] sm:text-3xl">
@@ -809,19 +949,31 @@ export function ChatPane({
             </h2>
           </div>
           {errorHere && (
-            <p role="alert" className="mb-3 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2.5 text-xs text-red-700 dark:text-red-300">
+            <p
+              role="alert"
+              className={cn(
+                "mb-3 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2.5 text-xs text-red-700 dark:text-red-300",
+                motion.riseIn,
+              )}
+            >
               {errorHere.message}
             </p>
           )}
-          {composer}
+          <div className={motion.riseIn} style={{ animationDelay: "60ms" }}>
+            {composer}
+          </div>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {suggestions.map((p) => (
+            {suggestions.map((p, i) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => send(p)}
                 disabled={chat.isPending}
-                className="cursor-pointer rounded-full border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-3.5 py-1.5 text-left text-xs text-[var(--ordiq-ink)] transition hover:border-[var(--ordiq-maroon)]/50 hover:text-[var(--ordiq-maroon)] disabled:opacity-50 dark:hover:border-[var(--ordiq-orange)]/60 dark:hover:text-[var(--ordiq-orange)]"
+                style={{ animationDelay: `${120 + i * 50}ms` }}
+                className={cn(
+                  "cursor-pointer rounded-full border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-3.5 py-1.5 text-left text-xs text-[var(--ordiq-ink)] transition-[border-color,color,translate] duration-200 hover:-translate-y-px hover:border-[var(--ordiq-maroon)]/50 hover:text-[var(--ordiq-maroon)] disabled:opacity-50 dark:hover:border-[var(--ordiq-orange)]/60 dark:hover:text-[var(--ordiq-orange)]",
+                  motion.riseIn,
+                )}
               >
                 {p}
               </button>
@@ -834,9 +986,15 @@ export function ChatPane({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto" aria-live="polite">
-        <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 text-sm leading-relaxed sm:px-6">
+    <div className={cn("flex min-h-0 flex-1 flex-col", motion.screenIn)}>
+      <div
+        ref={scrollRef}
+        onScroll={onScroll}
+        className="min-h-0 flex-1 overflow-y-auto"
+        aria-live="polite"
+        aria-busy={revealId !== null}
+      >
+        <div ref={contentRef} className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 text-sm leading-relaxed sm:px-6">
           {loading && !conversation && (
             <div className="space-y-4" role="status" aria-label="Loading conversation">
               <SkeletonBlock className="ml-auto h-10 w-2/3 rounded-2xl" />
@@ -844,7 +1002,12 @@ export function ChatPane({
             </div>
           )}
           {!loading && !conversation && !pendingHere && (
-            <p className="rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-4 py-3 text-xs text-[var(--ordiq-muted)]">
+            <p
+              className={cn(
+                "rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-4 py-3 text-xs text-[var(--ordiq-muted)]",
+                motion.riseIn,
+              )}
+            >
               This conversation is no longer available. It may have been deleted or belong to another term.
             </p>
           )}
@@ -859,14 +1022,19 @@ export function ChatPane({
                 </div>
               );
             }
+            const revealing = m.id === revealId;
             const proposal = m.parts?.some((p) => p.kind === "proposal_card");
             const cards = (m.parts ?? []).filter((p) => p.kind !== "proposal_card");
             return (
-              <div key={m.id} className="group">
+              <div key={m.id} className={cn("group", revealing && motion.textIn)}>
                 <div className="min-w-0 space-y-2 text-[var(--ordiq-ink)]">
-                  <FormattedReply text={m.content} />
-                  {cards.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                  {revealing ? (
+                    <RevealReply text={m.content} onProgress={followReveal} onDone={endReveal} />
+                  ) : (
+                    <FormattedReply text={m.content} />
+                  )}
+                  {!revealing && cards.length > 0 && (
+                    <div className={cn("flex flex-wrap gap-1.5", motion.riseIn)}>
                       {cards.map((p, i) => (
                         <span
                           key={`${p.kind}-${i}`}
@@ -878,27 +1046,36 @@ export function ChatPane({
                       ))}
                     </div>
                   )}
-                  {proposal && (
+                  {!revealing && proposal && (
                     <button
                       type="button"
                       onClick={onOpenProposals}
-                      className="cursor-pointer rounded-full border border-[var(--ordiq-maroon)] px-3 py-1 text-xs font-medium text-[var(--ordiq-maroon)] hover:bg-[var(--ordiq-maroon)]/5 dark:border-[var(--ordiq-orange)] dark:text-[var(--ordiq-orange)]"
+                      className={cn(
+                        "cursor-pointer rounded-full border border-[var(--ordiq-maroon)] px-3 py-1 text-xs font-medium text-[var(--ordiq-maroon)] transition-colors hover:bg-[var(--ordiq-maroon)]/5 dark:border-[var(--ordiq-orange)] dark:text-[var(--ordiq-orange)]",
+                        motion.riseIn,
+                      )}
                     >
                       Review the proposed change →
                     </button>
                   )}
-                  <div className="flex items-center gap-2 text-[11px] text-[var(--ordiq-muted)]">
-                    <span>{formatTime(m.createdAt)}</span>
-                    <button
-                      type="button"
-                      onClick={() => void copy(m)}
-                      aria-label="Copy reply"
-                      title="Copy reply"
-                      className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)] lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100"
-                    >
-                      {copiedId === m.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                    </button>
-                  </div>
+                  {!revealing && (
+                    <div className={cn("flex items-center gap-2 text-[11px] text-[var(--ordiq-muted)]", motion.textIn)}>
+                      <span>{formatTime(m.createdAt)}</span>
+                      <button
+                        type="button"
+                        onClick={() => void copy(m)}
+                        aria-label="Copy reply"
+                        title="Copy reply"
+                        className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition-[opacity,background-color,color] duration-200 hover:bg-[var(--ordiq-surface-muted)] hover:text-[var(--ordiq-ink)] lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100"
+                      >
+                        {copiedId === m.id ? (
+                          <Check className={cn("h-3.5 w-3.5", motion.textIn)} />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -906,23 +1083,23 @@ export function ChatPane({
 
           {pendingHere && (
             <>
-              <div className="flex justify-end">
+              <div className={cn("flex justify-end", motion.riseIn)}>
                 <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl bg-[var(--ordiq-surface-muted)] px-4 py-2.5 text-[var(--ordiq-ink)]">
                   {pendingHere.prompt}
                 </div>
               </div>
-              <div role="status" className="flex items-center gap-3 text-[var(--ordiq-muted)]">
-                <LoaderCircle
-                  aria-hidden="true"
-                  className="h-5 w-5 shrink-0 text-[var(--ordiq-maroon)] motion-safe:animate-spin dark:text-[var(--ordiq-orange)]"
-                />
-                <span className="text-xs">{pendingReplyLabel(pendingHere.prompt)}…</span>
-              </div>
+              <TypingIndicator label={pendingReplyLabel(pendingHere.prompt)} />
             </>
           )}
 
           {errorHere && (
-            <p role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2.5 text-xs text-red-700 dark:text-red-300">
+            <p
+              role="alert"
+              className={cn(
+                "rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2.5 text-xs text-red-700 dark:text-red-300",
+                motion.riseIn,
+              )}
+            >
               {errorHere.message}
             </p>
           )}
