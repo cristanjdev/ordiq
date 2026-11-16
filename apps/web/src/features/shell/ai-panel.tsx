@@ -1,11 +1,18 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, LoaderCircle, Maximize2, MessageSquare, MoreVertical, Plus, Search, SendHorizontal, X } from "lucide-react";
+import { Check, Maximize2, MessageSquare, MoreVertical, Plus, Search, SendHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
-import { conversationTitle } from "@/features/ai/assistant-chat";
+import {
+  conversationTitle,
+  FormattedReply,
+  prefersReducedMotion,
+  RevealReply,
+  TypingIndicator,
+} from "@/features/ai/assistant-chat";
+import motion from "@/features/ai/assistant-motion.module.css";
 import { SkeletonBlock } from "@/components/ui/table-skeleton";
 import { titleCase } from "@/lib/display-labels";
 import { overlayMenu, usePresence } from "@/lib/use-presence";
@@ -45,6 +52,8 @@ interface AiStateDto {
 
 interface ChatTurnDto {
   conversationId: string;
+  userMessage?: { id: string };
+  assistantMessage?: { id: string };
 }
 
 // Describe the requested topic, without claiming that a backend tool is running.
@@ -100,28 +109,6 @@ function formatWhen(iso: string): string {
   return d.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-/** Light formatting for model replies: **bold** and "- " / "* " bullets. */
-function RichText({ text }: { text: string }) {
-  const lines = text.replace(/\r\n/g, "\n").split("\n");
-  return (
-    <>
-      {lines.map((line, i) => {
-        const bullet = /^\s*[-*]\s+/.test(line);
-        const body = bullet ? line.replace(/^\s*[-*]\s+/, "• ") : line;
-        const pieces = body.split(/(\*\*[^*]+\*\*)/g);
-        return (
-          <React.Fragment key={i}>
-            {pieces.map((p, j) =>
-              /^\*\*[^*]+\*\*$/.test(p) ? <strong key={j}>{p.slice(2, -2)}</strong> : p,
-            )}
-            {i < lines.length - 1 && "\n"}
-          </React.Fragment>
-        );
-      })}
-    </>
-  );
-}
-
 // "Continue in panel" from the AI Assistant page. The panel may not be mounted
 // yet (it mounts on first open), so the request is also kept until it is read.
 const OPEN_CONVERSATION_EVENT = "ordiq:open-conversation";
@@ -146,7 +133,16 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
   // The panel opens on a fresh conversation (null). Earlier chats, including
   // the seeded demo ones, are reachable from the menu or the full page.
   const [conversationId, setConversationId] = React.useState<string | null>(null);
-  const [pendingPrompt, setPendingPrompt] = React.useState<string | null>(null);
+  // The message being sent; `sentId` is its saved id once the server answers,
+  // so the placeholder steps aside the moment the saved copy is on screen.
+  const [pending, setPending] = React.useState<{ prompt: string; sentId?: string } | null>(null);
+  // The reply that just arrived and is still being revealed.
+  const [revealId, setRevealId] = React.useState<string | null>(null);
+  const listRef = React.useRef<HTMLDivElement>(null);
+  const followRef = React.useRef(true);
+  const lastTopRef = React.useRef(0);
+  // A conversation this panel just created is already on screen: no fade-in.
+  const startedRef = React.useRef<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const menu = usePresence(menuOpen, 150);
@@ -202,6 +198,8 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
       );
   }, [conversations, sessionQuery]);
   const messages = conversation?.messages ?? [];
+  const pendingPrompt =
+    pending && !(pending.sentId && messages.some((m) => m.id === pending.sentId)) ? pending.prompt : null;
 
   const chat = useMutation({
     mutationFn: async (prompt: string) => {
@@ -222,10 +220,13 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
       return (await res.json()) as ChatTurnDto;
     },
     onMutate: (prompt) => {
-      setPendingPrompt(prompt);
+      setPending({ prompt });
       setError(null);
     },
     onSuccess: async (data) => {
+      setRevealId(data.assistantMessage?.id ?? null);
+      setPending((p) => (p ? { ...p, sentId: data.userMessage?.id } : p));
+      startedRef.current = data.conversationId;
       setConversationId(data.conversationId);
       await queryClient.invalidateQueries({ queryKey: ["ai-state"] });
       // Tools like generate_schedule or add_directive change workspace data.
@@ -235,15 +236,57 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
       setError(err instanceof Error ? err.message : "The assistant could not answer.");
       setInputText((current) => current || prompt);
     },
-    onSettled: () => setPendingPrompt(null),
+    onSettled: () => setPending(null),
   });
 
+  // Scroll the message list itself; scrollIntoView would also nudge the
+  // sliding panel and the page behind it.
+  const scrollToEnd = React.useCallback((smooth: boolean) => {
+    const list = listRef.current;
+    if (list) list.scrollTo({ top: list.scrollHeight, behavior: smooth && !prefersReducedMotion() ? "smooth" : "auto" });
+  }, []);
+
+  // Follow new text only while the Dean is at the bottom; scrolling up to
+  // read stops the follow, and coming back to the bottom resumes it.
+  const onListScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+    if (atBottom) followRef.current = true;
+    else if (el.scrollTop < lastTopRef.current - 4) followRef.current = false;
+    lastTopRef.current = el.scrollTop;
+  };
+
+  // Opening a different conversation: start at its end and fade it in.
+  React.useLayoutEffect(() => {
+    if (conversationId && conversationId === startedRef.current) {
+      startedRef.current = null;
+      return;
+    }
+    setRevealId(null);
+    followRef.current = true;
+    scrollToEnd(false);
+    if (!prefersReducedMotion()) {
+      listRef.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: "ease-out" });
+    }
+  }, [conversationId, scrollToEnd]);
+
+  // A sent message always brings the list to the bottom.
   React.useEffect(() => {
-    // Scroll the message list itself; scrollIntoView would also nudge the
-    // sliding panel and the page behind it.
-    const list = messagesEndRef.current?.parentElement;
-    if (list) list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
-  }, [messages.length, pendingPrompt, error]);
+    if (!pendingPrompt) return;
+    followRef.current = true;
+    scrollToEnd(true);
+  }, [pendingPrompt, scrollToEnd]);
+
+  React.useEffect(() => {
+    if (followRef.current) scrollToEnd(true);
+  }, [messages.length, error, scrollToEnd]);
+
+  const followReveal = React.useCallback(() => {
+    const el = listRef.current;
+    if (el && followRef.current) el.scrollTop = el.scrollHeight;
+  }, []);
+  const endReveal = React.useCallback(() => setRevealId(null), []);
 
   // Grow the input with its content, up to about five lines.
   React.useEffect(() => {
@@ -462,10 +505,13 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
 
       {/* Messages */}
       <div
+        ref={listRef}
+        onScroll={onListScroll}
         className="min-h-0 flex-1 space-y-3.5 overflow-y-auto p-4 text-xs leading-relaxed"
         aria-live="polite"
+        aria-busy={revealId !== null}
       >
-        <div className="flex flex-col items-start gap-1.5">
+        <div className={cn("flex flex-col items-start gap-1.5", motion.riseIn)}>
           <div className="max-w-[88%] whitespace-pre-wrap rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] p-3.5 shadow-xs">
             {GREETING}
           </div>
@@ -486,22 +532,30 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
 
         {messages.map((msg) => {
           const isUser = msg.role === "user";
+          const revealing = !isUser && msg.id === revealId;
           const proposal = msg.parts?.some((p) => p.kind === "proposal_card");
           const cards = (msg.parts ?? []).filter((p) => p.kind !== "proposal_card");
           return (
             <div key={msg.id} className={cn("flex flex-col gap-1.5", isUser ? "items-end" : "items-start")}>
               <div
                 className={cn(
-                  "max-w-[88%] whitespace-pre-wrap break-words rounded-2xl p-3.5 shadow-xs",
+                  "max-w-[88%] break-words rounded-2xl p-3.5 shadow-xs",
                   isUser
-                    ? "bg-[var(--ordiq-maroon)] text-white"
+                    ? "whitespace-pre-wrap bg-[var(--ordiq-maroon)] text-white"
                     : "border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] text-[var(--ordiq-ink)]",
+                  revealing && motion.riseIn,
                 )}
               >
-                {isUser ? msg.content : <RichText text={msg.content} />}
+                {isUser ? (
+                  msg.content
+                ) : revealing ? (
+                  <RevealReply text={msg.content} onProgress={followReveal} onDone={endReveal} />
+                ) : (
+                  <FormattedReply text={msg.content} />
+                )}
               </div>
-              {!isUser && cards.length > 0 && (
-                <div className="flex max-w-[88%] flex-wrap gap-1.5">
+              {!isUser && !revealing && cards.length > 0 && (
+                <div className={cn("flex max-w-[88%] flex-wrap gap-1.5", motion.riseIn)}>
                   {cards.map((p, i) => (
                     <span
                       key={`${p.kind}-${i}`}
@@ -513,7 +567,7 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
                   ))}
                 </div>
               )}
-              {!isUser && proposal && (
+              {!isUser && !revealing && proposal && (
                 <Link
                   href="/assistant?view=proposals"
                   className="rounded-full border border-[var(--ordiq-maroon)] px-3 py-1 text-[11px] font-medium text-[var(--ordiq-maroon)] hover:bg-[var(--ordiq-maroon)]/5 dark:border-[var(--ordiq-orange)] dark:text-[var(--ordiq-orange)]"
@@ -521,47 +575,44 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
                   Review the proposed change →
                 </Link>
               )}
-              <span className="px-1 text-[10px] text-[var(--ordiq-muted)]">{formatTime(msg.createdAt)}</span>
+              {!revealing && (
+                <span className={cn("px-1 text-[10px] text-[var(--ordiq-muted)]", motion.textIn)}>
+                  {formatTime(msg.createdAt)}
+                </span>
+              )}
             </div>
           );
         })}
 
         {pendingPrompt && (
           <>
-            <div className="flex flex-col items-end gap-1.5">
+            <div className={cn("flex flex-col items-end gap-1.5", motion.riseIn)}>
               <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl bg-[var(--ordiq-maroon)] p-3.5 text-white shadow-xs">
                 {pendingPrompt}
               </div>
             </div>
-            <div
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-              className="flex w-fit max-w-full items-center gap-2.5 rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] px-3.5 py-3 text-[var(--ordiq-muted)]"
-            >
-              <LoaderCircle
-                aria-hidden="true"
-                className="h-4 w-4 shrink-0 motion-safe:animate-spin text-[var(--ordiq-maroon)] dark:text-[var(--ordiq-orange)]"
-              />
-              <span className="min-w-0 break-words">{pendingReplyLabel(pendingPrompt)}</span>
-            </div>
+            <TypingIndicator label={pendingReplyLabel(pendingPrompt)} />
           </>
         )}
 
         {error && (
-          <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-red-700 dark:text-red-300">
+          <p
+            role="alert"
+            className={cn("rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-red-700 dark:text-red-300", motion.riseIn)}
+          >
             {error}
           </p>
         )}
 
         {showStarters && (
           <div className="flex flex-wrap gap-1.5">
-            {STARTER_PROMPTS.map((p) => (
+            {STARTER_PROMPTS.map((p, i) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => send(p)}
-                className="rounded-full border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-3 py-1 text-left text-[11px] font-medium text-[var(--ordiq-ink)] transition hover:border-[var(--ordiq-maroon)] hover:bg-[var(--ordiq-maroon)]/5 hover:text-[var(--ordiq-maroon)] dark:hover:border-[var(--ordiq-orange)] dark:hover:text-[var(--ordiq-orange)]"
+                style={{ animationDelay: `${80 + i * 50}ms` }}
+                className={cn(motion.riseIn, "rounded-full borderborder-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-3 py-1 text-left text-[11px] font-medium text-[var(--ordiq-ink)] transition hover:border-[var(--ordiq-maroon)] hover:bg-[var(--ordiq-maroon)]/5 hover:text-[var(--ordiq-maroon)] dark:hover:border-[var(--ordiq-orange)] dark:hover:text-[var(--ordiq-orange)]")}
               >
                 {p}
               </button>

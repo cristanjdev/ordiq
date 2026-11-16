@@ -625,7 +625,7 @@ const FALLBACK_PROMPTS = [
   "Kumusta ang faculty load ngayong term?",
 ];
 
-function prefersReducedMotion(): boolean {
+export function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
 }
 
@@ -633,7 +633,7 @@ function prefersReducedMotion(): boolean {
  * Shows a reply that has just arrived word by word, the way a streamed answer
  * reads. The text is the saved reply; only its display is paced.
  */
-function RevealReply({
+export function RevealReply({
   text,
   onProgress,
   onDone,
@@ -674,7 +674,7 @@ function RevealReply({
   return <FormattedReply text={tokens.slice(0, count).join("")} />;
 }
 
-function TypingIndicator({ label }: { label: string }) {
+export function TypingIndicator({ label }: { label: string }) {
   return (
     <div role="status" className={cn("flex items-center gap-3 text-[var(--ordiq-muted)]", motion.riseIn)}>
       <span aria-hidden="true" className={cn(motion.dots, "text-[var(--ordiq-maroon)] dark:text-[var(--ordiq-orange)]")}>
