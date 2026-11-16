@@ -539,12 +539,12 @@ function BriefingTab({ termCode }: { termCode: string }) {
         </h2>
         {briefing.items.length === 0 ? (
           <Card>
-            <CardContent className="flex items-center gap-3 p-5">
-              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-              <div>
-                <p className="text-sm font-semibold text-[var(--ordiq-ink)]">All clear</p>
-                <p className="text-xs text-[var(--ordiq-muted)]">Nothing needs attention.</p>
-              </div>
+            <CardContent className="p-5">
+              <p className="flex items-center gap-2 text-sm font-semibold text-[var(--ordiq-ink)]">
+                <CheckCircle2 aria-hidden="true" className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                All clear
+              </p>
+              <p className="mt-1 text-xs text-[var(--ordiq-muted)]">Nothing needs attention.</p>
             </CardContent>
           </Card>
         ) : (
@@ -555,10 +555,12 @@ function BriefingTab({ termCode }: { termCode: string }) {
               return (
                 <Card key={item.id}>
                   <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex min-w-0 gap-3">
-                      <Icon className={cn("mt-0.5 h-5 w-5 shrink-0", sev.tone)} />
+                    <div className="min-w-0">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-[var(--ordiq-ink)]">{item.title}</p>
+                        <p className="flex items-center gap-2 text-sm font-semibold text-[var(--ordiq-ink)]">
+                          <Icon aria-label={sev.label} className={cn("h-4 w-4 shrink-0", sev.tone)} />
+                          <span className="min-w-0">{item.title}</span>
+                        </p>
                         {item.examples.length > 0 && (
                           <ul className="mt-1.5 space-y-1 text-xs text-[var(--ordiq-muted)]">
                             {item.examples.slice(0, 3).map((ex, i) => (
@@ -809,25 +811,20 @@ function UsageTab({
             <SkeletonBlock className="h-32 w-full rounded-xl" />
           ) : (
             <>
-              <div className="flex items-start gap-3 rounded-xl bg-[var(--ordiq-surface-muted)]/60 p-4">
-                <span
-                  className={cn(
-                    "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                    provider.live
-                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                      : "bg-amber-500/15 text-amber-800 dark:text-amber-300",
+              <div className="rounded-xl bg-[var(--ordiq-surface-muted)]/60 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-[var(--ordiq-ink)]">
+                  {provider.live ? (
+                    <CheckCircle2 aria-hidden="true" className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <Info aria-hidden="true" className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   )}
-                >
-                  {provider.live ? <CheckCircle2 aria-hidden="true" className="h-4 w-4" /> : <Info aria-hidden="true" className="h-4 w-4" />}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[var(--ordiq-ink)]">{provider.live ? "Ready to help" : "Limited assistance"}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-[var(--ordiq-muted)]">
-                    {provider.live
-                      ? "Ask questions about schedules, faculty assignments, and room availability."
-                      : "Basic assistance is available. Some answers may be limited until the full service returns."}
-                  </p>
-                </div>
+                  {provider.live ? "Ready to help" : "Limited assistance"}
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-[var(--ordiq-muted)]">
+                  {provider.live
+                    ? "Ask questions about schedules, faculty assignments, and room availability."
+                    : "Basic assistance is available. Some answers may be limited until the full service returns."}
+                </p>
               </div>
               <div>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs">

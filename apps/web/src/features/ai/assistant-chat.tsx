@@ -862,12 +862,8 @@ export function ChatPane({
             const proposal = m.parts?.some((p) => p.kind === "proposal_card");
             const cards = (m.parts ?? []).filter((p) => p.kind !== "proposal_card");
             return (
-              <div key={m.id} className="group flex gap-3">
-                <span className="mt-0.5 shrink-0">
-                  <OrdiqLogo size={24} variant="maroon" alt="" className="dark:hidden" />
-                  <OrdiqLogo size={24} variant="white" alt="" className="hidden dark:block" />
-                </span>
-                <div className="min-w-0 flex-1 space-y-2 text-[var(--ordiq-ink)]">
+              <div key={m.id} className="group">
+                <div className="min-w-0 space-y-2 text-[var(--ordiq-ink)]">
                   <FormattedReply text={m.content} />
                   {cards.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">

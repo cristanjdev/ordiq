@@ -169,14 +169,12 @@ export function ImportWorkbookDialog({
         )}
       >
         <div className="flex items-start justify-between gap-3 border-b border-[var(--ordiq-border)] px-5 py-5 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--ordiq-maroon)] text-white">
-              <FileSpreadsheet className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-base font-semibold text-[var(--ordiq-ink)]">{title}</h2>
-              <p className="mt-1 text-xs text-[var(--ordiq-muted)]">{termCode}</p>
-            </div>
+          <div className="min-w-0">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-[var(--ordiq-ink)]">
+              <FileSpreadsheet aria-hidden="true" className="h-5 w-5 shrink-0 text-[var(--ordiq-maroon)] dark:text-[var(--ordiq-orange)]" />
+              <span className="min-w-0">{title}</span>
+            </h2>
+            <p className="mt-1 text-xs text-[var(--ordiq-muted)]">{termCode}</p>
           </div>
           <button
             type="button"

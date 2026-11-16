@@ -388,16 +388,14 @@ export function FacultyDetailsPanel({
         className="relative flex h-[640px] max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] shadow-2xl"
       >
         <header className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--ordiq-border)] p-5">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--ordiq-maroon)] text-white">
-              <CalendarClock className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <h2 id={titleId} className="text-base font-semibold text-[var(--ordiq-ink)]">{faculty.name}</h2>
-              <p className="mt-1 text-xs text-[var(--ordiq-muted)]">
-                {faculty.code} · {termCode}
-              </p>
-            </div>
+          <div className="min-w-0">
+            <h2 id={titleId} className="flex items-center gap-2 text-base font-semibold text-[var(--ordiq-ink)]">
+              <CalendarClock aria-hidden="true" className="h-5 w-5 shrink-0 text-[var(--ordiq-maroon)] dark:text-[var(--ordiq-orange)]" />
+              <span className="min-w-0 truncate">{faculty.name}</span>
+            </h2>
+            <p className="mt-1 text-xs text-[var(--ordiq-muted)]">
+              {faculty.code} · {termCode}
+            </p>
           </div>
           <button
             ref={closeRef}

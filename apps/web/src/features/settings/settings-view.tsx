@@ -344,13 +344,16 @@ export function SettingsView() {
               />
             </SettingRow>
             {!s.twoFactorRequired && (
-              <div className="flex gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-xs text-amber-800 dark:text-amber-300">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>
-                  With two-factor authentication off, anyone who learns the password can sign in. The
-                  authenticator setup is kept, so turning it back on needs no new QR scan. The project quotation
-                  lists multi-factor sign-in as a delivered feature.
-                </span>
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-xs text-amber-800 dark:text-amber-300">
+                <p className="flex items-center gap-2 font-semibold">
+                  <AlertTriangle aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  Two-factor authentication is off
+                </p>
+                <p className="mt-1 leading-relaxed">
+                  Anyone who learns the password can sign in. The authenticator setup is kept, so turning it
+                  back on needs no new QR scan. The project quotation lists multi-factor sign-in as a delivered
+                  feature.
+                </p>
               </div>
             )}
             <SettingRow
