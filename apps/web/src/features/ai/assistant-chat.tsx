@@ -21,6 +21,7 @@ import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
 import { SkeletonBlock } from "@/components/ui/table-skeleton";
 import { titleCase } from "@/lib/display-labels";
+import { overlayMenu, useLastDefined, usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 
 /**
@@ -291,6 +292,8 @@ export function AssistantRail({
   const [menuFor, setMenuFor] = React.useState<string | null>(null);
   const [renaming, setRenaming] = React.useState<{ id: string; title: string } | null>(null);
   const [toDelete, setToDelete] = React.useState<ChatConversationDto | null>(null);
+  // Keeps the dialog text while it fades out after closing.
+  const deleteShown = useLastDefined(toDelete);
   const [actionError, setActionError] = React.useState<string | null>(null);
 
   const rename = useMutation({
@@ -524,38 +527,18 @@ export function AssistantRail({
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
-                      {menuFor === c.id && (
-                        <>
-                          <div className="fixed inset-0 z-10" aria-hidden="true" onClick={() => setMenuFor(null)} />
-                          <div
-                            role="menu"
-                            className="absolute top-8 right-1 z-20 w-40 overflow-hidden rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] p-1 text-[13px] shadow-xl animate-info-pop"
-                          >
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => {
-                                setMenuFor(null);
-                                setRenaming({ id: c.id, title });
-                              }}
-                              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[var(--ordiq-ink)] hover:bg-[var(--ordiq-surface-muted)]"
-                            >
-                              <Pencil className="h-3.5 w-3.5" /> Rename
-                            </button>
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => {
-                                setMenuFor(null);
-                                setToDelete(c);
-                              }}
-                              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-600 hover:bg-red-500/10 dark:text-red-400"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" /> Delete
-                            </button>
-                          </div>
-                        </>
-                      )}
+                      <ItemMenu
+                        open={menuFor === c.id}
+                        onClose={() => setMenuFor(null)}
+                        onRename={() => {
+                          setMenuFor(null);
+                          setRenaming({ id: c.id, title });
+                        }}
+                        onDelete={() => {
+                          setMenuFor(null);
+                          setToDelete(c);
+                        }}
+                      />
                     </li>
                   );
                 })}
@@ -573,8 +556,8 @@ export function AssistantRail({
         }}
         title="Delete this conversation?"
         description={
-          toDelete
-            ? `"${conversationTitle(toDelete)}" and its ${plural(toDelete.messages.length, "message")} will be permanently removed.`
+          deleteShown
+            ? `"${conversationTitle(deleteShown)}" and its ${plural(deleteShown.messages.length, "message")} will be permanently removed.`
             : ""
         }
         confirmText="Delete"
@@ -582,6 +565,51 @@ export function AssistantRail({
         isLoading={remove.isPending}
       />
     </div>
+  );
+}
+
+function ItemMenu({
+  open,
+  onClose,
+  onRename,
+  onDelete,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onRename: () => void;
+  onDelete: () => void;
+}) {
+  const { mounted, shown } = usePresence(open, 150);
+  if (!mounted) return null;
+  return (
+    <>
+      {open && <div className="fixed inset-0 z-10" aria-hidden="true" onClick={onClose} />}
+      <div
+        role="menu"
+        inert={!open}
+        className={cn(
+          "absolute top-8 right-1 z-20 w-40 overflow-hidden rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] p-1 text-[13px] shadow-xl",
+          overlayMenu(shown),
+        )}
+      >
+        <button
+          type="button"
+          role="menuitem"
+          onClick={onRename}
+          className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[var(--ordiq-ink)] hover:bg-[var(--ordiq-surface-muted)]"
+        >
+          <Pencil className="h-3.5 w-3.5" /> Rename
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          onClick={onDelete}
+          className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-600 hover:bg-red-500/10 dark:text-red-400"
+        >
+          <Trash2 className="h-3.5 w-3.5" /> Delete
+        </button>
+      </div>
+    </>
   );
 }
 

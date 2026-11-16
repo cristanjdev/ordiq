@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
 import { TotpCodeInput } from "@/components/ui/totp-code-input";
 import type { LoginNoticeReason } from "@/lib/auth-constants";
+import { overlayBackdrop, overlayPanel, usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 
 interface EnrollmentPayload {
@@ -115,6 +116,7 @@ export function LoginView({
   const [copied, setCopied] = React.useState<"secret" | "codes" | null>(null);
   const [copyFailed, setCopyFailed] = React.useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = React.useState(false);
+  const qrModal = usePresence(isQrModalOpen);
   const [modalTab, setModalTab] = React.useState<"qr" | "key">("qr");
   const [isFirstEnrollment, setIsFirstEnrollment] = React.useState(false);
   const [loadingEnrollment, setLoadingEnrollment] = React.useState(false);
@@ -846,20 +848,26 @@ export function LoginView({
       </div>
 
       {/* QR Code & Setup Key Modal */}
-      {isQrModalOpen && (
+      {qrModal.mounted && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="qr-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          inert={!isQrModalOpen}
+          className={cn("fixed inset-0 z-50 flex items-center justify-center p-4", !qrModal.shown && "pointer-events-none")}
         >
           <div
-            className="fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity"
+            className={cn("fixed inset-0 bg-black/75 backdrop-blur-xs", overlayBackdrop(qrModal.shown))}
             onClick={() => setIsQrModalOpen(false)}
             aria-hidden="true"
           />
 
-          <div className="relative z-10 w-full max-w-[480px] rounded-2xl border border-white/20 bg-white dark:bg-[#1a0b0e] p-5 shadow-2xl text-center">
+          <div
+            className={cn(
+              "relative z-10 w-full max-w-[480px] rounded-2xl border border-white/20 bg-white dark:bg-[#1a0b0e] p-5 shadow-2xl text-center",
+              overlayPanel(qrModal.shown),
+            )}
+          >
             <button
               type="button"
               onClick={() => setIsQrModalOpen(false)}

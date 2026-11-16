@@ -2,6 +2,8 @@
 
 import { AlertTriangle, Loader2, X } from "lucide-react";
 import * as React from "react";
+import { cn } from "@/lib/utils";
+import { overlayBackdrop, overlayPanel, usePresence } from "@/lib/use-presence";
 import { Button } from "./button";
 
 export interface ConfirmationModalProps {
@@ -52,7 +54,8 @@ export function ConfirmationModal({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  const { mounted, shown } = usePresence(isOpen);
+  if (!mounted) return null;
 
   const defaultIcon =
     variant === "danger" ? (
@@ -75,11 +78,12 @@ export function ConfirmationModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      inert={!isOpen}
+      className={cn("fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6", !shown && "pointer-events-none")}
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        className={cn("fixed inset-0 bg-black/60 backdrop-blur-xs", overlayBackdrop(shown))}
         onClick={() => {
           if (!isLoading) onClose();
         }}
@@ -87,7 +91,12 @@ export function ConfirmationModal({
       />
 
       {/* Modal Dialog Card */}
-      <div className="relative z-10 w-full max-w-md rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-[var(--ordiq-ink)]">
+      <div
+        className={cn(
+          "relative z-10 w-full max-w-md rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] p-5 sm:p-6 shadow-2xl text-[var(--ordiq-ink)]",
+          overlayPanel(shown),
+        )}
+      >
         {/* Close Button */}
         <button
           type="button"

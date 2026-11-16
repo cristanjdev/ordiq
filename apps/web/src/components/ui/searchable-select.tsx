@@ -4,6 +4,7 @@ import { Check, ChevronDown, Search } from "lucide-react";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { infoTipPosition } from "@/lib/info-tip-position";
+import { usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 
 interface SelectOption {
@@ -33,6 +34,7 @@ export function SearchableSelect({
   variant?: "default" | "embedded";
 }) {
   const [open, setOpen] = React.useState(false);
+  const panel = usePresence(open, 150);
   const [query, setQuery] = React.useState("");
   const [active, setActive] = React.useState(0);
   const [position, setPosition] = React.useState<ReturnType<typeof infoTipPosition> | null>(null);
@@ -109,7 +111,7 @@ export function SearchableSelect({
       window.removeEventListener("scroll", update, true);
       window.visualViewport?.removeEventListener("resize", update);
     };
-  }, [open, disabled]);
+  }, [open, disabled, panel.mounted]);
 
   React.useEffect(() => {
     if (open) document.getElementById(`${listId}-${active}`)?.scrollIntoView({ block: "nearest" });
@@ -167,12 +169,17 @@ export function SearchableSelect({
           )}
         />
       </button>
-      {open &&
+      {panel.mounted &&
         !disabled &&
         createPortal(
           <div
             ref={panelRef}
-            className="fixed z-[70] flex flex-col overflow-hidden rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] shadow-xl"
+            inert={!open}
+            className={cn(
+              "fixed z-[70] flex flex-col overflow-hidden rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] shadow-xl",
+              "transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none",
+              panel.shown ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
+            )}
             style={{
               left: position?.left ?? 12,
               top: position?.top ?? 12,

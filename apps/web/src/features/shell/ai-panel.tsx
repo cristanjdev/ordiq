@@ -8,6 +8,7 @@ import { OrdiqLogo } from "@/components/ui/ordiq-logo";
 import { conversationTitle } from "@/features/ai/assistant-chat";
 import { SkeletonBlock } from "@/components/ui/table-skeleton";
 import { titleCase } from "@/lib/display-labels";
+import { overlayMenu, usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 import { useShell } from "./providers";
 
@@ -148,6 +149,7 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
   const [pendingPrompt, setPendingPrompt] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const menu = usePresence(menuOpen, 150);
   const [sessionQuery, setSessionQuery] = React.useState("");
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
@@ -335,13 +337,17 @@ export function AiAssistantPanel({ onClose, isMobileDrawer = false }: AiPanelPro
           >
             <MoreVertical className="h-4 w-4" />
           </button>
-          {menuOpen && (
+          {menu.mounted && (
             <>
-              <div className="fixed inset-0 z-10" aria-hidden="true" onClick={closeMenu} />
+              {menuOpen && <div className="fixed inset-0 z-10" aria-hidden="true" onClick={closeMenu} />}
               <div
                 role="menu"
                 aria-label="Conversations"
-                className="absolute right-0 top-9 z-20 flex max-h-[min(28rem,calc(100dvh-10rem))] w-[min(20rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] text-xs shadow-xl animate-info-pop"
+                inert={!menuOpen}
+                className={cn(
+                  "absolute right-0 top-9 z-20 flex max-h-[min(28rem,calc(100dvh-10rem))] w-[min(20rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] text-xs shadow-xl",
+                  overlayMenu(menu.shown),
+                )}
               >
                 <div className="shrink-0 p-1.5">
                   <button

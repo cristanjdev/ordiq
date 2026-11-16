@@ -3,6 +3,8 @@
 import { Loader2, Pencil, Plus, X } from "lucide-react";
 import * as React from "react";
 import { Button } from "./button";
+import { overlayBackdrop, overlayPanel, useLastDefined, usePresence } from "@/lib/use-presence";
+import { cn } from "@/lib/utils";
 
 /**
  * One dialog for adding and editing any master-data record. Each page passes
@@ -181,7 +183,7 @@ function fromDraft(
 
 export function RecordFormDialog({
   open,
-  mode,
+  mode: modeProp,
   entityLabel,
   description,
   fields,
@@ -189,6 +191,8 @@ export function RecordFormDialog({
   onClose,
   onSubmit,
 }: RecordFormDialogProps) {
+  // Callers clear the record when closing; keep the title steady while the dialog fades out.
+  const mode = useLastDefined(open ? modeProp : null) ?? modeProp;
   const [draft, setDraft] = React.useState<DraftValues>(() => toDraft(fields, initialValues));
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
@@ -218,7 +222,8 @@ export function RecordFormDialog({
     };
   }, [open, saving, onClose]);
 
-  if (!open) return null;
+  const { mounted, shown } = usePresence(open);
+  if (!mounted) return null;
 
   const set = (name: string, value: string | boolean | string[]) => {
     setDraft((prev) => ({ ...prev, [name]: value }));
@@ -269,10 +274,11 @@ export function RecordFormDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="record-form-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+      inert={!open}
+      className={cn("fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6", !shown && "pointer-events-none")}
     >
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+        className={cn("fixed inset-0 bg-black/60 backdrop-blur-xs", overlayBackdrop(shown))}
         onClick={() => {
           if (!saving) onClose();
         }}
@@ -281,7 +287,10 @@ export function RecordFormDialog({
       <form
         onSubmit={(e) => void handleSubmit(e)}
         noValidate
-        className="relative z-10 flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] text-xs text-[var(--ordiq-ink)] shadow-2xl"
+        className={cn(
+          "relative z-10 flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] text-xs text-[var(--ordiq-ink)] shadow-2xl",
+          overlayPanel(shown),
+        )}
       >
         <div className="flex items-start justify-between gap-3 bg-[#7a121b] dark:bg-[#2b080e] px-5 py-3.5 text-white">
           <div className="min-w-0">

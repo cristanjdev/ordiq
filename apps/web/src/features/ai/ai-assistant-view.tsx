@@ -26,6 +26,7 @@ import { useSystemSettings } from "@/features/settings/settings-api";
 import { useAuthSession } from "@/features/auth/auth-session-provider";
 import { useShell } from "@/features/shell/providers";
 import { titleCase } from "@/lib/display-labels";
+import { overlayBackdrop, usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 import {
   AssistantRail,
@@ -201,6 +202,7 @@ export function AiAssistantView() {
   const conversationId = view ? null : searchParams.get("c");
   const [railOpen, setRailOpen] = React.useState(false); // below lg: the rail is a drawer
   const [railHidden, setRailHidden] = React.useState(false); // lg and up: the rail can be collapsed
+  const railDrawer = usePresence(railOpen);
 
   const displayName = React.useMemo(() => {
     const raw = user?.username?.trim();
@@ -297,19 +299,44 @@ export function AiAssistantView() {
   return (
     <div className="relative flex h-full min-h-0">
       {/* Rail: a column from lg up, a drawer below */}
+      {/* The column slides closed (width to 0); its content keeps its width so nothing reflows mid-slide. */}
       <aside
         aria-label="Conversations"
+        inert={railHidden}
         className={cn(
-          "hidden w-64 shrink-0 border-r border-[var(--ordiq-border)] xl:w-72",
-          !railHidden && "lg:flex",
+          "hidden shrink-0 overflow-hidden border-[var(--ordiq-border)] lg:flex",
+          "transition-[width,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+          railHidden ? "w-0 border-r-0" : "w-64 border-r xl:w-72",
         )}
       >
-        {rail()}
+        <div
+          className={cn(
+            "flex h-full w-64 shrink-0 xl:w-72",
+            "transition-opacity duration-200 motion-reduce:transition-none",
+            railHidden ? "opacity-0" : "opacity-100",
+          )}
+        >
+          {rail()}
+        </div>
       </aside>
-      {railOpen && (
-        <div className="fixed inset-0 top-16 z-40 flex lg:hidden">
-          <div className="absolute inset-0 bg-black/45" aria-hidden="true" onClick={() => setRailOpen(false)} />
-          <aside aria-label="Conversations" className="relative flex w-72 max-w-[85vw] border-r border-[var(--ordiq-border)] shadow-2xl">
+      {railDrawer.mounted && (
+        <div
+          inert={!railOpen}
+          className={cn("fixed inset-0 top-16 z-40 flex lg:hidden", !railDrawer.shown && "pointer-events-none")}
+        >
+          <div
+            className={cn("absolute inset-0 bg-black/45", overlayBackdrop(railDrawer.shown))}
+            aria-hidden="true"
+            onClick={() => setRailOpen(false)}
+          />
+          <aside
+            aria-label="Conversations"
+            className={cn(
+              "relative flex w-72 max-w-[85vw] border-r border-[var(--ordiq-border)] shadow-2xl",
+              "transform-gpu transition-[translate,opacity] duration-200 ease-out motion-reduce:transition-none",
+              railDrawer.shown ? "translate-x-0 opacity-100" : "-translate-x-full opacity-60",
+            )}
+          >
             {rail(() => setRailOpen(false))}
           </aside>
         </div>

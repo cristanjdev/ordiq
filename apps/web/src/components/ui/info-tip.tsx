@@ -4,6 +4,7 @@ import { CircleAlert, X } from "lucide-react";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { infoTipPosition } from "@/lib/info-tip-position";
+import { overlayBackdrop, usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,6 +22,7 @@ export function InfoTip({
   align?: "center" | "end";
 }) {
   const [open, setOpen] = React.useState(false);
+  const tip = usePresence(open, 150);
   const wrapRef = React.useRef<HTMLSpanElement>(null);
   const popupRef = React.useRef<HTMLSpanElement>(null);
   const contentRef = React.useRef<HTMLSpanElement>(null);
@@ -61,7 +63,7 @@ export function InfoTip({
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [open, align]);
+  }, [open, align, tip.mounted]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -94,7 +96,8 @@ export function InfoTip({
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         onClick={() => {
-          setPosition(null);
+          // Keep the position while closing so the bubble fades out in place.
+          if (!open) setPosition(null);
           setOpen((o) => !o);
         }}
         className={cn(
@@ -106,17 +109,24 @@ export function InfoTip({
       >
         <CircleAlert className="h-4 w-4" />
       </button>
-      {open &&
+      {tip.mounted &&
         createPortal(
           <>
             {/* Phones: dim the page behind the bottom card */}
-            <span className="fixed inset-0 z-[69] bg-black/30 sm:hidden" aria-hidden="true" />
+            <span
+              className={cn("fixed inset-0 z-[69] bg-black/30 sm:hidden", overlayBackdrop(tip.shown))}
+              aria-hidden="true"
+            />
             <span
               id={id}
               ref={popupRef}
               role="dialog"
               aria-label={title}
-              className="fixed z-[70] block rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] text-left shadow-xl animate-info-pop"
+              className={cn(
+                "fixed z-[70] block rounded-xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] text-left shadow-xl",
+                "transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none",
+                tip.shown ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
+              )}
               style={{
                 left: position?.left ?? 12,
                 top: position?.top ?? 12,

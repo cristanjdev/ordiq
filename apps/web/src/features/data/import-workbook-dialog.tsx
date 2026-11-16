@@ -4,6 +4,8 @@ import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Loader2, Upload, 
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { overlayBackdrop, overlayPanel, usePresence } from "@/lib/use-presence";
+import { cn } from "@/lib/utils";
 import { workbookTemplateUrl, type WorkbookTemplateScope } from "@/lib/workbook-templates";
 
 /**
@@ -91,7 +93,8 @@ export function ImportWorkbookDialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, busy, onClose]);
 
-  if (!open) return null;
+  const { mounted, shown } = usePresence(open);
+  if (!mounted) return null;
 
   const chooseFile = (next: File | null) => {
     setPreview(null);
@@ -148,9 +151,23 @@ export function ImportWorkbookDialog({
   const canImport = preview !== null && preview.errors.length === 0 && preview.rowCount > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-xs" onClick={() => busy === null && onClose()} />
-      <div className="relative flex max-h-[90dvh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] shadow-2xl">
+    <div
+      className={cn("fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6", !shown && "pointer-events-none")}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      inert={!open}
+    >
+      <div
+        className={cn("fixed inset-0 bg-black/60 backdrop-blur-xs", overlayBackdrop(shown))}
+        onClick={() => busy === null && onClose()}
+      />
+      <div
+        className={cn(
+          "relative flex max-h-[90dvh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] shadow-2xl",
+          overlayPanel(shown),
+        )}
+      >
         <div className="flex items-start justify-between gap-3 border-b border-[var(--ordiq-border)] px-5 py-5 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--ordiq-maroon)] text-white">

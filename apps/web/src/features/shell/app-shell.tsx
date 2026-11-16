@@ -27,6 +27,7 @@ import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { MseufLogo } from "@/components/ui/mseuf-logo";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
 import { useAuthSession } from "@/features/auth/auth-session-provider";
+import { overlayBackdrop, usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 import { PageLoadingSkeleton } from "./page-loading-skeleton";
 import { AiAssistantPanel } from "./ai-panel";
@@ -237,6 +238,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // The AI Assistant page is itself a full chat, so the side panel and its
   // launcher are not shown there, and the page fills the workspace edge to edge.
   const onAssistantPage = pathname.startsWith("/assistant");
+  const mobileNav = usePresence(mobileNavOpen);
   React.useEffect(() => {
     if (!aiEnabled || onAssistantPage) setAiPanelOpen(false);
   }, [aiEnabled, onAssistantPage, setAiPanelOpen]);
@@ -476,17 +478,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Mobile Slide-Over Navigation Drawer (< lg) */}
-        {mobileNavOpen && (
-          <div className="fixed inset-0 top-16 z-50 flex lg:hidden">
+        {mobileNav.mounted && (
+          <div
+            inert={!mobileNavOpen}
+            className={cn("fixed inset-0 top-16 z-50 flex lg:hidden", !mobileNav.shown && "pointer-events-none")}
+          >
             {/* Backdrop */}
             <div
-              className="fixed inset-0 top-16 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+              className={cn("fixed inset-0 top-16 bg-black/60 backdrop-blur-xs", overlayBackdrop(mobileNav.shown))}
               onClick={() => setMobileNavOpen(false)}
               aria-hidden="true"
             />
 
             {/* Slide-in menu container */}
-            <div className="relative z-50 flex h-full w-72 max-w-[85vw] min-h-0 flex-col justify-between bg-gradient-to-b from-[#4a0a0f] via-[#38070b] to-[#230306] text-white shadow-2xl animate-in slide-in-from-left duration-200">
+            <div
+              className={cn(
+                "relative z-50 flex h-full w-72 max-w-[85vw] min-h-0 flex-col justify-between bg-gradient-to-b from-[#4a0a0f] via-[#38070b] to-[#230306] text-white shadow-2xl",
+                "transform-gpu transition-[translate,opacity] duration-200 ease-out motion-reduce:transition-none",
+                mobileNav.shown ? "translate-x-0 opacity-100" : "-translate-x-full opacity-60",
+              )}
+            >
               <div className="flex items-center justify-between border-b border-white/10 px-4 py-3.5 shrink-0">
                 <span className="text-xs font-bold uppercase tracking-wider text-white/80">
                   Navigation
