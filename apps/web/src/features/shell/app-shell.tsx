@@ -34,6 +34,7 @@ import { PageLoadingSkeleton } from "./page-loading-skeleton";
 import { AiAssistantPanel } from "./ai-panel";
 import { NotificationsMenu } from "./notifications-menu";
 import { useShell } from "./providers";
+import { saveSidebarOpen } from "./sidebar-preference";
 
 export interface HealthApiPayload {
   status: "ok" | "degraded";
@@ -108,7 +109,13 @@ function useIsDockedViewport(): boolean {
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  initialSidebarOpen = true,
+}: {
+  children: React.ReactNode;
+  initialSidebarOpen?: boolean;
+}) {
   const pathname = usePathname();
   const {
     selectedTerm,
@@ -120,7 +127,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setMobileNavOpen,
   } = useShell();
   const [darkMode, setDarkMode] = React.useState(false);
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [sidebarOpen, setSidebarOpen] = React.useState(initialSidebarOpen);
+  const toggleSidebar = React.useCallback(() => {
+    const next = !sidebarOpen;
+    setSidebarOpen(next);
+    saveSidebarOpen(next);
+  }, [sidebarOpen]);
   const [navigatingHref, setNavigatingHref] = React.useState<string | null>(null);
 
   // Clear navigating state when pathname updates
@@ -516,7 +528,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <button
             type="button"
-            onClick={() => setSidebarOpen((open) => !open)}
+            onClick={toggleSidebar}
             aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             aria-expanded={sidebarOpen}
