@@ -1,6 +1,6 @@
 {
- "generatedAt": "2026-11-08T08:33:02.699Z",
- "passageCount": 203,
+ "generatedAt": "2026-11-18T11:09:16.693Z",
+ "passageCount": 206,
  "passages": [
   {
    "id": "40b66530325b",
@@ -73,11 +73,11 @@
    "text": "The Schedules page is the schedule workspace.\n\n- Generate (CP-SAT): creates three candidate schedules for the term: Candidate A (Balanced), Candidate B (Faculty First) and Candidate C (Student First). Every candidate is checked again by the independent validator against hard rules HC-01 to HC-15.\n- Views: an hourly schedule grid and day column cards, filterable by section, faculty, room and weekday.\n- Editing: a meeting can be moved to another day, time, room or faculty member. Each edit is validated right away and conflicts are shown with the rule explained in plain words. \"Undo Edit\" reverses the last change.\n- Check Schedule: runs the validator again on the open schedule.\n- Compare: shows the candidates side by side (quality score, conflicts, unscheduled meetings).\n- Waived exceptions: a waivable rule (HC-04 to HC-15) can be overridden with a written reason. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.\n- Accept Candidate: makes a candidate the official schedule. ORDIQ only accepts a candidate with zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives the previously accepted schedule for the term.\n- Start Schedule Revision: creates a new draft from the accepted schedule so it can be edited without touching the accepted version.\n- Import / Export: bring in an existing schedule or export the open one."
   },
   {
-   "id": "74729afca0f2",
+   "id": "8ef85817bd2d",
    "source": "ORDIQ In-App Guide",
    "section": "Rules & Preferences page",
    "priority": 1.35,
-   "text": "This page has five tabs:\n\n- Hard Constraints: the fixed rules HC-01 to HC-15 that every schedule must meet. The rules themselves cannot be edited; the \"Adjust In\" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).\n- Objective Weights: how much each soft preference (SC-01 to SC-16) counts when the solver builds candidates.\n- Dean Directives: extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is hard or soft.\n- Locked Fixed Blocks: time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.\n- Readiness Gate: the data readiness check (ISO/IEC 25012: completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed."
+   "text": "This page has five tabs:\n\n- Hard Constraints: the fixed rules HC-01 to HC-16 that every schedule must meet. The rules themselves cannot be edited; the \"Adjust In\" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).\n- Objective Weights: how much each soft preference (SC-01 to SC-16) counts when the solver builds candidates.\n- Dean Directives: extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is hard or soft.\n- Locked Fixed Blocks: time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.\n- Readiness Gate: the data readiness check (ISO/IEC 25012: completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed."
   },
   {
    "id": "e358c01175b5",
@@ -182,7 +182,7 @@
    "source": "ORDIQ FAQ",
    "section": "What is the difference between Balanced, Faculty First and Student First?",
    "priority": 1.3,
-   "text": "Also asked: candidate A B C, ano ang pinagkaiba ng candidates, weight profiles.\n\nThey are three candidate schedules built from the same data with different weights on the soft preferences. Candidate A (Balanced) keeps the weights moderate across faculty and student preferences. Candidate B (Faculty First) weighs faculty preferred days and times (SC-01), load balance (SC-02), preferred rooms (SC-04) and faculty fit (SC-07) more heavily. Candidate C (Student First) weighs fewer gaps (SC-03), an even spread across the week (SC-05), no evening classes for lower years (SC-09), lower-year priority (SC-10), no late laboratories (SC-11) and spreading major subjects (SC-12) more heavily. All three must meet the same hard rules."
+   "text": "Also asked: candidate A B C, ano ang pinagkaiba ng candidates, weight profiles.\n\nThey are three candidate schedules built from the same data with different weights on the soft preferences. Candidate A (Balanced) keeps the weights moderate across faculty and student preferences. Candidate B (Faculty First) weighs faculty preferred days and times (SC-01), load balance (SC-02), preferred rooms (SC-04) and faculty fit (SC-07) more heavily. Candidate C (Student First) weighs fewer gaps (SC-03), an even spread across the week (SC-05), no evening classes for lower years (SC-09), lower-year priority (SC-10), no late laboratories (SC-11) and spreading major subjects (SC-12) more heavily. All three must meet the same hard rules, and in all three the faculty's own preferred days, times and rooms (SC-01, SC-04) count only after the department's preferences, following the college's strict order of priority."
   },
   {
    "id": "7ef0be77a777",
@@ -364,7 +364,7 @@
    "source": "ORDIQ FAQ",
    "section": "What are the hard constraints?",
    "priority": 1.3,
-   "text": "Also asked: list the hard rules, mandatory rules, HC list, ano ang mga hard constraints.\n\nEvery schedule must meet fifteen hard rules. HC-01 a faculty member teaches one class at a time. HC-02 a room hosts one class at a time. HC-03 a section attends one class at a time. HC-04 room capacity fits the section. HC-05 room type matches (lecture or laboratory). HC-06 faculty only when available. HC-07 faculty within maximum load. HC-08 all required meetings and hours scheduled. HC-09 faculty qualified for the subject. HC-10 rooms only when available. HC-11 inside allowed hours and outside official breaks. HC-12 required Dean directives respected. HC-13 required duration and meeting pattern. HC-14 calendar and maintenance restrictions. HC-15 sections clear of their fixed blocks. HC-01 to HC-03 can never be waived; the rest can be waived with a written reason. They are listed on Rules & Preferences › Hard Constraints."
+   "text": "Also asked: list the hard rules, mandatory rules, HC list, ano ang mga hard constraints.\n\nEvery schedule must meet sixteen hard rules. HC-01 a faculty member teaches one class at a time. HC-02 a room hosts one class at a time. HC-03 a section attends one class at a time. HC-04 room capacity fits the section. HC-05 room type matches (lecture or laboratory). HC-06 faculty only when available. HC-07 faculty within maximum load. HC-08 all required meetings and hours scheduled. HC-09 faculty qualified for the subject. HC-10 rooms only when available. HC-11 inside allowed hours and outside official breaks. HC-12 required Dean directives respected. HC-13 required duration and meeting pattern. HC-14 calendar and maintenance restrictions. HC-15 sections clear of their fixed blocks. HC-16 no first- or second-year class ends after 6:00 PM (the college's rule on evening classes for lower years). HC-01 to HC-03 can never be waived; the rest can be waived with a written reason. They are listed on Rules & Preferences › Hard Constraints."
   },
   {
    "id": "900ec06e7c7b",
@@ -479,6 +479,13 @@
    "text": "Also asked: GenEd conflict, PATHFIT conflict.\n\nA section's locked fixed blocks (classes run by other departments) stay free. Waivable with a reason. Fixed blocks are on Rules & Preferences › Locked Fixed Blocks."
   },
   {
+   "id": "efcf13e88df8",
+   "source": "ORDIQ FAQ",
+   "section": "HC-16: No evening classes for lower years",
+   "priority": 1.3,
+   "text": "Also asked: evening class first year, gabi na klase, late class second year.\n\nFirst- and second-year sections have no class that ends after 6:00 PM. This is the college's own rule (lower years must not have evening classes). Generate never places such a class; the validator flags one in an imported or edited schedule. Waivable with a reason, for example a section whose only free laboratory time is in the evening."
+  },
+  {
    "id": "627e128c68cd",
    "source": "ORDIQ FAQ",
    "section": "Soft preferences SC-01 to SC-08",
@@ -490,7 +497,7 @@
    "source": "ORDIQ FAQ",
    "section": "Soft preferences SC-09 to SC-16",
    "priority": 1.3,
-   "text": "Also asked: student preferences, survey preferences.\n\nFrom the manuscript and student survey: SC-09 avoid evening classes for lower-year sections. SC-10 give lower-year sections priority. SC-11 keep laboratories away from late hours. SC-12 spread major and mathematics subjects across days. SC-13 keep a break between long back-to-back classes. SC-14 avoid a late class followed by an early class the next day. SC-15 place PATHFIT late in the day or before a vacant period. SC-16 limit very early starts. Each needs approval before it counts, and some pull against each other."
+   "text": "Also asked: student preferences, survey preferences.\n\nFrom the manuscript and student survey: SC-09 avoid evening classes for lower-year sections; since the college made this a rule (HC-16), SC-09 only matters where the Dean waived HC-16. SC-10 give lower-year sections priority. SC-11 keep laboratories away from late hours. SC-12 spread major and mathematics subjects across days. SC-13 keep a break between long back-to-back classes. SC-14 avoid a late class followed by an early class the next day. SC-15 place PATHFIT late in the day or before a vacant period. SC-16 limit very early starts. Each needs approval before it counts, and some pull against each other."
   },
   {
    "id": "75edd77b3785",
@@ -518,14 +525,14 @@
    "source": "Dean User Guide",
    "section": "2. Step-by-Step Scheduling Workflow › Step 2: Check Existing Schedule or Generate Candidates",
    "priority": 1.15,
-   "text": "1. Open Schedules (`/schedules`).\n2. Click Generate 3 Candidates (CP-SAT) to produce three optimized candidate schedules:\n   - Candidate A — Balanced (`BALANCED`)\n   - Candidate B — Faculty First (`FACULTY_FIRST`)\n   - Candidate C — Student First (`STUDENT_FIRST`)\n3. Every candidate is independently re-validated by the Python validator against `HC-01` through `HC-15`."
+   "text": "1. Open Schedules (`/schedules`).\n2. Click Generate 3 Candidates (CP-SAT) to produce three optimized candidate schedules:\n   - Candidate A — Balanced (`BALANCED`)\n   - Candidate B — Faculty First (`FACULTY_FIRST`)\n   - Candidate C — Student First (`STUDENT_FIRST`)\n3. Every candidate is independently re-validated by the Python validator against `HC-01` through `HC-16`."
   },
   {
    "id": "2633c880a108",
    "source": "Dean User Guide",
    "section": "2. Step-by-Step Scheduling Workflow › Step 3: Review, Edit, Waive, or Compare",
    "priority": 1.15,
-   "text": "1. Switch between the Spreadsheet Grid, Weekly Timetable Calendar (filtered by Section, Faculty, or Room), and Side-by-Side Candidate Comparison.\n2. Click Pin/Unpin on any entry you want to lock in place before regenerating.\n3. If a waivable rule (`HC-04` to `HC-15`) requires an administrative override, record a Documented Exception (`D-18`) with a written justification. Core double-booking rules (`HC-01` Faculty, `HC-02` Room, `HC-03` Section) can never be waived.\n4. Click Accept Candidate for Portal Encoding once `0` unwaived hard conflicts and `0` unscheduled meetings remain."
+   "text": "1. Switch between the Spreadsheet Grid, Weekly Timetable Calendar (filtered by Section, Faculty, or Room), and Side-by-Side Candidate Comparison.\n2. Click Pin/Unpin on any entry you want to lock in place before regenerating.\n3. If a waivable rule (`HC-04` to `HC-16`) requires an administrative override, record a Documented Exception (`D-18`) with a written justification. Core double-booking rules (`HC-01` Faculty, `HC-02` Room, `HC-03` Section) can never be waived.\n4. Click Accept Candidate for Portal Encoding once `0` unwaived hard conflicts and `0` unscheduled meetings remain."
   },
   {
    "id": "6f4b595df58a",
@@ -549,9 +556,9 @@
    "text": "| Layer | Technology | Purpose |\n|---|---|---|\n| Web Frontend & API | Next.js 15 (App Router), React 19, TypeScript 5.8 (strict), Tailwind CSS v4, shadcn/ui, TanStack Query | Workspace grids, timetable calendar, dashboard, reports, auth & API routes |\n| Database & ORM | PostgreSQL 16 + Prisma ORM | Relational persistence, optimistic locking (`Schedule.version`), append-only `AuditLog` |\n| Optimization & Validation Engine | Python 3.12, FastAPI, Pydantic v2, Google OR-Tools CP-SAT (`>=9.11`) | Stateless constraint validation (`POST /v1/validate`), multi-profile solving (`POST /v1/solve`), alternative slot search (`POST /v1/alternatives`) |\n| Machine Learning | Python `scikit-learn` (`LogisticRegression`) + local token/character 3-gram embeddings (`D-11`, `D-12`) | Faculty–subject fit ranking (`POST /v1/ml/recommend`) and Laplace-smoothed preference learning |\n| Security & Exports | Argon2id, `otpauth` (TOTP 2FA), AES-256-GCM, ExcelJS, PDF 1.4 generator | Dean-only security, `.xlsx` import/export pipeline, printable PDF reports |"
   },
   {
-   "id": "4275472ff366",
+   "id": "5c484e0c378e",
    "source": "Architecture, Constraints & Known Limitations",
-   "section": "3. Implemented Constraint Catalogue › Hard Constraints (`HC-01` to `HC-15`)",
+   "section": "3. Implemented Constraint Catalogue › Hard Constraints (`HC-01` to `HC-16`)",
    "priority": 1.1,
    "text": "- Never Waivable (`D-18`):\n  - `HC-01`: No faculty double-booking\n  - `HC-02`: No room double-booking\n  - `HC-03`: No student section double-booking\n- Waivable Only With Documented Reason (`D-18`):\n  - `HC-04`: Room capacity >= section student count\n  - `HC-05`: Room type matches lecture/lab requirement\n  - `HC-06`: Faculty is qualified for the assigned subject\n  - `HC-07`: Faculty and room are available during the scheduled slot\n  - `HC-08`: Offering weekly meeting count and duration match subject contact hours\n  - `HC-09`: Faculty total teaching load within regular/overload limit\n  - `HC-10`: Meeting falls within official daily teaching window and respects lunch/break rules\n  - `HC-11`: Section respects external `FixedBlock` commitments (PATHFIT, GenEd, `D-23`)\n  - `HC-12`: Hard Dean directives (`Directive.hardness == HARD`) are satisfied\n  - `HC-13`: Paired lecture/lab or MWF/TTh pattern consistency\n  - `HC-14`: Room maintenance/calendar restrictions respected\n  - `HC-15`: Combined-class sections synchronized to identical faculty, room, day, and time"
   },
@@ -714,7 +721,14 @@
    "source": "Implementation Plan",
    "section": "3. Decision log",
    "priority": 1,
-   "text": "| D-24 | Evaluation evidence is built into the product | Effort, corrections and test records are needed for the paper and are hard to rebuild later | Decided |\n| D-25 | Persistence is one state repository with a unit of work per request (`src/server/repo/state.repository.ts`, `state-sync.ts`), not a `*.repo.ts` per module. Services keep working on the in-memory domain state. `withDeanRoute` loads it from PostgreSQL, saves only changed records in one transaction, and uses `system_state.version` for optimistic concurrency (409 `CONCURRENT_MODIFICATION`). PostgreSQL (Supabase) is the only store; memory is used only by the automated tests |\\|memory` | Keeps every service synchronous and testable in memory, and makes one write path the only place that touches the database. One Dean and college-sized data make whole-state reloads cheap. See ADR 0001 | Implemented |\n| D-26 | The CP-SAT model is decomposed: per meeting, separate time, room and faculty choices with optional intervals and NoOverlap per faculty, room and section. A complete greedy hint is always supplied and returned if the solver finds nothing in time | The single-option model grew too large and placed under half of the medium fixture. The decomposed model places all meetings of 576-meeting terms in the time limit with no hard violations | Implemented |\n| D-27 | The privacy gateway for live providers is AI SDK middleware on the model (`createPrivacyMiddleware`). Every request, including each step of the tool loop and every tool result, is pseudonymized and captured there. Refusals stay deterministic and run before any provider call. Without a usable provider, under tests, or when a call fails, the built-in deterministic assistant answers | Code above the model cannot forget to scrub a field. The assistant keeps working offline, and tests never spend tokens | Implemented |"
+   "text": "| D-24 | Evaluation evidence is built into the product | Effort, corrections and test records are needed for the paper and are hard to rebuild later | Decided |\n| D-25 | Persistence is one state repository with a unit of work per request (`src/server/repo/state.repository.ts`, `state-sync.ts`), not a `*.repo.ts` per module. Services keep working on the in-memory domain state. `withDeanRoute` loads it from PostgreSQL, saves only changed records in one transaction, and uses `system_state.version` for optimistic concurrency (409 `CONCURRENT_MODIFICATION`). PostgreSQL (Supabase) is the only store; memory is used only by the automated tests |\\|memory` | Keeps every service synchronous and testable in memory, and makes one write path the only place that touches the database. One Dean and college-sized data make whole-state reloads cheap. See ADR 0001 | Implemented |\n| D-26 | The CP-SAT model is decomposed: per meeting, separate time, room and faculty choices with optional intervals and NoOverlap per faculty, room and section. A complete greedy hint is always supplied and returned if the solver finds nothing in time | The single-option model grew too large and placed under half of the medium fixture. The decomposed model places all meetings of 576-meeting terms in the time limit with no hard violations | Implemented |"
+  },
+  {
+   "id": "9a3250f79029",
+   "source": "Implementation Plan",
+   "section": "3. Decision log",
+   "priority": 1,
+   "text": "| D-27 | The privacy gateway for live providers is AI SDK middleware on the model (`createPrivacyMiddleware`). Every request, including each step of the tool loop and every tool result, is pseudonymized and captured there. Refusals stay deterministic and run before any provider call. Without a usable provider, under tests, or when a call fails, the built-in deterministic assistant answers | Code above the model cannot forget to scrub a field. The assistant keeps working offline, and tests never spend tokens | Implemented |\n| D-28 | The college's rules and priority order (November 2026 answers): lower-year evening classes become hard rule `HC-16`, and faculty preferences (`SC-01`, `SC-04`) are optimized lexicographically after the department's objective in a second CP-SAT pass with the first pass's value as an upper bound | Answers 3, 10 and 11 make the evening rule mandatory and ask for a strict order, which a single weighted sum cannot guarantee | Decided |\n\nRecord larger decisions as short ADRs in `docs/adr/`."
   },
   {
    "id": "c8c66bb69f79",
@@ -759,18 +773,25 @@
    "text": "\"Accepted\" means the Dean approved this candidate for portal encoding. It is not an official schedule, because university approval happens outside ORDIQ. Accepted schedules are never edited in place. A revision creates a new candidate with `parent` set, which keeps the history complete."
   },
   {
-   "id": "b764f34ab29e",
+   "id": "7e8cee9f4279",
    "source": "Implementation Plan",
    "section": "6. Constraint catalogue",
    "priority": 1,
-   "text": "Codes are stable. Tests, reports and explanations all use them. The college's approved rules are still pending, and the manuscript requires college confirmation before encoding, so treat this as the starting list."
+   "text": "Codes are stable. Tests, reports and explanations all use them. The college answered the rules question in November 2026 (see Client answers): faculty by specialization, no lapses in time and subjects, no room or laboratory conflicts, no evening classes for lower years, rooms within capacity, and shorter vacant times. Those rules are covered by the codes below."
   },
   {
    "id": "6704c4094041",
    "source": "Implementation Plan",
    "section": "6. Constraint catalogue › Hard constraints",
    "priority": 1,
-   "text": "| Code | Rule |\n|---|---|\n| `HC-01` | A faculty member teaches one class at a time |\n| `HC-02` | A room hosts one class at a time |\n| `HC-03` | A section attends one class at a time |\n| `HC-04` | Room capacity fits the section |\n| `HC-05` | Room type matches the requirement (lecture or laboratory) |\n| `HC-06` | Faculty are scheduled only when available |\n| `HC-07` | Faculty stay within maximum teaching load for their employment type |\n| `HC-08` | All required meetings and contact hours are scheduled |\n| `HC-09` | Faculty specialization matches the subject |\n| `HC-10` | Rooms are used only when available |\n| `HC-11` | Classes stay inside allowed periods and avoid official breaks |\n| `HC-12` | Dean directives marked as required are respected |\n| `HC-13` | Each class follows its required duration and meeting pattern |\n| `HC-14` | Approved calendar and maintenance restrictions are respected |\n| `HC-15` | Sections stay clear of their fixed blocks |\n\nIf the mandatory rules cannot all be met, ORDIQ reports the cause and never silently relaxes a rule. Never waivable: `HC-01`, `HC-02`, `HC-03`. Combined classes are modeled through a combined-class group, not as a conflict. All other rules are provisionally waivable with a documented reason (D-18)."
+   "text": "| Code | Rule |\n|---|---|\n| `HC-01` | A faculty member teaches one class at a time |\n| `HC-02` | A room hosts one class at a time |\n| `HC-03` | A section attends one class at a time |\n| `HC-04` | Room capacity fits the section |\n| `HC-05` | Room type matches the requirement (lecture or laboratory) |\n| `HC-06` | Faculty are scheduled only when available |\n| `HC-07` | Faculty stay within maximum teaching load for their employment type |\n| `HC-08` | All required meetings and contact hours are scheduled |\n| `HC-09` | Faculty specialization matches the subject |\n| `HC-10` | Rooms are used only when available |\n| `HC-11` | Classes stay inside allowed periods and avoid official breaks |\n| `HC-12` | Dean directives marked as required are respected |\n| `HC-13` | Each class follows its required duration and meeting pattern |\n| `HC-14` | Approved calendar and maintenance restrictions are respected |\n| `HC-15` | Sections stay clear of their fixed blocks |\n| `HC-16` | First- and second-year sections have no class ending after 6:00 PM (college rule 3d) |"
+  },
+  {
+   "id": "ae50731190b9",
+   "source": "Implementation Plan",
+   "section": "6. Constraint catalogue › Hard constraints",
+   "priority": 1,
+   "text": "If the mandatory rules cannot all be met, ORDIQ reports the cause and never silently relaxes a rule. Never waivable: `HC-01`, `HC-02`, `HC-03`. Combined classes are modeled through a combined-class group, not as a conflict. All other rules are provisionally waivable with a documented reason (D-18). The college named room capacity (`HC-04`) as waivable, and assigning outside a specialization (`HC-09`) only to complete a faculty member's units. `HC-16` reads \"lower years\" as first and second year, as the manuscript does. The college's own 2026-2027 schedule has 17 second-year meetings past 6:00 PM and no first-year ones, so whether second year is included still needs confirmation (Q-23)."
   },
   {
    "id": "a9486fa78695",
@@ -784,7 +805,7 @@
    "source": "Implementation Plan",
    "section": "6. Constraint catalogue › Candidate preferences from the manuscript",
    "priority": 1,
-   "text": "These come from the proposal text and student survey. Each needs approval, and some of them pull against each other, such as avoiding both early and evening classes.\n\n| Code | Goal | Source |\n|---|---|---|\n| `SC-09` | Avoid evening classes for lower-year sections | Manuscript 5.1 |\n| `SC-10` | Give lower-year sections priority | Conceptual framework |\n| `SC-11` | Keep laboratories away from late hours | Student comments |\n| `SC-12` | Spread major and mathematics subjects, not all on one day | Student comments |\n| `SC-13` | Keep a break between long back-to-back classes | Student comments |\n| `SC-14` | Avoid a late class followed by an early class the next day | Student comments |\n| `SC-15` | Place PATHFIT late in the day or before a vacant period | Student comments |\n| `SC-16` | Limit very early starts where feasible | Student comments |"
+   "text": "These come from the proposal text and student survey. Each needs approval, and some of them pull against each other, such as avoiding both early and evening classes.\n\n| Code | Goal | Source |\n|---|---|---|\n| `SC-09` | Avoid evening classes for lower-year sections. Now a rule (`HC-16`), so this counts only where the Dean waived `HC-16` | Manuscript 5.1 |\n| `SC-10` | Give lower-year sections priority | Conceptual framework |\n| `SC-11` | Keep laboratories away from late hours | Student comments |\n| `SC-12` | Spread major and mathematics subjects, not all on one day | Student comments |\n| `SC-13` | Keep a break between long back-to-back classes | Student comments |\n| `SC-14` | Avoid a late class followed by an early class the next day | Student comments |\n| `SC-15` | Place PATHFIT late in the day or before a vacant period | Student comments |\n| `SC-16` | Limit very early starts where feasible | Student comments |"
   },
   {
    "id": "13169bbbe9d9",
@@ -798,7 +819,7 @@
    "source": "Implementation Plan",
    "section": "6. Constraint catalogue › What \"optimized\" means",
    "priority": 1,
-   "text": "The manuscript defines optimization as improving schedule quality and resource use against the documented baseline. It \"does not imply a mathematically global optimum,\" and feasibility alone doesn't prove quality.\n\nThe objective is the weighted sum of soft penalties, plus a very large penalty per unscheduled meeting. The manuscript leaves open whether priorities are weights or a strict order, so this needs a decision (Q-12).\n\n- Proven optimal: the solver finished and proved no better schedule exists for these weights.\n- Best found: the time limit ended the search, and the solver reports the remaining gap.\n\nThe UI shows which one applies, plus which preferences went unmet. Don't describe every result as \"the best possible.\""
+   "text": "The manuscript defines optimization as improving schedule quality and resource use against the documented baseline. It \"does not imply a mathematically global optimum,\" and feasibility alone doesn't prove quality.\n\nThe college asked for a strict order of priority (answer 11): faculty specialization, then room and laboratory capacity, then no lapses in time and subjects, then soft preferences, with the department's preferences ahead of the faculty's (answer 10). ORDIQ follows it this way (D-28):\n\n1. Specialization (`HC-09`) and capacity (`HC-04`) are hard rules.\n2. Every required meeting is scheduled: a very large penalty per unscheduled meeting outweighs any preference.\n3. The department's preferences (`SC-02`, `SC-03`, `SC-05` to `SC-16`) are a weighted sum.\n4. Faculty preferences (`SC-01`, `SC-04`) are optimized in a second solver pass that may not make step 3's result worse.\n\n- Proven optimal: the solver finished both passes and proved no better schedule exists for these weights.\n- Best found: the time limit ended the search, and the solver reports the remaining gap.\n\nThe UI shows which one applies, plus which preferences went unmet. Don't describe every result as \"the best possible.\""
   },
   {
    "id": "700ba8960931",

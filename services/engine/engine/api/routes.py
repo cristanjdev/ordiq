@@ -63,7 +63,7 @@ async def get_healthz(
     summary="Independently validate any schedule and compute quality score",
 )
 async def post_validate(req: ValidationRequest) -> ValidationResponse:
-    """Validate all 15 hard constraints and score 16 soft constraints."""
+    """Validate all 16 hard constraints and score 16 soft constraints."""
     return validate_schedule(req.problem, req.entries)
 
 

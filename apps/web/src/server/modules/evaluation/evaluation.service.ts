@@ -32,9 +32,9 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     id: "TC-FS-01",
     qualityCharacteristic: "functionalSuitability",
     stage: "STAGE_1_BASELINE",
-    title: "Independent Hard Constraint Validator (HC-01 to HC-15)",
+    title: "Independent Hard Constraint Validator (HC-01 to HC-16)",
     verificationTarget:
-      "Plain-Python validator catches injected violations across all 15 hard constraint families.",
+      "Plain-Python validator catches injected violations across all 16 hard constraint families.",
     status: "NOT_RECORDED",
   },
   {

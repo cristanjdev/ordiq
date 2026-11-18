@@ -62,7 +62,7 @@ Also asked: paano gumawa ng schedule, generate schedule steps, saan magsisimula,
 
 Also asked: candidate A B C, ano ang pinagkaiba ng candidates, weight profiles.
 
-They are three candidate schedules built from the same data with different weights on the soft preferences. Candidate A (Balanced) keeps the weights moderate across faculty and student preferences. Candidate B (Faculty First) weighs faculty preferred days and times (SC-01), load balance (SC-02), preferred rooms (SC-04) and faculty fit (SC-07) more heavily. Candidate C (Student First) weighs fewer gaps (SC-03), an even spread across the week (SC-05), no evening classes for lower years (SC-09), lower-year priority (SC-10), no late laboratories (SC-11) and spreading major subjects (SC-12) more heavily. All three must meet the same hard rules.
+They are three candidate schedules built from the same data with different weights on the soft preferences. Candidate A (Balanced) keeps the weights moderate across faculty and student preferences. Candidate B (Faculty First) weighs faculty preferred days and times (SC-01), load balance (SC-02), preferred rooms (SC-04) and faculty fit (SC-07) more heavily. Candidate C (Student First) weighs fewer gaps (SC-03), an even spread across the week (SC-05), no evening classes for lower years (SC-09), lower-year priority (SC-10), no late laboratories (SC-11) and spreading major subjects (SC-12) more heavily. All three must meet the same hard rules, and in all three the faculty's own preferred days, times and rooms (SC-01, SC-04) count only after the department's preferences, following the college's strict order of priority.
 
 ## Why are some classes unscheduled?
 
@@ -218,7 +218,7 @@ ORDIQ ("Order Meets Intelligence") is the class scheduling and resource allocati
 
 Also asked: list the hard rules, mandatory rules, HC list, ano ang mga hard constraints.
 
-Every schedule must meet fifteen hard rules. HC-01 a faculty member teaches one class at a time. HC-02 a room hosts one class at a time. HC-03 a section attends one class at a time. HC-04 room capacity fits the section. HC-05 room type matches (lecture or laboratory). HC-06 faculty only when available. HC-07 faculty within maximum load. HC-08 all required meetings and hours scheduled. HC-09 faculty qualified for the subject. HC-10 rooms only when available. HC-11 inside allowed hours and outside official breaks. HC-12 required Dean directives respected. HC-13 required duration and meeting pattern. HC-14 calendar and maintenance restrictions. HC-15 sections clear of their fixed blocks. HC-01 to HC-03 can never be waived; the rest can be waived with a written reason. They are listed on Rules & Preferences › Hard Constraints.
+Every schedule must meet sixteen hard rules. HC-01 a faculty member teaches one class at a time. HC-02 a room hosts one class at a time. HC-03 a section attends one class at a time. HC-04 room capacity fits the section. HC-05 room type matches (lecture or laboratory). HC-06 faculty only when available. HC-07 faculty within maximum load. HC-08 all required meetings and hours scheduled. HC-09 faculty qualified for the subject. HC-10 rooms only when available. HC-11 inside allowed hours and outside official breaks. HC-12 required Dean directives respected. HC-13 required duration and meeting pattern. HC-14 calendar and maintenance restrictions. HC-15 sections clear of their fixed blocks. HC-16 no first- or second-year class ends after 6:00 PM (the college's rule on evening classes for lower years). HC-01 to HC-03 can never be waived; the rest can be waived with a written reason. They are listed on Rules & Preferences › Hard Constraints.
 
 ## What languages does the assistant understand?
 
@@ -316,6 +316,12 @@ Also asked: GenEd conflict, PATHFIT conflict.
 
 A section's locked fixed blocks (classes run by other departments) stay free. Waivable with a reason. Fixed blocks are on Rules & Preferences › Locked Fixed Blocks.
 
+## HC-16: No evening classes for lower years
+
+Also asked: evening class first year, gabi na klase, late class second year.
+
+First- and second-year sections have no class that ends after 6:00 PM. This is the college's own rule (lower years must not have evening classes). Generate never places such a class; the validator flags one in an imported or edited schedule. Waivable with a reason, for example a section whose only free laboratory time is in the evening.
+
 ## Soft preferences SC-01 to SC-08
 
 Also asked: soft constraints, preferences, objective weights.
@@ -326,4 +332,4 @@ SC-01 honor faculty preferred days and times. SC-02 balance teaching loads. SC-0
 
 Also asked: student preferences, survey preferences.
 
-From the manuscript and student survey: SC-09 avoid evening classes for lower-year sections. SC-10 give lower-year sections priority. SC-11 keep laboratories away from late hours. SC-12 spread major and mathematics subjects across days. SC-13 keep a break between long back-to-back classes. SC-14 avoid a late class followed by an early class the next day. SC-15 place PATHFIT late in the day or before a vacant period. SC-16 limit very early starts. Each needs approval before it counts, and some pull against each other.
+From the manuscript and student survey: SC-09 avoid evening classes for lower-year sections; since the college made this a rule (HC-16), SC-09 only matters where the Dean waived HC-16. SC-10 give lower-year sections priority. SC-11 keep laboratories away from late hours. SC-12 spread major and mathematics subjects across days. SC-13 keep a break between long back-to-back classes. SC-14 avoid a late class followed by an early class the next day. SC-15 place PATHFIT late in the day or before a vacant period. SC-16 limit very early starts. Each needs approval before it counts, and some pull against each other.

@@ -73,7 +73,7 @@ The Schedules page is the schedule workspace.
 
 This page has five tabs:
 
-- **Hard Constraints:** the fixed rules HC-01 to HC-15 that every schedule must meet. The rules themselves cannot be edited; the "Adjust In" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).
+- **Hard Constraints:** the fixed rules HC-01 to HC-16 that every schedule must meet. The rules themselves cannot be edited; the "Adjust In" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).
 - **Objective Weights:** how much each soft preference (SC-01 to SC-16) counts when the solver builds candidates.
 - **Dean Directives:** extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is hard or soft.
 - **Locked Fixed Blocks:** time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.

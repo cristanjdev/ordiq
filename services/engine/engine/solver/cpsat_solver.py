@@ -23,6 +23,7 @@ from engine.domain.models import (
     DirectiveType,
     FacultyModel,
     FacultyPreferenceModel,
+    HardConstraintCode,
     OfferingModel,
     Problem,
     RoomModel,
@@ -34,6 +35,9 @@ from engine.domain.models import (
     UnscheduledMeetingResult,
     UnscheduledReasonCode,
     Weekday,
+    is_lower_year_evening,
+    preferred_days_by_faculty,
+    time_preference_met,
 )
 from engine.domain.spread import SPREAD_PENALTY_FACTOR, daytime_peak_target
 from engine.validator.validator import validate_schedule
@@ -42,6 +46,17 @@ UNSCHEDULED_PENALTY = 100_000
 # Above this many meetings CP-SAT presolve is skipped (see solve_problem).
 LARGE_MODEL_MEETINGS = 200
 DAY_MINUTES = 1440
+# Share of the time budget for the department pass when faculty preferences
+# get a second pass (strict order of priority, college answer 11).
+FIRST_PASS_SHARE = 0.8
+
+
+def _all_values(model: cp_model.CpModel, solver: cp_model.CpSolver) -> dict[int, int]:
+    """Every variable's value in the solver's current solution, by proto index."""
+    return {
+        idx: int(solver.value(model.get_int_var_from_proto_index(idx)))
+        for idx in range(len(model.proto.variables))
+    }
 
 
 def _overlaps(start_a: int, end_a: int, start_b: int, end_b: int) -> bool:
@@ -105,6 +120,21 @@ class _AvailabilityIndex:
         self._hard_directives = [
             d for d in problem.directives if d.hardness == ConstraintHardness.HARD and d.approved
         ]
+        # HC-16: lower-year sections stay out of the evening unless the Dean
+        # recorded an exception for the section, the offering, or all of them.
+        self._year_by_section = {s.code: s.year_level for s in problem.sections}
+        hc16_waivers = [
+            w
+            for w in problem.waivers
+            if w.code == HardConstraintCode.HC_16 and w.faculty_code is None and w.room_code is None
+        ]
+        self._evening_all = any(
+            w.section_code is None and w.offering_code is None for w in hc16_waivers
+        )
+        self._evening_sections = {
+            w.section_code for w in hc16_waivers if w.section_code and w.offering_code is None
+        }
+        self._evening_offerings = {w.offering_code for w in hc16_waivers if w.offering_code}
         self._fac_cache: dict[tuple[str, Weekday, int, int], bool] = {}
         self._room_cache: dict[tuple[str, str, Weekday, int, int], bool] = {}
         self._sec_cache: dict[tuple[str, Weekday, int, int], bool] = {}
@@ -203,6 +233,17 @@ class _AvailabilityIndex:
             and d.room_code is not None
             and (d.offering_code is None or d.offering_code == off_code)
         ]
+
+    def evening_ok(self, off: OfferingModel, end_min: int) -> bool:
+        """HC-16: whether a meeting of this offering may end at `end_min`."""
+        year = self._year_by_section.get(off.section_code)
+        if year is None or not is_lower_year_evening(year, end_min):
+            return True
+        return (
+            self._evening_all
+            or off.section_code in self._evening_sections
+            or off.code in self._evening_offerings
+        )
 
     def section(self, sec_code: str, day: Weekday, start_min: int, end_min: int) -> bool:
         key = (sec_code, day, start_min, end_min)
@@ -309,7 +350,8 @@ def _time_penalty(
         prior_entry.weekday != day or prior_entry.start_min != start_min
     ):
         pen += weights.get(SoftConstraintCode.SC_06, 12.0) * 2.0
-    # SC-09: Avoid evening for lower-year sections
+    # SC-09: Avoid evening for lower-year sections. HC-16 already removes evening
+    # slots for them, so this only applies where the Dean waived HC-16.
     if sec and sec.year_level <= 2 and end_min > 1080:
         pen += weights.get(SoftConstraintCode.SC_09, 10.0) * 1.5
     # SC-10: Lower-year priority for mid-day slots
@@ -436,6 +478,7 @@ def solve_problem(
     for pref in problem.faculty_preferences:
         if pref.approved:
             prefs_by_fac[pref.faculty_code].append(pref)
+    preferred_days = preferred_days_by_faculty(problem.faculty_preferences)
 
     prior_lookup: dict[tuple[str, int], ScheduledMeetingEntry] = {}
     by_off_prior: dict[str, list[ScheduledMeetingEntry]] = defaultdict(list)
@@ -498,7 +541,13 @@ def solve_problem(
         ]
 
     horizon = len(WEEKDAY_ORDER) * DAY_MINUTES
+    # Strict order of priority (college answer 11): specialization and capacity are
+    # hard rules, then every meeting scheduled (UNSCHEDULED_PENALTY), then the
+    # department's preferences, and faculty preferences (SC-01/SC-04) only after
+    # those. Faculty-preference terms are kept apart and optimized in a second pass
+    # that may not make the first pass's result any worse.
     objective_terms: list[cp_model.LinearExpr | int] = []
+    faculty_pref_terms: list[tuple[int, cp_model.IntVar]] = []
     meetings: dict[tuple[str, int], _MeetingVars] = {}
     # Meetings with their own time choice (combined-class followers share their
     # leader's), for the SC-05 time-of-day spread.
@@ -599,6 +648,18 @@ def solve_problem(
 
         # SC-01 / SC-04: faculty preferences interact with time or room choice
         pref_terms: list[tuple[cp_model.IntVar, cp_model.IntVar, list[cp_model.IntVar]]] = []
+
+        def add_pref(
+            f: str, x: cp_model.IntVar, kind: str, pen: int, hits: list[cp_model.IntVar]
+        ) -> None:
+            """Penalize faculty `f` teaching this meeting on any of the `hits` choices."""
+            if not hits or not pen:
+                return
+            z = model.new_bool_var(f"pref_{off.code}_{m_idx}_{f}_{kind}")
+            model.add(z >= x + sum(hits) - 1)
+            faculty_pref_terms.append((pen, z))
+            pref_terms.append((z, x, hits))
+
         for f, x in x_vars.items():
             for pref in prefs_by_fac.get(f, []):
                 if pref.type == "AVOID_DAY":
@@ -607,26 +668,23 @@ def solve_problem(
                         for (d, _s, _e), t in zip(times, t_vars, strict=True)
                         if d.value == pref.value.upper()
                     ]
-                    pen = round(w_sc01 * max(pref.weight, 1.0) * 10)
+                    add_pref(f, x, pref.type, round(w_sc01 * max(pref.weight, 1.0) * 10), hits)
                 elif pref.type == "PREFERRED_TIME":
-                    val = pref.value.upper()
                     hits = [
                         t
-                        for (_d, s, _e), t in zip(times, t_vars, strict=True)
-                        if ("MORNING" in val and s >= 720) or ("AFTERNOON" in val and s < 720)
+                        for (_d, s, e), t in zip(times, t_vars, strict=True)
+                        if time_preference_met(pref.value, s, e) is False
                     ]
-                    pen = round(w_sc01 * 0.5 * 10)
+                    add_pref(f, x, pref.type, round(w_sc01 * 0.5 * 10), hits)
                 elif pref.type == "PREFERRED_ROOM":
                     hits = [y for r, y in y_vars.items() if r != pref.value]
-                    pen = round(w_sc04 * 0.5 * 10)
-                else:
-                    continue
-                if not hits or not pen:
-                    continue
-                z = model.new_bool_var(f"pref_{off.code}_{m_idx}_{f}_{pref.type}")
-                model.add(z >= x + sum(hits) - 1)
-                objective_terms.append(pen * z)
-                pref_terms.append((z, x, hits))
+                    add_pref(f, x, pref.type, round(w_sc04 * 0.5 * 10), hits)
+            days = preferred_days.get(f)
+            if days:
+                hits = [
+                    t for (d, _s, _e), t in zip(times, t_vars, strict=True) if d.value not in days
+                ]
+                add_pref(f, x, "PREFERRED_DAY", round(w_sc01 * 0.5 * 10), hits)
 
         day_bools: dict[Weekday, list[cp_model.IntVar]] = defaultdict(list)
         for (d, _s, _e), t in zip(times, t_vars, strict=True):
@@ -661,7 +719,9 @@ def solve_problem(
         bad_t = [
             t
             for (d, s, e), t in zip(lead.times, lead.t_vars, strict=True)
-            if d not in follower_days or not avail.section(off.section_code, d, s, e)
+            if d not in follower_days
+            or not avail.section(off.section_code, d, s, e)
+            or not avail.evening_ok(off, e)
         ]
         if bad_t:
             model.add(sum(bad_t) == 0).only_enforce_if(sched)
@@ -708,6 +768,7 @@ def solve_problem(
             for d in allowed_days
             for s in _candidate_start_mins(problem, off.minutes_per_meeting)
             if avail.section(off.section_code, d, s, s + off.minutes_per_meeting)
+            and avail.evening_ok(off, s + off.minutes_per_meeting)
         ]
 
         for m_idx in range(shared):
@@ -778,9 +839,7 @@ def solve_problem(
         for (day, slot_start), lits in covering.items():
             if len(lits) <= peak_target:
                 continue
-            excess = model.new_int_var(
-                0, len(lits) - peak_target, f"peak_{day.value}_{slot_start}"
-            )
+            excess = model.new_int_var(0, len(lits) - peak_target, f"peak_{day.value}_{slot_start}")
             model.add(excess >= sum(lits) - peak_target)
             objective_terms.append(slot_unit * excess)
             peak_vars.append((excess, lits))
@@ -798,7 +857,9 @@ def solve_problem(
         hints[excess.index] = (excess, value)
         model.add_hint(excess, value)
 
-    model.minimize(sum(objective_terms))
+    department_objective = sum(objective_terms)
+    model.minimize(department_objective)
+    two_pass = bool(faculty_pref_terms)
 
     cfg = get_settings()
     solver = cp_model.CpSolver()
@@ -807,7 +868,8 @@ def solve_problem(
         time_limit_seconds if time_limit_seconds is not None else cfg.solver_time_limit_seconds
     )
     # The time limit covers model building too, so the caller's budget is honored.
-    solver.parameters.max_time_in_seconds = max(1.0, float(limit_sec) - elapsed_build)
+    budget = max(1.0, float(limit_sec) - elapsed_build)
+    solver.parameters.max_time_in_seconds = budget * (FIRST_PASS_SHARE if two_pass else 1.0)
     solver.parameters.num_workers = cfg.solver_workers
     # Presolve probing scales badly with the many optional intervals of a full term
     # (it consumed the whole budget at ~300 meetings); search works better without it.
@@ -821,7 +883,6 @@ def solve_problem(
         solver.parameters.cp_model_presolve = False
 
     raw_status = solver.solve(model)
-    elapsed_ms = int((time.perf_counter() - t0) * 1000)
 
     solved = raw_status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
     hint_values = {idx: value for idx, (_var, value) in hints.items()}
@@ -829,8 +890,28 @@ def solve_problem(
     # back to the greedy first-fit schedule, which already satisfies every hard rule.
     use_greedy = not solved and any(hint_values.get(mv.sched.index) for mv in meetings.values())
 
+    obj_val = float(solver.objective_value) if solved else 0.0
+    bound_val = float(solver.best_objective_bound) if solved else 0.0
+    proven = raw_status == cp_model.OPTIMAL
+    values = _all_values(model, solver) if solved else hint_values
+    if solved and two_pass:
+        # Second pass: faculty preferences, holding the department's result.
+        model.add(department_objective <= round(obj_val))
+        model.clear_hints()  # type: ignore[no-untyped-call]
+        for idx, value in values.items():
+            model.add_hint(model.get_int_var_from_proto_index(idx), value)
+        model.minimize(sum(pen * z for pen, z in faculty_pref_terms))
+        remaining = float(limit_sec) - (time.perf_counter() - t0)
+        solver.parameters.max_time_in_seconds = max(1.0, remaining)
+        second = solver.solve(model)
+        if second in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            values = _all_values(model, solver)
+        proven = proven and second == cp_model.OPTIMAL
+    pref_val = float(sum(pen * values.get(z.index, 0) for pen, z in faculty_pref_terms))
+    elapsed_ms = int((time.perf_counter() - t0) * 1000)
+
     def on(var: cp_model.IntVar) -> bool:
-        return solver.boolean_value(var) if solved else bool(hint_values.get(var.index, 0))
+        return bool(values.get(var.index, 0))
 
     if not solved and not use_greedy:
         return Solution(
@@ -897,8 +978,7 @@ def solve_problem(
                 )
             )
 
-    obj_val = float(solver.objective_value) if solved else 0.0
-    bound_val = float(solver.best_objective_bound) if solved else 0.0
+    # The gap describes the department pass, which the faculty pass cannot worsen.
     if not solved:
         gap_pct = 100.0  # greedy fallback: optimality unknown
     elif raw_status == cp_model.OPTIMAL or abs(obj_val) < 1e-6:
@@ -908,12 +988,12 @@ def solve_problem(
     validation = validate_schedule(problem, entries)
 
     return Solution(
-        status="PROVEN_OPTIMAL" if raw_status == cp_model.OPTIMAL else "BEST_FOUND",
+        status="PROVEN_OPTIMAL" if proven else "BEST_FOUND",
         profile_name=profile_name,
         entries=entries,
         unscheduled=unscheduled,
-        objective_value=round(obj_val / 10.0, 2),
-        best_bound=round(bound_val / 10.0, 2),
+        objective_value=round((obj_val + pref_val) / 10.0, 2),
+        best_bound=round((bound_val + pref_val) / 10.0, 2),
         optimality_gap_pct=gap_pct,
         solve_time_ms=elapsed_ms,
         validation=validation,

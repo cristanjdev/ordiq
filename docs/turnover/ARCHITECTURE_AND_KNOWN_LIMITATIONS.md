@@ -12,7 +12,7 @@ flowchart LR
     Dean["Dean Browser (Next.js 15 UI)"] -->|HTTPS + Argon2id/TOTP Cookie| Web["apps/web (Next.js 15 Modular Monolith)"]
     Web -->|Prisma ORM| DB[("PostgreSQL 16 (Encrypted at Rest)")]
     Web -->|X-Engine-Token (Private Network)| Engine["services/engine (FastAPI + Python 3.12)"]
-    Engine --> Validator["Independent Validator (HC-01..HC-15, SC-01..SC-16)"]
+    Engine --> Validator["Independent Validator (HC-01..HC-16, SC-01..SC-16)"]
     Engine --> Solver["OR-Tools CP-SAT Solver"]
     Engine --> ML["scikit-learn Fit & Preference Learner"]
     Web --> Gateway["Privacy Gateway (Faculty.alias Scrubbing)"]
@@ -35,7 +35,7 @@ flowchart LR
 
 ## 3. Implemented Constraint Catalogue
 
-### Hard Constraints (`HC-01` to `HC-15`)
+### Hard Constraints (`HC-01` to `HC-16`)
 - **Never Waivable (`D-18`):**
   - `HC-01`: No faculty double-booking
   - `HC-02`: No room double-booking

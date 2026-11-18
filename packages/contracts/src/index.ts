@@ -43,6 +43,7 @@ export const HARD_CONSTRAINT_CODES: readonly HardConstraintCode[] = [
   "HC-13",
   "HC-14",
   "HC-15",
+  "HC-16",
 ] as const;
 
 export const NON_WAIVABLE_HARD_CONSTRAINTS: readonly HardConstraintCode[] = [

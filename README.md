@@ -2,7 +2,7 @@
 
 AI-based class scheduling decision-support system for the **College of Engineering**, **Manuel S. Enverga University Foundation (MSEUF)**, Lucena City.
 
-> **Authoritative Plan:** See [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) for the complete architecture, constraint catalogue (`HC-01`–`HC-15`, `SC-01`–`SC-16`), data model, and phase-by-phase build checklist.
+> **Authoritative Plan:** See [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) for the complete architecture, constraint catalogue (`HC-01`–`HC-16`, `SC-01`–`SC-16`), data model, and phase-by-phase build checklist.
 
 ---
 

@@ -359,7 +359,7 @@ function collegeSummary(ctx: ReportContext): ReportContent {
   const headers = ["Measure", "Value", "How it is calculated"];
   const rows = [
     ["Classes scheduled", `${metrics.classesScheduled} of ${metrics.totalMeetings} (${pct(metrics.scheduledPct)})`, "Class meetings placed ÷ class meetings required by this term's offerings."],
-    ["Unresolved conflicts", String(metrics.conflictsDetected), "Hard-rule violations (HC-01 to HC-15) found by the independent validator and not waived."],
+    ["Unresolved conflicts", String(metrics.conflictsDetected), "Hard-rule violations (HC-01 to HC-16) found by the independent validator and not waived."],
     ["Waived exceptions", String(metrics.waivedExceptionsCount), "Rule exceptions the Dean approved with a written reason. One approval can cover several class meetings."],
     ["Faculty load balance", pctOrDash(metrics.facultyLoadBalanceScore), "100 minus the standard deviation of faculty load percentages. Higher means loads are more even. Not available when the schedule names no faculty."],
     ["Average faculty load", pctOrDash(metrics.averageFacultyUtilizationPct), "Average of assigned units ÷ regular maximum units."],

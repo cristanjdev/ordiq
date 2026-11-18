@@ -141,7 +141,7 @@ export interface components {
       "detail"?: Array<components["schemas"]["ValidationError"]>;
     };
     /** Catalogue codes for mandatory constraints (Section 6). */
-    "HardConstraintCode": "HC-01" | "HC-02" | "HC-03" | "HC-04" | "HC-05" | "HC-06" | "HC-07" | "HC-08" | "HC-09" | "HC-10" | "HC-11" | "HC-12" | "HC-13" | "HC-14" | "HC-15";
+    "HardConstraintCode": "HC-01" | "HC-02" | "HC-03" | "HC-04" | "HC-05" | "HC-06" | "HC-07" | "HC-08" | "HC-09" | "HC-10" | "HC-11" | "HC-12" | "HC-13" | "HC-14" | "HC-15" | "HC-16";
     /** Liveness and solver configuration payload returned by GET /healthz. */
     "HealthResponse": {
       "service": "ordiq-engine";

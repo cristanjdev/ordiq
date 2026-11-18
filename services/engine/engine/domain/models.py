@@ -1,5 +1,6 @@
 """Domain models and shared enums for the ORDIQ engine."""
 
+import re
 from enum import StrEnum
 from typing import Any, Literal
 
@@ -75,6 +76,59 @@ class HardConstraintCode(StrEnum):
     HC_13 = "HC-13"
     HC_14 = "HC-14"
     HC_15 = "HC-15"
+    HC_16 = "HC-16"
+
+
+# HC-16: the college's rule 3(d) — lower-year sections have no evening classes.
+# "Lower years" is first and second year (manuscript 5.1), and a class is in the
+# evening when it ends after 6:00 PM. Kept here so the validator and the solver
+# read the same definition without importing each other.
+LOWER_YEAR_MAX_LEVEL = 2
+EVENING_START_MIN = 18 * 60
+
+
+def is_lower_year_evening(year_level: int, end_min: int) -> bool:
+    """True when a meeting of a section at this year level would break HC-16."""
+    return year_level <= LOWER_YEAR_MAX_LEVEL and end_min > EVENING_START_MIN
+
+
+_TIME_WINDOW = re.compile(r"(\d{1,2}):?(\d{2})\s*-\s*(\d{1,2}):?(\d{2})")
+
+
+def time_preference_met(value: str, start_min: int, end_min: int) -> bool | None:
+    """Whether a meeting meets a faculty PREFERRED_TIME value (SC-01).
+
+    Accepts MORNING (starts before noon), AFTERNOON (starts at noon or later) or a
+    window such as "07:30-12:00" (the meeting fits inside it). Returns None when
+    the value is not understood, so the preference is ignored rather than guessed.
+    """
+    val = value.strip().upper()
+    if "MORNING" in val:
+        return start_min < 720
+    if "AFTERNOON" in val:
+        return start_min >= 720
+    m = _TIME_WINDOW.fullmatch(val)
+    if not m:
+        return None
+    win_start = int(m[1]) * 60 + int(m[2])
+    win_end = int(m[3]) * 60 + int(m[4])
+    if win_end <= win_start:
+        return None
+    return win_start <= start_min and end_min <= win_end
+
+
+def preferred_days_by_faculty(prefs: "list[FacultyPreferenceModel]") -> dict[str, set[str]]:
+    """Approved PREFERRED_DAY rows merged per faculty member (SC-01).
+
+    A faculty member may list several preferred days (one row each, or
+    "MONDAY, WEDNESDAY"); a meeting meets the preference on any of them.
+    """
+    days: dict[str, set[str]] = {}
+    for pref in prefs:
+        if pref.approved and pref.type == "PREFERRED_DAY":
+            names = {d.upper() for d in re.split(r"[\s,/]+", pref.value) if d}
+            days.setdefault(pref.faculty_code, set()).update(names)
+    return days
 
 
 NEVER_WAIVABLE_CODES: set[HardConstraintCode] = {

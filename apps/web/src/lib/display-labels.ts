@@ -91,6 +91,7 @@ export const HARD_CONSTRAINT_NAMES: Record<string, string> = {
   "HC-13": "Wrong class length or days",
   "HC-14": "Calendar or maintenance restriction",
   "HC-15": "Clashes with a fixed block",
+  "HC-16": "Lower-year evening class",
 };
 
 /** Short names for the soft preferences, matching the Rules page. */

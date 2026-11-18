@@ -67,6 +67,7 @@ export const GOLDEN_DOC_QUESTIONS: GoldenDocQuestion[] = [
   { q: "what is HC-04", expect: /HC-04/i, answerHas: ["capacity"] },
   { q: "explain hc 7", expect: /HC-07/i, answerHas: ["load"] },
   { q: "ano ang HC-15", expect: /HC-15/i, answerHas: ["fixed"] },
+  { q: "ano ang HC-16", expect: /HC-16/i, answerHas: ["evening"] },
   { q: "what does HC-11 mean", expect: /HC-11/i, answerHas: ["break"] },
   { q: "list the hard constraints", expect: /Hard constraints|Hard Constraints|HC-/i },
   { q: "what is SC-09", expect: /SC-09|SC-16|Soft constraints|Candidate preferences/i, answerHas: ["evening"] },

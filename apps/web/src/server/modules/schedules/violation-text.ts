@@ -99,6 +99,8 @@ export function describeViolation(
       return `${capitalize(cls(o1))}${when()} falls on a calendar or room maintenance restriction.`;
     case "HC-15":
       return `${capitalize(cls(o1))}${when()} overlaps a fixed block of section ${sectionCodes[0] ?? ""} (e.g. NSTP or PATHFit).`;
+    case "HC-16":
+      return `${capitalize(cls(o1))}${when()} ends after 6:00 PM, but section ${sectionCodes[0] ?? ""} is a first- or second-year section.`;
     default:
       return v.message;
   }

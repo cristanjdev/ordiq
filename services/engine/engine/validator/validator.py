@@ -8,6 +8,7 @@ IMPORTANT ARCHITECTURE RULE (Section 2, Rules 2 & 3):
 from collections import defaultdict
 
 from engine.domain.models import (
+    EVENING_START_MIN,
     NEVER_WAIVABLE_CODES,
     WEEKDAY_ORDER,
     ConstraintHardness,
@@ -22,6 +23,9 @@ from engine.domain.models import (
     ValidationResponse,
     Violation,
     Weekday,
+    is_lower_year_evening,
+    preferred_days_by_faculty,
+    time_preference_met,
 )
 from engine.domain.spread import SPREAD_PENALTY_FACTOR, daytime_peak_target
 
@@ -281,7 +285,7 @@ def check_hc_06_faculty_availability(
     problem: Problem, entries: list[ScheduledMeetingEntry]
 ) -> list[Violation]:
     """HC-06: Faculty are scheduled only when available."""
-    avail_by_fac: dict[str, list[ tuple[Weekday, int, int, str] ]] = defaultdict(list)
+    avail_by_fac: dict[str, list[tuple[Weekday, int, int, str]]] = defaultdict(list)
     for w in problem.faculty_availability:
         avail_by_fac[w.entity_code].append((w.weekday, w.start_min, w.end_min, w.status))
 
@@ -567,9 +571,7 @@ def check_hc_12_dean_directives(
     violations: list[Violation] = []
 
     hard_directives = [
-        d
-        for d in problem.directives
-        if d.hardness == ConstraintHardness.HARD and d.approved
+        d for d in problem.directives if d.hardness == ConstraintHardness.HARD and d.approved
     ]
 
     for d in hard_directives:
@@ -857,6 +859,41 @@ def check_hc_15_fixed_blocks(
     return violations
 
 
+def check_hc_16_lower_year_evening(
+    problem: Problem, entries: list[ScheduledMeetingEntry]
+) -> list[Violation]:
+    """HC-16: Lower-year sections have no evening classes (college rule 3d)."""
+    offering_map = {o.code: o for o in problem.offerings}
+    section_map = {s.code: s for s in problem.sections}
+
+    violations: list[Violation] = []
+    for e in entries:
+        off = offering_map.get(e.offering_code)
+        sec = section_map.get(off.section_code) if off else None
+        if not off or not sec or not is_lower_year_evening(sec.year_level, e.end_min):
+            continue
+        violations.append(
+            Violation(
+                code=HardConstraintCode.HC_16,
+                message=(
+                    f"Year {sec.year_level} section {sec.code} meeting {off.code} on {e.weekday} "
+                    f"[{e.start_min}-{e.end_min}] ends after {EVENING_START_MIN} "
+                    f"(evening classes are not allowed for lower years)."
+                ),
+                waivable=True,
+                entry_ids=[e.id] if e.id else [],
+                offering_codes=[off.code],
+                section_codes=[sec.code],
+                faculty_codes=[e.faculty_code],
+                room_codes=[e.room_code],
+                weekday=e.weekday,
+                start_min=e.start_min,
+                end_min=e.end_min,
+            )
+        )
+    return violations
+
+
 def apply_waivers(problem: Problem, violations: list[Violation]) -> list[Violation]:
     """Mark waivable violations as waived when a matching documented exception exists (D-18)."""
     result: list[Violation] = []
@@ -882,14 +919,10 @@ def apply_waivers(problem: Problem, violations: list[Violation]) -> list[Violati
     return result
 
 
-def compute_quality_report(
-    problem: Problem, entries: list[ScheduledMeetingEntry]
-) -> QualityReport:
+def compute_quality_report(problem: Problem, entries: list[ScheduledMeetingEntry]) -> QualityReport:
     """Compute soft-constraint penalties (SC-01 to SC-16) and unmet preferences."""
     weights = problem.soft_weights.weights
-    penalties_by_code: dict[SoftConstraintCode, float] = {
-        code: 0.0 for code in SoftConstraintCode
-    }
+    penalties_by_code: dict[SoftConstraintCode, float] = {code: 0.0 for code in SoftConstraintCode}
     unmet: list[UnmetPreference] = []
 
     offering_map = {o.code: o for o in problem.offerings}
@@ -923,11 +956,8 @@ def compute_quality_report(
                         )
                     )
         elif pref.type == "PREFERRED_TIME":
-            val = pref.value.upper()
             for e in fac_entries:
-                if ("MORNING" in val and e.start_min >= 720) or (
-                    "AFTERNOON" in val and e.start_min < 720
-                ):
+                if time_preference_met(pref.value, e.start_min, e.end_min) is False:
                     pen = w_sc01 * 0.5
                     penalties_by_code[SoftConstraintCode.SC_01] += pen
                     unmet.append(
@@ -959,6 +989,23 @@ def compute_quality_report(
                             offering_code=e.offering_code,
                         )
                     )
+    for fac_code, days in preferred_days_by_faculty(problem.faculty_preferences).items():
+        for e in entries:
+            if e.faculty_code == fac_code and e.weekday.value not in days:
+                pen = w_sc01 * 0.5
+                penalties_by_code[SoftConstraintCode.SC_01] += pen
+                unmet.append(
+                    UnmetPreference(
+                        code=SoftConstraintCode.SC_01,
+                        description=(
+                            f"Faculty {fac_code} prefers {', '.join(sorted(days))}, "
+                            f"but {e.offering_code} is on {e.weekday}."
+                        ),
+                        penalty=round(pen, 2),
+                        faculty_code=fac_code,
+                        offering_code=e.offering_code,
+                    )
+                )
 
     # SC-02: Balance teaching loads
     w_sc02 = weights.get(SoftConstraintCode.SC_02, 8.0)
@@ -1064,9 +1111,7 @@ def compute_quality_report(
     # SC-06: Minimize changes from prior schedule on regeneration
     w_sc06 = weights.get(SoftConstraintCode.SC_06, 12.0)
     if problem.prior_entries:
-        prior_by_key = {
-            (pe.offering_code, pe.meeting_index): pe for pe in problem.prior_entries
-        }
+        prior_by_key = {(pe.offering_code, pe.meeting_index): pe for pe in problem.prior_entries}
         for e in entries:
             pe = prior_by_key.get((e.offering_code, e.meeting_index))
             if pe and (
@@ -1180,10 +1225,8 @@ def compute_quality_report(
     )
 
 
-def validate_schedule(
-    problem: Problem, entries: list[ScheduledMeetingEntry]
-) -> ValidationResponse:
-    """Run all 15 independent hard constraint validators and compute the soft quality report."""
+def validate_schedule(problem: Problem, entries: list[ScheduledMeetingEntry]) -> ValidationResponse:
+    """Run all 16 independent hard constraint validators and compute the soft quality report."""
     raw_violations: list[Violation] = []
     raw_violations.extend(check_hc_01_faculty_overlap(problem, entries))
     raw_violations.extend(check_hc_02_room_overlap(problem, entries))
@@ -1200,6 +1243,7 @@ def validate_schedule(
     raw_violations.extend(check_hc_13_duration_and_pattern(problem, entries))
     raw_violations.extend(check_hc_14_calendar_restrictions(problem, entries))
     raw_violations.extend(check_hc_15_fixed_blocks(problem, entries))
+    raw_violations.extend(check_hc_16_lower_year_evening(problem, entries))
 
     violations = apply_waivers(problem, raw_violations)
     unwaived_count = sum(1 for v in violations if not v.waived)

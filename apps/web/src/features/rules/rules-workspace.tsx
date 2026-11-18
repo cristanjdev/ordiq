@@ -138,6 +138,7 @@ const HARD_CONSTRAINTS_REGISTRY = [
   { code: "HC-13", name: "Duration and meeting pattern", category: "Calendar", waivable: true, description: "Each meeting has the offering's length and follows its meeting pattern (MWF, TTH, once a week).", adjust: { label: "Offerings", href: "/courses-sections" } },
   { code: "HC-14", name: "Calendar and maintenance restrictions", category: "Calendar", waivable: true, description: "No meetings during calendar restrictions or room maintenance periods.", adjust: { label: "Room maintenance", href: "/rooms" } },
   { code: "HC-15", name: "Sections clear of fixed blocks", category: "Calendar", waivable: true, description: "Sections are never scheduled during their locked fixed blocks (PATHFIT, NSTP, GenEd).", adjust: { label: "Fixed blocks", tab: "fixed-blocks" } },
+  { code: "HC-16", name: "No evening classes for lower years", category: "Calendar", waivable: true, description: "First- and second-year sections have no class that ends after 6:00 PM (college rule 3d).", adjust: { label: "Sections", href: "/courses-sections" } },
 ] as const;
 
 /** Soft objectives as defined in the implementation plan (Section 6). */
@@ -150,7 +151,7 @@ const SOFT_OBJECTIVES_REGISTRY = [
   { code: "SC-06", name: "Stability on regeneration", description: "Keep the previous schedule where possible when regenerating." },
   { code: "SC-07", name: "Faculty fit score", description: "Favour assignments with a high learned fit score." },
   { code: "SC-08", name: "Room efficiency", description: "Match room size to section size to avoid wasted seats." },
-  { code: "SC-09", name: "No evening classes for lower years", description: "Keep first- and second-year sections out of evening slots." },
+  { code: "SC-09", name: "No evening classes for lower years", description: "Applies where the Dean waived HC-16: still keep those sections out of evening slots where possible." },
   { code: "SC-10", name: "Lower-year priority", description: "Give lower-year sections the better time slots first." },
   { code: "SC-11", name: "Labs away from late hours", description: "Schedule laboratory meetings earlier in the day." },
   { code: "SC-12", name: "Spread major and math subjects", description: "Avoid stacking heavy major or mathematics subjects on the same day." },

@@ -27,12 +27,12 @@
    - **Candidate A — Balanced (`BALANCED`)**
    - **Candidate B — Faculty First (`FACULTY_FIRST`)**
    - **Candidate C — Student First (`STUDENT_FIRST`)**
-3. Every candidate is independently re-validated by the Python validator against `HC-01` through `HC-15`.
+3. Every candidate is independently re-validated by the Python validator against `HC-01` through `HC-16`.
 
 ### Step 3: Review, Edit, Waive, or Compare
 1. Switch between the **Spreadsheet Grid**, **Weekly Timetable Calendar** (filtered by Section, Faculty, or Room), and **Side-by-Side Candidate Comparison**.
 2. Click **Pin/Unpin** on any entry you want to lock in place before regenerating.
-3. If a waivable rule (`HC-04` to `HC-15`) requires an administrative override, record a **Documented Exception (`D-18`)** with a written justification. Core double-booking rules (`HC-01` Faculty, `HC-02` Room, `HC-03` Section) can never be waived.
+3. If a waivable rule (`HC-04` to `HC-16`) requires an administrative override, record a **Documented Exception (`D-18`)** with a written justification. Core double-booking rules (`HC-01` Faculty, `HC-02` Room, `HC-03` Section) can never be waived.
 4. Click **Accept Candidate for Portal Encoding** once `0` unwaived hard conflicts and `0` unscheduled meetings remain.
 
 ---

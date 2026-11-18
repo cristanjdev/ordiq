@@ -695,7 +695,8 @@
           "HC-12",
           "HC-13",
           "HC-14",
-          "HC-15"
+          "HC-15",
+          "HC-16"
         ],
         "title": "HardConstraintCode",
         "type": "string"

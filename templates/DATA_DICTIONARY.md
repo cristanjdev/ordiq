@@ -149,7 +149,7 @@ Stores faculty preference survey results (`SC-01`, Decision `D-17`).
 | `facultyCode` | `string` | Yes | **Composite PK** | Faculty code. |
 | `termCode` | `string` | Yes | **Composite PK** | Term code. |
 | `type` | `enum` | Yes | **Composite PK** | `PREFERRED_DAY` \| `AVOID_DAY` \| `PREFERRED_TIME_WINDOW` \| `PREFERRED_ROOM`. |
-| `value` | `string` | Yes | **Composite PK** | Day name (`FRIDAY`), time window (`07:30-12:00`), or room code. |
+| `value` | `string` | Yes | **Composite PK** | Day name (`FRIDAY`; list several preferred days as separate rows), time window (`07:30-12:00`, or `MORNING` / `AFTERNOON`), or room code. A value ORDIQ cannot read is ignored. |
 | `weight` | `number` | Yes | | Relative preference weight (`0.0` to `10.0`). |
 | `source` | `enum` | Yes | | `SURVEY` \| `LEARNED` \| `DEAN`. |
 

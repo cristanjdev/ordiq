@@ -398,7 +398,7 @@ export function computeScheduleAnalytics(
       classesScheduled:
         "Count of placed college class meetings divided by total required lecture/lab meetings across term offerings.",
       conflictsDetected:
-        "Count of unwaived hard constraint violations (HC-01 to HC-15) verified by the independent Python validator.",
+        "Count of unwaived hard constraint violations (HC-01 to HC-16) verified by the independent Python validator.",
       facultyLoadBalanceScore:
         "100 minus the population standard deviation of assigned faculty teaching load utilization percentages (assignedUnits / regularMaxUnits * 100). Not available when the schedule names no faculty.",
       roomUtilizationPct:

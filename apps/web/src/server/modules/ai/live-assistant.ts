@@ -75,7 +75,7 @@ Reference documentation (excerpts from the ORDIQ project documents, chosen for t
 ${context.knowledge}
 """
 How to use the reference documentation:
-- Answer questions about how ORDIQ works (screens, steps, rules HC-01 to HC-15 and SC-01 to SC-16, settings, privacy, reports, the study itself) from these excerpts only. Do not add steps, buttons, limits or features that the excerpts do not state.
+- Answer questions about how ORDIQ works (screens, steps, rules HC-01 to HC-16 and SC-01 to SC-16, settings, privacy, reports, the study itself) from these excerpts only. Do not add steps, buttons, limits or features that the excerpts do not state.
 - Name where to go using the page and section, for example "Settings › Sign-in security" or "Rules & Preferences › Dean Directives".
 - When excerpts disagree, follow the "ORDIQ In-App Guide" and the "ORDIQ FAQ"; they describe the current screens.
 - Never take this term's figures from the documents; call the tools for any count, name or metric of the term.

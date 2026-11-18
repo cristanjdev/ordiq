@@ -291,6 +291,7 @@ The OpenAPI document from FastAPI is the contract. `packages/contracts` generate
 | D-25 | Persistence is one state repository with a unit of work per request (`src/server/repo/state.repository.ts`, `state-sync.ts`), not a `*.repo.ts` per module. Services keep working on the in-memory domain state. `withDeanRoute` loads it from PostgreSQL, saves only changed records in one transaction, and uses `system_state.version` for optimistic concurrency (409 `CONCURRENT_MODIFICATION`). PostgreSQL (Supabase) is the only store; memory is used only by the automated tests |\|memory` | Keeps every service synchronous and testable in memory, and makes one write path the only place that touches the database. One Dean and college-sized data make whole-state reloads cheap. See ADR 0001 | Implemented |
 | D-26 | The CP-SAT model is decomposed: per meeting, separate time, room and faculty choices with optional intervals and NoOverlap per faculty, room and section. A complete greedy hint is always supplied and returned if the solver finds nothing in time | The single-option model grew too large and placed under half of the medium fixture. The decomposed model places all meetings of 576-meeting terms in the time limit with no hard violations | Implemented |
 | D-27 | The privacy gateway for live providers is AI SDK middleware on the model (`createPrivacyMiddleware`). Every request, including each step of the tool loop and every tool result, is pseudonymized and captured there. Refusals stay deterministic and run before any provider call. Without a usable provider, under tests, or when a call fails, the built-in deterministic assistant answers | Code above the model cannot forget to scrub a field. The assistant keeps working offline, and tests never spend tokens | Implemented |
+| D-28 | The college's rules and priority order (November 2026 answers): lower-year evening classes become hard rule `HC-16`, and faculty preferences (`SC-01`, `SC-04`) are optimized lexicographically after the department's objective in a second CP-SAT pass with the first pass's value as an upper bound | Answers 3, 10 and 11 make the evening rule mandatory and ask for a strict order, which a single weighted sum cannot guarantee | Decided |
 
 Record larger decisions as short ADRs in `docs/adr/`.
 
@@ -459,7 +460,7 @@ stateDiagram-v2
 
 ## 6. Constraint catalogue
 
-Codes are stable. Tests, reports and explanations all use them. **The college's approved rules are still pending,** and the manuscript requires college confirmation before encoding, so treat this as the starting list.
+Codes are stable. Tests, reports and explanations all use them. The college answered the rules question in November 2026 (see [Client answers](#client-answers-november-2026)): faculty by specialization, no lapses in time and subjects, no room or laboratory conflicts, no evening classes for lower years, rooms within capacity, and shorter vacant times. Those rules are covered by the codes below.
 
 ### Hard constraints
 
@@ -480,8 +481,9 @@ Codes are stable. Tests, reports and explanations all use them. **The college's 
 | `HC-13` | Each class follows its required duration and meeting pattern |
 | `HC-14` | Approved calendar and maintenance restrictions are respected |
 | `HC-15` | Sections stay clear of their fixed blocks |
+| `HC-16` | First- and second-year sections have no class ending after 6:00 PM (college rule 3d) |
 
-If the mandatory rules cannot all be met, ORDIQ reports the cause and never silently relaxes a rule. **Never waivable:** `HC-01`, `HC-02`, `HC-03`. Combined classes are modeled through a combined-class group, not as a conflict. All other rules are provisionally waivable with a documented reason (D-18).
+If the mandatory rules cannot all be met, ORDIQ reports the cause and never silently relaxes a rule. **Never waivable:** `HC-01`, `HC-02`, `HC-03`. Combined classes are modeled through a combined-class group, not as a conflict. All other rules are provisionally waivable with a documented reason (D-18). The college named room capacity (`HC-04`) as waivable, and assigning outside a specialization (`HC-09`) only to complete a faculty member's units. `HC-16` reads "lower years" as first and second year, as the manuscript does. The college's own 2026-2027 schedule has 17 second-year meetings past 6:00 PM and no first-year ones, so whether second year is included still needs confirmation (Q-23).
 
 ### Soft constraints
 
@@ -504,7 +506,7 @@ These come from the proposal text and student survey. Each needs approval, and s
 
 | Code | Goal | Source |
 |---|---|---|
-| `SC-09` | Avoid evening classes for lower-year sections | Manuscript 5.1 |
+| `SC-09` | Avoid evening classes for lower-year sections. Now a rule (`HC-16`), so this counts only where the Dean waived `HC-16` | Manuscript 5.1 |
 | `SC-10` | Give lower-year sections priority | Conceptual framework |
 | `SC-11` | Keep laboratories away from late hours | Student comments |
 | `SC-12` | Spread major and mathematics subjects, not all on one day | Student comments |
@@ -523,9 +525,14 @@ If a request does not fit one of these, the assistant says so and does not impro
 
 The manuscript defines optimization as improving schedule quality and resource use against the documented baseline. It "does not imply a mathematically global optimum," and feasibility alone doesn't prove quality.
 
-The objective is the weighted sum of soft penalties, plus a very large penalty per unscheduled meeting. The manuscript leaves open whether priorities are weights or a strict order, so this needs a decision (Q-12).
+The college asked for a strict order of priority (answer 11): faculty specialization, then room and laboratory capacity, then no lapses in time and subjects, then soft preferences, with the department's preferences ahead of the faculty's (answer 10). ORDIQ follows it this way (D-28):
 
-- **Proven optimal:** the solver finished and proved no better schedule exists for these weights.
+1. Specialization (`HC-09`) and capacity (`HC-04`) are hard rules.
+2. Every required meeting is scheduled: a very large penalty per unscheduled meeting outweighs any preference.
+3. The department's preferences (`SC-02`, `SC-03`, `SC-05` to `SC-16`) are a weighted sum.
+4. Faculty preferences (`SC-01`, `SC-04`) are optimized in a second solver pass that may not make step 3's result worse.
+
+- **Proven optimal:** the solver finished both passes and proved no better schedule exists for these weights.
 - **Best found:** the time limit ended the search, and the solver reports the remaining gap.
 
 The UI shows which one applies, plus which preferences went unmet. Don't describe every result as "the best possible."
@@ -1104,27 +1111,52 @@ These are follow-ups for now. None of them stops the build: work continues on th
 | ID | Question | Needed for | Priority | Status |
 |---|---|---|---|---|
 | Q-01 | Which package was approved: Basic, Standard or Premium? | Everything | High | Follow-up |
-| Q-02 | What are the college's approved scheduling rules? | Phase 2 | High | Follow-up |
-| Q-03 | What are the official time slots, breaks and teaching days? Survey comments suggest 7:30 AM to 8:30 PM and six-day weeks. Please confirm | Phase 2 | High | Follow-up |
-| Q-04 | Where will it be hosted: cloud or a school server? Any IT rules? | Phase 8 | High | Follow-up |
-| Q-05 | Do subjects follow fixed patterns such as MWF or TTh, at the same time on each day? | Phase 2 | High | Follow-up |
-| Q-06 | How is teaching load computed? How do lab hours convert to units? Is overload allowed? | Phase 2 | High | Follow-up |
-| Q-07 | Which classes are outside the college's control (general education, PATHFIT, other buildings)? How do we get those schedules, and are the rooms shared? | Phase 2 | High | Follow-up |
-| Q-08 | Are faculty assigned to subjects beforehand, or must the system choose? | Phase 2, 5 | High | Follow-up |
-| Q-09 | Do any faculty also teach for other colleges? Can sections be combined into one class? | Phase 2 | Medium | Follow-up |
-| Q-10 | Do you already have the first-semester A.Y. 2026-2027 data? What format is the portal data in? | Phase 1, 5 | High | Follow-up |
-| Q-11 | How will the faculty preference survey be collected? | Phase 5 | Medium | Follow-up |
-| Q-12 | Which preferences are approved, including section 6's candidates? Are they weights or a strict order? | Phase 2 | High | Follow-up |
-| Q-13 | Who signs off the approved rules and preferences? | Phases 2, 7 | Medium | Follow-up |
-| Q-14 | Which existing forms must the reports match? Which fields does the scheduling officer encode in the portal? | Phase 6 | Medium | Follow-up |
-| Q-15 | Who owns the AI provider account and the budget? | Phase 4 | High | Follow-up |
+| Q-02 | What are the college's approved scheduling rules? | Phase 2 | High | Answered |
+| Q-03 | What are the official time slots, breaks and teaching days? Survey comments suggest 7:30 AM to 8:30 PM and six-day weeks. Please confirm | Phase 2 | High | Answered |
+| Q-04 | Where will it be hosted: cloud or a school server? Any IT rules? | Phase 8 | High | Answered |
+| Q-05 | Do subjects follow fixed patterns such as MWF or TTh, at the same time on each day? | Phase 2 | High | Answered |
+| Q-06 | How is teaching load computed? How do lab hours convert to units? Is overload allowed? | Phase 2 | High | Answered |
+| Q-07 | Which classes are outside the college's control (general education, PATHFIT, other buildings)? How do we get those schedules, and are the rooms shared? | Phase 2 | High | Answered |
+| Q-08 | Are faculty assigned to subjects beforehand, or must the system choose? | Phase 2, 5 | High | Answered |
+| Q-09 | Do any faculty also teach for other colleges? Can sections be combined into one class? | Phase 2 | Medium | Answered |
+| Q-10 | Do you already have the first-semester A.Y. 2026-2027 data? What format is the portal data in? | Phase 1, 5 | High | Answered |
+| Q-11 | How will the faculty preference survey be collected? | Phase 5 | Medium | Answered |
+| Q-12 | Which preferences are approved, including section 6's candidates? Are they weights or a strict order? | Phase 2 | High | Answered |
+| Q-13 | Who signs off the approved rules and preferences? | Phases 2, 7 | Medium | Answered |
+| Q-14 | Which existing forms must the reports match? Which fields does the scheduling officer encode in the portal? | Phase 6 | Medium | Answered |
+| Q-15 | Who owns the AI provider account and the budget? | Phase 4 | High | Answered |
 | Q-16 | What are the final defense date and actual start date? The cover says April 2027, which may fall after the 60-day support | Timeline | High | Follow-up |
-| Q-17 | Will the paper be revised to include machine learning, generative AI, the chosen stack and Dean-only access? | Phases 4, 5 | High | Follow-up |
-| Q-18 | Is it truly Dean-only? The paper has coordinators and the scheduling officer reviewing schedules, and the pilot involves the scheduling officer | Phase 1 | High | Follow-up |
-| Q-19 | Is a web application acceptable as the "standalone" tool in the paper? | Phase 0 | Medium | Follow-up |
-| Q-20 | Does the Legal Office approval cover a third-party developer and sending coded data to an AI provider? Is ethics review needed? | Before any real data | High | Follow-up |
-| Q-21 | What are the prespecified evaluation criteria and the usability instrument? | Phase 7 | High | Follow-up |
-| Q-22 | Which rules may the Dean waive as documented exceptions? | Phase 3 | Medium | Follow-up |
+| Q-17 | Will the paper be revised to include machine learning, generative AI, the chosen stack and Dean-only access? | Phases 4, 5 | High | Answered |
+| Q-18 | Is it truly Dean-only? The paper has coordinators and the scheduling officer reviewing schedules, and the pilot involves the scheduling officer | Phase 1 | High | Answered |
+| Q-19 | Is a web application acceptable as the "standalone" tool in the paper? | Phase 0 | Medium | Answered |
+| Q-20 | Does the Legal Office approval cover a third-party developer and sending coded data to an AI provider? Is ethics review needed? | Before any real data | High | Partly answered |
+| Q-21 | What are the prespecified evaluation criteria and the usability instrument? | Phase 7 | High | Partly answered |
+| Q-22 | Which rules may the Dean waive as documented exceptions? | Phase 3 | Medium | Answered |
+| Q-23 | Does "lower years" in rule 3(d) mean first and second year, or first year only? The college's own schedule has second-year classes after 6:00 PM | `HC-16` | High | Follow-up |
+| Q-24 | May the coded data, with faculty names replaced by codes, be sent to the AI provider used by the assistant? Answer 1 covers the developer but not the AI provider | Phase 4 | High | Follow-up |
+
+### Client answers (November 2026)
+
+From `docs/Questions for System Development.txt`. Each answer updates the plan as follows.
+
+| Question | Answer | Effect on ORDIQ |
+|---|---|---|
+| Q-20 data permission | The Legal Office, the research panel and the Dean allow the complete first-semester A.Y. 2026-2027 data for testing, given to the developer under strict security | Real data is in use, coded and kept out of the repository. Sending it to an AI provider is not explicitly covered (Q-24) |
+| Q-10 data | Available as Excel files | Loaded through the import workbook |
+| Q-02 rules | Specialization, no lapses in time and subjects, no room or laboratory conflicts, no evening classes for lower years, within capacity, shorter vacant times | `HC-09`, `HC-08`, `HC-02`, `HC-16` (new), `HC-04`, `SC-03` |
+| Q-03, Q-05, Q-06, Q-07 time slots, patterns, load, outside classes | Derive from the Excel files. Non-engineering subjects are outside the college's control | Taken from the converted schedule; outside classes are fixed blocks (D-23) |
+| Q-08 faculty assignment | By specialization; outside it only to complete a faculty member's units | `HC-09` stays waivable with a reason |
+| Q-09 other colleges, combined classes | No and no | Combined-class groups stay unused |
+| Q-12 preferences and priority | The department's preferences first, the faculty's if tolerable; a strict order: specialization, capacity, no lapses, then soft preferences | D-28 |
+| Q-13 sign-off | The Dean | Unchanged |
+| Q-22 waivable rules | Room and laboratory capacity | `HC-04` waivable; `HC-01` to `HC-03` never |
+| Q-11 preference survey | The department secretary runs an online survey; the system evaluates whether the preferences are possible | Faculty preferences are imported (`FacultyPreferences` sheet) |
+| Q-18 access | Dean's office only. Faculty, coordinators and students have no access | Unchanged |
+| Q-19 standalone | Standalone, not integrated with the portal | Unchanged |
+| Q-17 paper | Will be revised for machine learning, "hybrid learning" | Unchanged |
+| Q-14 reports | Refer to the existing Excel data | Reports follow the converted schedule's fields |
+| Q-21 evaluation | Few or no conflicts when the schedule goes through the portal and the university validators, and time saved. No usability questionnaire yet; they ask the developer for one | Provide a usability questionnaire, for example the System Usability Scale |
+| Q-04, Q-15 hosting and AI account | Preferred: installed on the Dean's office computer; no paid AI subscription; ₱20,000 overall budget | The current cloud deployment and AI setup continue for now. The budget differs from the Standard package total |
 
 ---
 

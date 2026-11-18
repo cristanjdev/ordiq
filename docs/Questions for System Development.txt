@@ -1,0 +1,81 @@
+DATA AND PERMISSION 
+1. Does the Legal Office approval cover an outside developer handling the scheduling data? Does it also cover sending coded data, with faculty names removed, to an AI provider? Is an ethics review needed? 
+Yes, they allow to use the complete scheduling data in first semester of AY 2026-2027 for testing with the developed system. This was also reviewed by research panelists and approve by the department dean to use the existing scheduling data to be given to the developer, but with proper security of keeping the information to not leak because the information is sensitive.
+2. Is the first-semester A.Y. 2026-2027 scheduling data already available? What format is it in (Excel, portal export, PDF, or printed copies)? 
+Yes. The format was given in Excel files.
+
+SCHEDULING RULES 
+3. What are the College's approved scheduling rules? 
+Rules are as follows: 
+a) Subjects must be assigned to faculty based on their specialization
+b) No lapses in time and subjects
+c) No conflicts in rooms or laboratories
+d) Lower years must not have evening classes 
+e) Utilization of rooms and laboratories must be not beyond their capacities 
+f) Shorter vacant times
+
+4. What are the official time slots, breaks, and teaching days? The survey comments mention classes from 7:30 AM to 8:30 PM and six-day weeks. Is this correct? 
+The actual time slots and teaching days can be evaluated based on the provided Excel files as basis.
+
+
+5. Do subjects follow fixed patterns such as MWF or TTh, at the same time on each day? 
+This can be evaluated based on the provided existing scheduling information in Excel files as basis.
+
+6. How is teaching load computed? How do laboratory hours convert to units? Is overload allowed? 
+This can be evaluated based on the provided existing scheduling information in Excel files as basis.
+
+7. Which classes are outside the College's control, such as general education, PATHFIT, or classes in other buildings? How can those schedules be obtained, and are any rooms shared with other colleges? 
+Non-engineering subjects from other departments are out of the college of engineering’s control. They are obtained through departmental coordination and sharing of information. This can also be answered by evaluating the existing scheduling data provided in the excel files for basis.
+
+8. Are faculty assigned to subjects before scheduling, or should the system choose the faculty? 
+Yes, faculty are assigned to subjects based on their specialization. As much as possible, the department avoids assigning them subjects that are out of their specialization, unless they need to so that the teaching units of faculty can be fulfilled.
+
+9. Do any faculty members also teach in other colleges? Can two or more sections be combined into one class? 
+No.
+
+
+
+PREFERENCES AND APPROVALS 
+10. Which scheduling preferences are approved? Examples from the manuscript and survey include: 
+-Avoiding evening classes for lower-year sections 
+- Giving priority to lower-year sections 
+- Avoiding late laboratory classes 
+- Spreading major and math subjects across the week 
+- Keeping breaks between long back-to-back classes 
+- Avoiding a late class followed by an early class the next day 
+- Placing PATHFIT late in the day or before a vacant period 
+- Limiting very early starts 
+The mentioned examples apply to the preferences of the department, faculty and students. But in principle, we consider the main preferences of the department since they are the unit that creates the schedule. And if tolerable, faculty preferences may be considered. The bottom line is we make the scheduling optimal based on the hard constraints.
+
+11. Should the preferences follow a strict order of priority, or should each one have a weight? 
+Yes, it must follow a strict order of priority. From faculty specialization to room and laboratory capacity, followed by not having lapses in time and subjects, then soft constraints such as faculty preferences.
+
+12. Who will sign off on the approved rules and preferences?
+The department dean.
+
+13. Which rules may the Dean waive as a documented exception? Faculty, room, and section double-booking will never be waivable. 
+Room and laboratory capacity may be waivable because the engineering student population is great in number, so exceeding the capacity may be tolerable. 
+
+14. How will the faculty preference survey be collected? Faculty will not have system accounts under Dean-only access, so the results will need to be imported. 
+The department secretary may issue an online survey to the faculty members to collect their preferences and apply possibilities when prompted to the system and let the system evaluate whether the preferences are possible.
+
+USERS AND THE PAPER 
+15. Should access really be limited to the Dean only? The manuscript has program coordinators and the scheduling officer reviewing schedules, and the mockup shows a Scheduling Officer login. 
+Yes, since the Dean is the initial person who sets the department schedule. The secretary is only the assistant for gathering information, but the expert is the dean. The secretary or scheduling officer is the middle person that coordinates to program coordinators whenever changes occur and requests them to do the changes in program schedules. But overall, it is the dean who approves the schedule that is why it is only limited to the dean’s office. Faculty members, program coordinators, and students must not have access to the system.
+
+16. Is a web application acceptable as the "standalone" tool described in the paper? It will not connect to the university portal. 
+Yes, it is standalone and not designed to be integrated with the university portal. Because it will only be used by the College of Engineering Department to formulate their schedule before encoding it to the university portal.
+
+17. Will the paper be revised to include machine learning, generative AI, the chosen technology stack, and Dean-only access? The current manuscript does not mention machine learning and states that no solver has been selected. 
+Yes, it will be totally revised because after the research proposal defense, the Dean and our adviser suggested that it should be machine learning, or more appropriate is hybrid learning so that the AI system learns the constraints and satisfy them by generating the optimal schedule.
+
+REPORTS AND EVALUATION 
+18. Which existing forms must the reports follow? Which fields does the scheduling officer encode in the portal? 
+Please refer to the provided existing scheduling data to answer the question. That would be a great help.
+
+19. What are the prespecified evaluation criteria, and which usability questionnaire will be used for the pilot test? 
+As far as we know, the criteria will be whether the generated schedule by the system will not have detected conflicts when sent through the university portal and when returned by university validators with no or less errors or conflicts needed to be fixed. For the usability questionnaire, we still do not have that, but if you can provide, that would be a great help. Yet, the core is determining whether the system reduce the time for working on the schedule and allocates the department resources effectively and efficiently.
+
+HOSTING AND ACCOUNTS 
+20. Where will the system be hosted (cloud or a school server), and are there any school IT rules to follow? Who will own the AI provider account, and what is the budget for it?
+The preferred setup is when the application of the system is installed into the computer of the Dean’s office, the application is like a GPT style software where the scheduling can be done. In terms of IT rules, the only issue is the security of the confidential information not to be leaked on the internet and be accessed by other people. As for the AI account, the department does not want anything to pay for any subscription. This is more like a community service of the students to the process improvement of their department. But for the budget of the development of the system, the agreed budget is 20,000 pesos overall.
