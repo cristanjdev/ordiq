@@ -150,7 +150,7 @@ function preferenceFields(type: PreferenceType, rooms: FieldOption[]): FormField
         : [{ name: "value", label: "Day", kind: "select", required: true, options: WEEKDAY_OPTIONS }];
   return [
     ...value,
-    { name: "weight", label: "Weight", kind: "number", required: true, min: 0, max: 10, step: 0.5, help: "0 to 10; higher counts more in SC-01 / SC-04." },
+    { name: "weight", label: "Weight", kind: "number", required: true, min: 0, max: 10, step: 0.5, help: "0 to 10; higher values give this preference stronger priority." },
     {
       name: "source",
       label: "Source",
@@ -496,7 +496,7 @@ export function FacultyDetailsPanel({
         <div className="min-h-0 flex-1 overflow-auto px-5 pb-5">
           {loadError ? (
             <p className="py-10 text-center text-xs text-[var(--ordiq-muted)]">
-              Sign in with the Dean account (/login) to view these records.
+              Please sign in with the Dean account to view these records.
             </p>
           ) : (
             <table className="w-full border-collapse text-xs">
@@ -573,7 +573,7 @@ export function FacultyDetailsPanel({
                         label="Loading qualifications"
                       />
                     ) : qualifications.length === 0 ? (
-                      <EmptyRow colSpan={3} text="No qualifications yet. Without any, the solver cannot assign this faculty member." />
+                      <EmptyRow colSpan={3} text="No qualifications yet. Add at least one subject so this faculty member can be assigned to classes." />
                     ) : (
                       qualifications.map((q) => (
                         <tr key={q.id} className="border-b border-[var(--ordiq-border)]/50">

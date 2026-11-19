@@ -350,9 +350,8 @@ export function SettingsView() {
                   Two-factor authentication is off
                 </p>
                 <p className="mt-1 leading-relaxed">
-                  Anyone who learns the password can sign in. The authenticator setup is kept, so turning it
-                  back on needs no new QR scan. The project quotation lists multi-factor sign-in as a delivered
-                  feature.
+                  Anyone who learns the password can sign in. Your authenticator setup is kept, so turning it
+                  back on will not require a new QR scan.
                 </p>
               </div>
             )}
@@ -390,7 +389,7 @@ export function SettingsView() {
             description="When ORDIQ signs the Dean out on its own."
           >
             <SettingRow
-              title="Sign out after inactivity (auto-expire)"
+              title="Sign out after inactivity"
               description="End the session when no one uses ORDIQ for a while, e.g. on a shared or unattended computer."
             >
               <Toggle
@@ -436,7 +435,7 @@ export function SettingsView() {
           >
             <SettingRow
               title="AI Assistant"
-              description="When off, the assistant's menu item, button and panel are hidden and chat requests are refused."
+              description="When off, the AI Assistant is hidden across the app and cannot be used."
             >
               <Toggle
                 label="AI Assistant"
@@ -445,10 +444,10 @@ export function SettingsView() {
               />
             </SettingRow>
             <SettingRow
-              title="Monthly token budget"
+              title="Monthly AI usage limit"
               htmlFor="token-budget"
               muted={!draft.ai.assistantEnabled}
-              description={`AI provider tokens allowed per calendar month; once used up, the built-in assistant answers instead (${rangeText(SETTINGS_LIMITS.monthlyTokenBudget, "tokens")}).`}
+              description={`Maximum AI usage per calendar month. Once reached, the built-in assistant answers instead (${rangeText(SETTINGS_LIMITS.monthlyTokenBudget, "tokens")}).`}
             >
               <NumberField
                 id="token-budget"
@@ -464,7 +463,7 @@ export function SettingsView() {
           <SectionCard
             icon={Server}
             title="Server configuration"
-            description="Read-only. These values are set in the server's .env file by the system administrator."
+            description="Read-only. Managed by your system administrator."
           >
             {healthQuery.isLoading ? (
               <SkeletonBlock className="h-16 w-full" />
@@ -473,13 +472,13 @@ export function SettingsView() {
             ) : (
               <dl className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2 lg:grid-cols-3">
                 {[
-                  ["AI provider", health.web.llmProvider === "gemini" ? "Google Gemini" : health.web.llmProvider],
+                  ["AI service", health.web.llmProvider === "gemini" ? "Google Gemini" : health.web.llmProvider],
                   ["Scheduling engine", health.engine.connected ? `Connected (v${health.engine.version ?? "?"})` : "Not connected"],
                   [
-                    "Solver time limit",
+                    "Generation time limit",
                     health.engine.solverTimeLimitSeconds ? `${health.engine.solverTimeLimitSeconds} seconds` : "—",
                   ],
-                  ["Solver workers", health.engine.solverWorkers ? String(health.engine.solverWorkers) : "—"],
+                  ["Parallel workers", health.engine.solverWorkers ? String(health.engine.solverWorkers) : "—"],
                   ["App version", health.web.version],
                 ].map(([k, v]) => (
                   <div key={k} className="rounded-xl bg-[var(--ordiq-surface-muted)]/60 px-4 py-3">

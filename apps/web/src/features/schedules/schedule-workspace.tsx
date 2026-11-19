@@ -322,7 +322,7 @@ export function ScheduleWorkspace() {
       });
       if (resp.ok) {
         await refreshSchedules();
-        setStatusMessage("Independent validator check completed.");
+        setStatusMessage("Conflict check completed.");
       }
     } finally {
       setLoading(false);
@@ -362,7 +362,7 @@ export function ScheduleWorkspace() {
     });
     if (resp.ok) {
       await refreshSchedules();
-      setStatusMessage("Last change undone and re-validated.");
+      setStatusMessage("Last change undone and checked for conflicts.");
     }
   }
 
@@ -381,10 +381,10 @@ export function ScheduleWorkspace() {
     if (resp.ok) {
       setWaiverReason("");
       await refreshSchedules();
-      setStatusMessage(`Documented waiver recorded for ${waiverCode}.`);
+      setStatusMessage(`Documented exception recorded for "${hardConstraintLabel(waiverCode)}".`);
     } else {
       const err = (await resp.json()) as { error?: { message?: string } };
-      setStatusMessage(err.error?.message ?? "Could not add waiver.");
+      setStatusMessage(err.error?.message ?? "Could not add exception.");
     }
   }
 
@@ -403,7 +403,10 @@ export function ScheduleWorkspace() {
       setStatusMessage("Candidate accepted for portal encoding.");
     } else {
       const err = (await resp.json()) as { error?: { message?: string } };
-      setStatusMessage(err.error?.message ?? "Accept blocked by validator.");
+      setStatusMessage(
+        err.error?.message ??
+          "Schedule cannot be accepted while unresolved conflicts or unscheduled classes remain.",
+      );
     }
   }
 
@@ -501,8 +504,8 @@ export function ScheduleWorkspace() {
             Schedule Workspace & Candidate Comparison
           </h1>
           <p className="mt-0.5 text-xs text-[var(--ordiq-muted)]">
-            Spreadsheet grid, weekly timetable, instant conflict validation,
-            optimistic locking, and documented waivers.
+            Spreadsheet grid, weekly timetable, instant conflict checks,
+            and documented rule exceptions.
           </p>
         </div>
 
@@ -516,7 +519,7 @@ export function ScheduleWorkspace() {
             className="h-8 border-[var(--ordiq-border)] text-xs font-semibold hover:border-[var(--ordiq-maroon)] hover:text-[var(--ordiq-maroon)]"
           >
             <Sparkles className="h-3.5 w-3.5 text-[var(--ordiq-maroon)]" />
-            <span>Generate (CP-SAT)</span>
+            <span>Generate Schedules</span>
           </Button>
           <Button
             variant="outline"
@@ -640,7 +643,7 @@ export function ScheduleWorkspace() {
       {viewMode === "compare" ? (
         <Card>
           <CardHeader>
-            <CardTitle>Side-by-Side Candidate Comparison (D-19)</CardTitle>
+            <CardTitle>Side-by-Side Candidate Comparison</CardTitle>
             <CardDescription>
               Compare conflicts, waived rules, unscheduled meetings, and quality
               scores across profiles.
@@ -653,9 +656,9 @@ export function ScheduleWorkspace() {
                   <tr>
                     <th className="px-3 py-2 text-left whitespace-nowrap">Candidate</th>
                     <th className="px-3 py-2 text-center whitespace-nowrap">Status</th>
-                    <th className="px-3 py-2 text-center whitespace-nowrap">Solver Status</th>
+                    <th className="px-3 py-2 text-center whitespace-nowrap">Generation Result</th>
                     <th className="px-3 py-2 text-center whitespace-nowrap">Quality Score</th>
-                    <th className="px-3 py-2 text-center whitespace-nowrap">Hard Violations</th>
+                    <th className="px-3 py-2 text-center whitespace-nowrap">Conflicts</th>
                     <th className="px-3 py-2 text-center whitespace-nowrap">Waived Exceptions</th>
                     <th className="px-3 py-2 text-center whitespace-nowrap">Unscheduled</th>
                     <th className="px-3 py-2 text-center whitespace-nowrap">Meetings Placed</th>
@@ -1037,8 +1040,8 @@ export function ScheduleWorkspace() {
                 Spreadsheet Schedule Grid ({filteredEntries.length} meetings)
               </CardTitle>
               <CardDescription>
-                Version v{activeSchedule?.version ?? 1} • Pin/unpin meetings or
-                inspect validation status in real time.
+                Version {activeSchedule?.version ?? 1} • Pin or unpin classes to
+                keep them in place when regenerating.
               </CardDescription>
             </div>
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
@@ -1126,8 +1129,8 @@ export function ScheduleWorkspace() {
                         colSpan={6}
                         className="px-3 py-8 text-center text-xs text-[var(--ordiq-muted)]"
                       >
-                        No schedule entries loaded. Use &ldquo;Generate 3
-                        Candidates (CP-SAT)&rdquo; above.
+                        No schedule entries loaded. Click &ldquo;Generate Schedules&rdquo;
+                        above to create candidate schedules.
                       </td>
                     </tr>
                   )}
@@ -1153,17 +1156,17 @@ export function ScheduleWorkspace() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
-              Validation & Documented Exceptions (D-18)
+              Conflict Checks & Documented Exceptions
             </CardTitle>
             <CardDescription>
-              Double-booking (HC-01 to HC-03) is never waivable. All other rules
-              require a documented reason.
+              Double-booking (faculty, room, or section) can never be waived. All
+              other rules require a documented reason.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <select
-                aria-label="Select waivable rule code"
+                aria-label="Select waivable rule"
                 value={waiverCode}
                 onChange={(e) =>
                   setWaiverCode(e.target.value as HardConstraintCode)
@@ -1214,7 +1217,7 @@ export function ScheduleWorkspace() {
                         {v.waivable ? "Waivable with reason" : "Never waivable"}
                       </span>
                     </div>
-                    <p className="mt-1" title={v.message}>
+                    <p className="mt-1">
                       {v.description ?? v.message}
                     </p>
                     {v.waiver_reason && (
@@ -1228,8 +1231,7 @@ export function ScheduleWorkspace() {
               {(activeSchedule?.validationReport?.violations?.length ?? 0) ===
                 0 && (
                 <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                  Zero hard constraint violations detected by the independent
-                  Python validator.
+                  No scheduling conflicts detected. All required rules are satisfied.
                 </p>
               )}
             </div>
@@ -1243,8 +1245,8 @@ export function ScheduleWorkspace() {
               Unscheduled Meetings & Revision History
             </CardTitle>
             <CardDescription>
-              Meetings left unplaced by D-07 partial solve and audit trail of
-              workspace edits.
+              Classes that could not be placed automatically and a log of
+              schedule edits.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -1330,7 +1332,7 @@ export function ScheduleWorkspace() {
           await handleUndo();
         }}
         title="Undo Last Schedule Change?"
-        description="Are you sure you want to revert the most recent adjustment to this schedule? The schedule will be restored to its previous state and re-validated against all 11 constraint checkers."
+        description="Are you sure you want to revert the most recent adjustment to this schedule? The schedule will be restored to its previous state and checked again for conflicts."
         confirmText="Undo Change"
         variant="warning"
         isLoading={loading}

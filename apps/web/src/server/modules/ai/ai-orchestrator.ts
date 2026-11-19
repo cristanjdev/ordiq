@@ -30,7 +30,6 @@ import {
 } from "./tools";
 
 export const SYSTEM_PROMPT_V1 = `You are the ORDIQ Scheduling Assistant for the College of Engineering at Manuel S. Enverga University Foundation (MSEUF), Lucena City.
-Version: v1.0 (Quotation Q-2026-002).
 Capabilities & Boundaries:
 1. You assist the Dean in English, Filipino, and Taglish.
 2. Faculty names are pseudonymized as ALIAS-XXX. Refer to faculty using their ALIAS-XXX code so the Privacy Gateway restores their real names for the Dean.
@@ -136,7 +135,7 @@ export function detectRefusalIntent(prompt: string): {
       refused: true,
       reason: "OUT_OF_SCOPE_CAPABILITY",
       reply:
-        "That request is outside ORDIQ's approved scope (Quotation Q-2026-002). ORDIQ operates strictly at the section level without individual student records, does not forecast enrollment, and exports portal-ready Excel sheets rather than connecting directly to the university portal.",
+        "That request is outside ORDIQ's supported scope. ORDIQ operates strictly at the section level without individual student records, does not forecast enrollment, and exports portal-ready Excel sheets rather than connecting directly to the university portal.",
     };
   }
 
@@ -481,14 +480,14 @@ function synthesizeReplyFromToolResult(
         warningCount: number;
         iso25012Scores: { overall: number };
       };
-      return `Data readiness check complete: ISO/IEC 25012 overall quality is ${r.iso25012Scores.overall}% (${r.criticalCount} critical gaps, ${r.warningCount} warnings). ${r.canGenerate ? "The term is ready for schedule generation." : "Generation is blocked until critical gaps are resolved."}`;
+      return `Data readiness check complete: overall data quality is ${r.iso25012Scores.overall}% (${r.criticalCount} critical gaps, ${r.warningCount} warnings). ${r.canGenerate ? "The term is ready for schedule generation." : "Generation is blocked until critical gaps are resolved."}`;
     }
     case "check_conflicts": {
       const c = toolResult.rawResult as {
         candidateLabel?: string;
         hardViolationCount: number;
       };
-      return `Conflict check for ${c.candidateLabel ?? "the current schedule"}${facAlias ? ` (${facAlias})` : ""}: ${c.hardViolationCount} unwaived hard violation(s) detected by the independent validator.`;
+      return `Conflict check for ${c.candidateLabel ?? "the current schedule"}${facAlias ? ` (${facAlias})` : ""}: ${c.hardViolationCount} unresolved conflict(s) detected.`;
     }
     case "compare_candidates": {
       const comp = toolResult.rawResult as {
@@ -575,7 +574,7 @@ function synthesizeReplyFromToolResult(
         .slice(0, 3)
         .map((r) => `${r.facultyAlias} (fit ${(r.score * 100).toFixed(0)}%)`)
         .join(", ");
-      return `Top faculty recommendations for ${rec.subjectCode}${rec.coldStart ? " (cold-start NLP similarity)" : ""}: ${topList}.`;
+      return `Top faculty recommendations for ${rec.subjectCode}${rec.coldStart ? " (matched by specialization and subject description)" : ""}: ${topList}.`;
     }
     case "add_directive": {
       const d = toolResult.rawResult as {
@@ -602,7 +601,7 @@ function synthesizeReplyFromToolResult(
         valid: boolean;
         qualityDelta: number;
       };
-      return `Created change proposal (${p.proposalId.slice(0, 8)}): ${p.summary}. Validator check: ${p.valid ? "0 hard conflicts" : "has conflicts"} (quality delta ${p.qualityDelta >= 0 ? "+" : ""}${p.qualityDelta}). Use the Apply or Reject button on the proposal card to confirm.`;
+      return `Created change proposal: ${p.summary}. Conflict check: ${p.valid ? "no conflicts" : "has conflicts"} (quality change ${p.qualityDelta >= 0 ? "+" : ""}${p.qualityDelta}). Use the Apply or Reject button on the proposal card to confirm.`;
     }
   }
 }
@@ -649,7 +648,7 @@ export async function runAiAssistantTurn(
   // Handle simulated or actual provider failure gracefully (Phase 4B)
   if (input.simulateProviderFailure) {
     const fallbackText =
-      "The AI provider is temporarily unavailable. All manual Schedule Workspace, Validator, Solver, and Export features remain fully operational.";
+      "The AI service is temporarily unavailable. All Schedule Workspace, conflict checking, schedule generation, and report export features remain fully available.";
     const assistantMsg: MessageRecord = {
       id: crypto.randomUUID(),
       conversationId: conv.id,

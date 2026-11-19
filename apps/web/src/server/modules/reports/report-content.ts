@@ -359,7 +359,7 @@ function collegeSummary(ctx: ReportContext): ReportContent {
   const headers = ["Measure", "Value", "How it is calculated"];
   const rows = [
     ["Classes scheduled", `${metrics.classesScheduled} of ${metrics.totalMeetings} (${pct(metrics.scheduledPct)})`, "Class meetings placed ÷ class meetings required by this term's offerings."],
-    ["Unresolved conflicts", String(metrics.conflictsDetected), "Hard-rule violations (HC-01 to HC-16) found by the independent validator and not waived."],
+    ["Unresolved conflicts", String(metrics.conflictsDetected), "Required-rule violations found during conflict checking and not waived."],
     ["Waived exceptions", String(metrics.waivedExceptionsCount), "Rule exceptions the Dean approved with a written reason. One approval can cover several class meetings."],
     ["Faculty load balance", pctOrDash(metrics.facultyLoadBalanceScore), "100 minus the standard deviation of faculty load percentages. Higher means loads are more even. Not available when the schedule names no faculty."],
     ["Average faculty load", pctOrDash(metrics.averageFacultyUtilizationPct), "Average of assigned units ÷ regular maximum units."],
@@ -370,8 +370,8 @@ function collegeSummary(ctx: ReportContext): ReportContent {
       ? [["Classes with no college room named", String(metrics.meetingsWithoutRoom), "Left blank in the imported schedule, or held outside the college's rooms. Room checks do not apply to them."]]
       : []),
     ["Room utilization", pct(metrics.roomUtilizationPct), "Average over all rooms of scheduled minutes ÷ available teaching minutes per week."],
-    ["Unmet preferences", String(metrics.unmetPreferencesCount), "Soft preferences (SC-01 to SC-16) the schedule could not satisfy."],
-    ["Quality score", ctx.sched?.qualityScore == null ? "—" : String(metrics.qualityScore), "Solver score from 0 to 100 that weighs the soft preferences."],
+    ["Unmet preferences", String(metrics.unmetPreferencesCount), "Scheduling preferences the schedule could not satisfy."],
+    ["Quality score", ctx.sched?.qualityScore == null ? "—" : String(metrics.qualityScore), "Overall score from 0 to 100 based on how well scheduling priorities are met."],
     [
       "Student change-request risk",
       `${titleCase(risk.riskLevel)} (${risk.totalRiskIndicators})`,
@@ -436,7 +436,7 @@ function conflictsAndExceptions(ctx: ReportContext): ReportContent {
   return {
     title: "Conflicts and Exceptions Report",
     intro:
-      "Hard-rule problems the Dean still needs to fix, rule exceptions approved with a written reason, and classes the solver could not place.",
+      "Required-rule conflicts that still need attention, rule exceptions approved with a written reason, and classes that could not be scheduled automatically.",
     summary: [
       { label: "Needs fixing", value: String(open.length) },
       { label: "Waived with approval", value: String(waivedRows.length) },
@@ -494,7 +494,7 @@ function validationAndPreferences(ctx: ReportContext): ReportContent {
   return {
     title: "Data Quality and Unmet Preferences Report",
     intro:
-      "How ready the term's data is for scheduling (ISO/IEC 25012 data-quality dimensions), any readiness issues, and the faculty preferences the selected schedule could not meet.",
+      "How ready the term's data is for scheduling across key data quality dimensions, any readiness issues, and the faculty preferences the selected schedule could not meet.",
     summary: [
       ...DIMENSIONS.map(([key, label]) => ({ label, value: pct(scores[key]) })),
       { label: "Readiness issues", value: String(readiness.issues.length) },
@@ -523,7 +523,7 @@ function candidateComparison(ctx: ReportContext): ReportContent {
   const schedules = [...state.schedules.values()]
     .filter((s) => s.termCode === ctx.termCode && s.status !== "ARCHIVED")
     .sort((a, b) => rank(a) - rank(b) || (runCreated(b) ?? "").localeCompare(runCreated(a) ?? ""));
-  const headers = ["Schedule", "Strategy", "Status", "Solver result", "Classes scheduled", "Conflicts", "Unmet preferences", "Load balance", "Room use", "Quality"];
+  const headers = ["Schedule", "Strategy", "Status", "Generation result", "Classes scheduled", "Conflicts", "Unmet preferences", "Load balance", "Room use", "Quality"];
   const align: ColumnAlign[] = ["left", "left", "left", "left", "right", "right", "right", "right", "right", "right"];
   const scored = schedules.map((s) => {
     const m = computeScheduleAnalytics(ctx.termCode, s.id).metrics;

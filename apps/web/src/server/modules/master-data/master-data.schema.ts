@@ -23,7 +23,7 @@ export const termInputSchema = z
     dayEndMin: z.number().int().min(0).max(1440).default(1230), // 20:30
   })
   .refine((t) => t.dayEndMin > t.dayStartMin, {
-    message: "dayEndMin must be greater than dayStartMin",
+    message: "Day end time must be after day start time",
     path: ["dayEndMin"],
   });
 
@@ -129,7 +129,7 @@ export const fixedBlockInputSchema = z
     location: z.string().min(1).max(120).default("External Building"),
   })
   .refine((b) => b.endMin > b.startMin, {
-    message: "endMin must be greater than startMin",
+    message: "End time must be after start time",
     path: ["endMin"],
   });
 
@@ -146,7 +146,7 @@ export const facultyAvailabilityInputSchema = z
     reason: z.string().max(200).default(""),
   })
   .refine((a) => a.endMin > a.startMin, {
-    message: "endMin must be greater than startMin",
+    message: "End time must be after start time",
     path: ["endMin"],
   });
 

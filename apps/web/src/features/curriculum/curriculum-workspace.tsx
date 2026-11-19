@@ -125,7 +125,7 @@ export function CurriculumWorkspace() {
       const res = await fetch(
         `/api/v1/subjects?termCode=${encodeURIComponent(selectedTerm.id)}`,
       );
-      if (!res.ok) throw new Error("Requires active Dean session");
+      if (!res.ok) throw new Error("Please sign in to view this data.");
       return (await res.json()) as { items: SubjectItem[] };
     },
   });
@@ -136,7 +136,7 @@ export function CurriculumWorkspace() {
       const res = await fetch(
         `/api/v1/sections?termCode=${encodeURIComponent(selectedTerm.id)}`,
       );
-      if (!res.ok) throw new Error("Requires active Dean session");
+      if (!res.ok) throw new Error("Please sign in to view this data.");
       return (await res.json()) as { items: SectionItem[] };
     },
   });
@@ -147,7 +147,7 @@ export function CurriculumWorkspace() {
       const res = await fetch(
         `/api/v1/offerings?termCode=${encodeURIComponent(selectedTerm.id)}`,
       );
-      if (!res.ok) throw new Error("Requires active Dean session");
+      if (!res.ok) throw new Error("Please sign in to view this data.");
       return (await res.json()) as { items: OfferingItem[] };
     },
   });
@@ -321,7 +321,7 @@ export function CurriculumWorkspace() {
       rows: offerings.map((o) => [o.code, o.termCode, o.sectionCode, o.subjectCode,
         componentLabel(o.component), o.meetingsPerWeek, o.minutesPerMeeting,
         meetingPatternLabel(o.meetingPattern), roomTypeLabel(o.requiredRoomType),
-        o.preassignedFacultyCode ?? "Solver chooses"]),
+        o.preassignedFacultyCode ?? "Auto-assigned"]),
     };
     return downloadExcelExport({ fileName: `mseuf-${activeTab}-${selectedTerm.id}.xlsx`,
       sheetName: activeTab, ...data });
@@ -586,7 +586,7 @@ export function CurriculumWorkspace() {
                         className="px-4 py-12 text-center text-xs text-[var(--ordiq-muted)]"
                       >
                         {subjectsQuery.isError
-                          ? "Sign in with the Dean account (/login) to view subjects."
+                          ? "Please sign in with the Dean account to view subjects."
                           : totalSubjects === 0
                             ? 'No subjects yet. Use "Add" or "Import" above.'
                             : "No subjects match your filter criteria."}
@@ -711,7 +711,7 @@ export function CurriculumWorkspace() {
                         className="px-4 py-12 text-center text-xs text-[var(--ordiq-muted)]"
                       >
                         {sectionsQuery.isError
-                          ? "Sign in with the Dean account (/login) to view sections."
+                          ? "Please sign in with the Dean account to view sections."
                           : totalSections === 0
                             ? 'No student sections yet. Use "Add" or "Import" above.'
                             : "No sections match your filter criteria."}
@@ -813,7 +813,7 @@ export function CurriculumWorkspace() {
                         className="px-4 py-12 text-center text-xs text-[var(--ordiq-muted)]"
                       >
                         {offeringsQuery.isError
-                          ? "Sign in with the Dean account (/login) to view course offerings."
+                          ? "Please sign in with the Dean account to view course offerings."
                           : totalOfferings === 0
                             ? 'No course offerings yet. Use "Add" or "Import" above.'
                             : "No offerings match your search query."}
@@ -854,7 +854,7 @@ export function CurriculumWorkspace() {
                           </Badge>
                         </td>
                         <td className="px-4 py-2.5 text-center font-mono text-[11px]">
-                          {offering.preassignedFacultyCode ?? "Solver chooses"}
+                          {offering.preassignedFacultyCode ?? "Auto-assigned"}
                         </td>
                         <td className="px-4 py-2.5 text-center whitespace-nowrap">
                           <RowEditButton label={offering.code} onClick={() => offeringEditor.openEdit(offering)} />
@@ -937,7 +937,7 @@ export function CurriculumWorkspace() {
         open={offeringEditor.state !== null}
         mode={offeringEditor.state?.mode ?? "create"}
         entityLabel="Offering"
-        description={`Class offered in ${selectedTerm.label}. The solver assigns the day, time, room and (unless pre-assigned) the faculty member.`}
+        description={`Class offered in ${selectedTerm.label}. Day, time, room, and faculty (unless pre-assigned) are assigned automatically during schedule generation.`}
         fields={offeringFields({
           sections: toOptions(sections),
           subjects: toOptions(subjects),

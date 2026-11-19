@@ -226,7 +226,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         row: rowNum,
         column: "studentId",
         message:
-          "Individual student records are forbidden (D-21). Provide section-level studentCount only.",
+          "Individual student records are not allowed. Provide the section's total Student Count only.",
       });
       return;
     }
@@ -370,7 +370,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         sheet: "FixedBlocks",
         row: rowNum,
         column: "sectionCode",
-        message: `FixedBlock references unknown section "${parsed.data.sectionCode}".`,
+        message: `Fixed block references unknown section "${parsed.data.sectionCode}".`,
       });
       return;
     }
@@ -402,7 +402,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         sheet: "FacultyAvailability",
         row: rowNum,
         column: "facultyCode",
-        message: `FacultyAvailability references unknown faculty "${parsed.data.facultyCode}".`,
+        message: `Faculty availability row references unknown faculty "${parsed.data.facultyCode}".`,
       });
       return;
     }
@@ -429,7 +429,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         sheet: "FacultyQualifications",
         row: rowNum,
         column: "facultyCode",
-        message: `FacultyQualification references unknown faculty "${parsed.data.facultyCode}".`,
+        message: `Faculty qualification row references unknown faculty "${parsed.data.facultyCode}".`,
       });
       return;
     }
@@ -438,7 +438,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         sheet: "FacultyQualifications",
         row: rowNum,
         column: "subjectCode",
-        message: `FacultyQualification references unknown subject "${parsed.data.subjectCode}".`,
+        message: `Faculty qualification row references unknown subject "${parsed.data.subjectCode}".`,
       });
       return;
     }
@@ -469,7 +469,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         sheet: "FacultyPreferences",
         row: rowNum,
         column: "facultyCode",
-        message: `FacultyPreference references unknown faculty "${parsed.data.facultyCode}".`,
+        message: `Faculty preference row references unknown faculty "${parsed.data.facultyCode}".`,
       });
       return;
     }
@@ -491,7 +491,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         sheet: "PastSchedule",
         row: rowNum,
         column: "offeringCode",
-        message: `PastSchedule row references unknown offering "${offeringCode}".`,
+        message: `Past schedule row references unknown offering "${offeringCode}".`,
       });
     }
     // A blank faculty or room is kept blank: the college's own schedule does not
@@ -501,7 +501,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         sheet: "PastSchedule",
         row: rowNum,
         column: "facultyCode",
-        message: `PastSchedule row references unknown faculty "${facultyCode}".`,
+        message: `Past schedule row references unknown faculty "${facultyCode}".`,
       });
     }
     if (roomCode && !knownRooms.has(roomCode)) {
@@ -509,7 +509,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         sheet: "PastSchedule",
         row: rowNum,
         column: "roomCode",
-        message: `PastSchedule row references unknown room "${roomCode}".`,
+        message: `Past schedule row references unknown room "${roomCode}".`,
       });
     }
     if (!dayParsed.success) {
@@ -525,7 +525,7 @@ export function validateWorkbookPayload(payload: WorkbookSheetsPayload): {
         sheet: "PastSchedule",
         row: rowNum,
         column: "endMin",
-        message: "startMin and endMin must be integer minutes with endMin > startMin.",
+        message: "Start and end times must be valid, with the end time after the start time.",
       });
     }
 

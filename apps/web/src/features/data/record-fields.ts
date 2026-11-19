@@ -138,7 +138,7 @@ export function sectionFields(programs: FieldOption[]): FormField[] {
     { name: "code", label: "Section code", kind: "text", required: true, lockedOnEdit: true, maxLength: 30, placeholder: "e.g. CE-1A" },
     { name: "programCode", label: "Program", kind: "select", required: true, options: programs },
     { name: "yearLevel", label: "Year level", kind: "number", required: true, min: 1, max: 5 },
-    { name: "studentCount", label: "Number of students", kind: "number", required: true, min: 1, max: 120, help: "Section total only; no individual student records (D-21)." },
+    { name: "studentCount", label: "Number of students", kind: "number", required: true, min: 1, max: 120, help: "Section total only; no individual student records are stored." },
   ];
 }
 
@@ -155,7 +155,7 @@ export function offeringFields(options: {
     { name: "meetingsPerWeek", label: "Meetings per week", kind: "number", required: true, min: 1, max: 6 },
     { name: "minutesPerMeeting", label: "Minutes per meeting", kind: "number", required: true, min: 30, max: 360, step: 30 },
     { name: "meetingPattern", label: "Meeting pattern", kind: "select", required: true, options: enumOptions(["ANY", "MWF", "TTH", "SINGLE"], (v) => MEETING_PATTERN_LABELS[v] ?? v) },
-    { name: "preassignedFacultyCode", label: "Pre-assigned faculty", kind: "select", options: options.faculty, nullable: true, nullLabel: "Let the solver choose" },
+    { name: "preassignedFacultyCode", label: "Pre-assigned faculty", kind: "select", options: options.faculty, nullable: true, nullLabel: "Assign automatically" },
     { name: "combinedClassGroup", label: "Combined-class group", kind: "text", nullable: true, maxLength: 40, help: "Offerings with the same group meet together." },
     { name: "code", label: "Offering code", kind: "text", lockedOnEdit: true, maxLength: 40, help: "Leave empty to build it from the term, section and subject." },
   ];
@@ -192,7 +192,7 @@ export const DIRECTIVE_TYPE_LABELS: Record<string, string> = {
   REQUIRE_ROOM: "Require a room",
   PIN_MEETING: "Pin a meeting",
   ASSIGN_FACULTY: "Assign faculty",
-  SET_WEIGHT: "Objective weight",
+  SET_WEIGHT: "Priority weight",
 };
 
 /** Fields for one directive type; mirrors directiveInputSchema on the server. */
@@ -238,11 +238,11 @@ export function directiveFields(
       kind: "select",
       required: true,
       options: [
-        { value: "HARD", label: "Hard: must hold once approved (HC-12)" },
-        { value: "SOFT", label: "Soft: preferred, weighted" },
+        { value: "HARD", label: "Required: must be followed once approved" },
+        { value: "SOFT", label: "Preferred: weighted guideline" },
       ],
     },
-    { name: "weight", label: "Weight (soft only)", kind: "number", required: true, min: 0, max: 100, help: "Higher weights matter more to the solver." },
+    { name: "weight", label: "Priority weight (preferred only)", kind: "number", required: true, min: 0, max: 100, help: "Higher weights give this rule stronger priority when generating schedules." },
   );
   return fields;
 }

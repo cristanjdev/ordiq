@@ -12,7 +12,7 @@ Enter the Dean username or email and the password on the sign-in page. If two-fa
 
 Also asked: nawala ang phone, lost authenticator, cannot get the 6-digit code, recovery code.
 
-On the code step of sign-in, choose "Use a recovery code" and enter one of the single-use recovery codes shown when two-factor was first set up. Each recovery code works once. If no recovery codes are left, the system administrator can reset the Dean account with the seed script described in the Operations manual.
+On the code step of sign-in, choose "Use a recovery code" and enter one of the single-use recovery codes shown when two-factor was first set up. Each recovery code works once. If no recovery codes are left, contact your system administrator to reset the Dean account.
 
 ## How do I turn two-factor authentication on or off?
 
@@ -54,8 +54,8 @@ It caps how much the AI Assistant can use each month. When it is used up, the as
 
 Also asked: paano gumawa ng schedule, generate schedule steps, saan magsisimula, where do I start for a new term, first steps.
 
-1. Make sure the term's data is complete: faculty, subjects, sections, offerings and rooms. The Readiness Gate on Rules & Preferences shows what is missing.
-2. Open Schedules and press Generate (CP-SAT). ORDIQ creates three candidates: Balanced, Faculty First and Student First.
+1. Make sure the term's data is complete: faculty, subjects, sections, offerings and rooms. The Data Readiness tab on Rules & Preferences shows what is missing.
+2. Open Schedules and press Generate Schedules. ORDIQ creates three candidates: Balanced, Faculty First and Student First.
 3. Review and compare them, fix any conflicts or unscheduled meetings, then accept one.
 
 ## What is the difference between Balanced, Faculty First and Student First?
@@ -158,7 +158,7 @@ Open Rooms & Laboratories and edit the room. Capacity is checked by HC-04 and th
 
 Also asked: may student data ba, individual students, student ID.
 
-No. ORDIQ stores only the number of students per section (decision D-21). There are no individual student names, IDs, grades or schedules anywhere in the system.
+No. ORDIQ stores only the number of students per section. There are no individual student names, IDs, grades or schedules anywhere in the system.
 
 ## Are faculty names sent to the AI provider?
 
@@ -186,7 +186,7 @@ It is 100 minus the spread (standard deviation) of faculty load utilization, whe
 
 ## What does "optimized" mean in ORDIQ?
 
-Also asked: best schedule ba ito, optimal, pinakamaganda ba.
+Also asked: best schedule ba ito, optimal, pinakamaganda ba, what is CP-SAT, constraint solver.
 
 The solver minimizes a weighted sum of soft-preference penalties, with a large penalty for every unscheduled meeting. "Proven optimal" means no better schedule exists for those weights; "best found" means the time limit ended the search. It does not mean a global best for every possible priority.
 
@@ -326,10 +326,10 @@ First- and second-year sections have no class that ends after 6:00 PM. This is t
 
 Also asked: soft constraints, preferences, objective weights.
 
-SC-01 honor faculty preferred days and times. SC-02 balance teaching loads. SC-03 minimize vacant gaps for faculty and sections. SC-04 use preferred rooms. SC-05 distribute classes evenly across the week. SC-06 minimize changes from the existing schedule when regenerating. SC-07 prefer faculty with a high ML fit score. SC-08 use rooms efficiently, such as not putting 15 students in a 40-seat room. Their weights are set on Rules & Preferences › Objective Weights; a preference counts only once it is approved.
+SC-01 honor faculty preferred days and times. SC-02 balance teaching loads. SC-03 minimize vacant gaps for faculty and sections. SC-04 use preferred rooms. SC-05 distribute classes evenly across the week. SC-06 minimize changes from the existing schedule when regenerating. SC-07 prefer faculty with a strong subject match. SC-08 use rooms efficiently, such as not putting 15 students in a 40-seat room. Their weights are set on Rules & Preferences › Priority Weights; a preference counts only once it is approved.
 
 ## Soft preferences SC-09 to SC-16
 
 Also asked: student preferences, survey preferences.
 
-From the manuscript and student survey: SC-09 avoid evening classes for lower-year sections; since the college made this a rule (HC-16), SC-09 only matters where the Dean waived HC-16. SC-10 give lower-year sections priority. SC-11 keep laboratories away from late hours. SC-12 spread major and mathematics subjects across days. SC-13 keep a break between long back-to-back classes. SC-14 avoid a late class followed by an early class the next day. SC-15 place PATHFIT late in the day or before a vacant period. SC-16 limit very early starts. Each needs approval before it counts, and some pull against each other.
+Student-focused scheduling priorities: SC-09 avoid evening classes for lower-year sections; since the college made this a required rule (HC-16), SC-09 only matters where the Dean waived that rule. SC-10 give lower-year sections priority. SC-11 keep laboratories away from late hours. SC-12 spread major and mathematics subjects across days. SC-13 keep a break between long back-to-back classes. SC-14 avoid a late class followed by an early class the next day. SC-15 place PATHFIT late in the day or before a vacant period. SC-16 limit very early starts. Each needs approval before it counts, and some pull against each other.

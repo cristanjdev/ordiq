@@ -398,7 +398,7 @@ export async function runScheduleGeneration(
     const solution: EngineSolution | null | undefined = jobResp.solution;
     if (!solution || jobResp.status === "FAILED") {
       run.status = "FAILED";
-      run.error = jobResp.error ?? "Solver failed to produce a solution.";
+      run.error = jobResp.error ?? "Schedule generation could not produce a valid schedule.";
       run.completedAt = new Date().toISOString();
       store.generationRuns.set(runId, run);
       throw new AppError("SOLVER_FAILED", run.error, 500);
@@ -423,8 +423,8 @@ export async function runScheduleGeneration(
       run.status = "SOLVER_MODEL_BUG";
       run.error =
         modelBugViolations.length > 0
-          ? `Independent validator rejected solver output: ${modelBugViolations.map((v) => v.code).join(", ")}`
-          : `Solver output left ${unassigned} meeting assignment(s) without a faculty member or room.`;
+          ? `The generated schedule did not pass the conflict check (${modelBugViolations.length} issue${modelBugViolations.length === 1 ? "" : "s"}). Please try generating again or review the term's rules.`
+          : `The generated schedule left ${unassigned} class assignment(s) without a faculty member or room.`;
       run.completedAt = new Date().toISOString();
       store.generationRuns.set(runId, run);
       throw new AppError("SOLVER_MODEL_BUG", run.error, 500, {

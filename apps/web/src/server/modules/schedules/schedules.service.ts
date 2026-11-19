@@ -86,7 +86,7 @@ export async function editScheduleEntry(
   if (sched.version !== input.expectedVersion) {
     throw new AppError(
       "SCHEDULE_VERSION_CONFLICT",
-      `Optimistic lock conflict on schedule "${sched.id}": expected version ${input.expectedVersion}, but current version is ${sched.version}.`,
+      "This schedule was modified in another tab or window. Refresh the page and try your edit again.",
       409,
       { expectedVersion: input.expectedVersion, actualVersion: sched.version },
     );
@@ -255,7 +255,7 @@ export async function addScheduleException(
   if (NON_WAIVABLE_HARD_CONSTRAINTS.includes(input.code)) {
     throw new AppError(
       "NON_WAIVABLE_CONSTRAINT",
-      `Constraint ${input.code} (double-booking) is never waivable (D-18).`,
+      "Double-booking rules (faculty, room, or section) can never be waived.",
       422,
       { code: input.code },
     );
@@ -265,7 +265,7 @@ export async function addScheduleException(
   if (trimmedReason.length < 5) {
     throw new AppError(
       "WAIVER_REASON_REQUIRED",
-      "A documented reason of at least 5 characters is required to waive a rule (D-18).",
+      "A documented reason of at least 5 characters is required to waive a rule.",
       422,
     );
   }
@@ -341,7 +341,7 @@ export async function acceptCandidateSchedule(
   if (!validation.valid || validation.hard_violation_count > 0 || unscheduledCount > 0) {
     throw new AppError(
       "SCHEDULE_NOT_ACCEPTABLE",
-      `Cannot accept schedule "${schedule.id}": ${validation.hard_violation_count} unwaived violation(s) and ${unscheduledCount} unscheduled meeting(s) remain.`,
+      `Cannot accept "${schedule.candidateLabel}": ${validation.hard_violation_count} unresolved conflict(s) and ${unscheduledCount} unscheduled class(es) remain.`,
       422,
       {
         hardViolationCount: validation.hard_violation_count,

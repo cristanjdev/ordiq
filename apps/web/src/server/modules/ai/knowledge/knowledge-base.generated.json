@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-18T11:09:16.693Z",
+ "generatedAt": "2026-11-19T15:25:04.620Z",
  "passageCount": 206,
  "passages": [
   {
@@ -28,7 +28,7 @@
    "source": "ORDIQ In-App Guide",
    "section": "Settings page",
    "priority": 1.35,
-   "text": "Settings holds the system-wide switches. Every saved change is recorded in the audit log.\n\n- Sign-in security: two-factor authentication (Google Authenticator) on or off; failed attempts before the account locks (3 to 10); lock duration (1 to 1,440 minutes). Turning two-factor off keeps the authenticator setup, so turning it back on needs no new QR scan.\n- Session & automatic sign-out: sign out after inactivity (auto-expire) on or off; inactivity limit (5 to 480 minutes, default 30); maximum session length (1 to 72 hours, default 12).\n- AI Assistant: turn the assistant on or off, and set the monthly token budget. When it is off, the chat button, the AI Assistant page and the AI menu item are hidden and nothing is sent to the AI provider.\n- Server configuration: read-only status of the web app, the scheduling engine and the AI provider.\n\nChanges appear in a save bar at the bottom of the page. Sign-in and session changes need the current password before they can be saved; the password box turns red if Save is pressed without it. \"Discard\" undoes unsaved edits and \"Restore recommended values\" resets the switches to the defaults."
+   "text": "Settings holds the system-wide switches. Every saved change is recorded in the audit log.\n\n- Sign-in security: two-factor authentication (Google Authenticator) on or off; failed attempts before the account locks (3 to 10); lock duration (1 to 1,440 minutes). Turning two-factor off keeps the authenticator setup, so turning it back on needs no new QR scan.\n- Session & automatic sign-out: sign out after inactivity on or off; inactivity limit (5 to 480 minutes, default 30); maximum session length (1 to 72 hours, default 12).\n- AI Assistant: turn the assistant on or off, and set the monthly AI usage limit (token budget). When it is off, the chat button, the AI Assistant page and the AI menu item are hidden and nothing is sent to the AI service.\n- Server configuration: read-only status of the web app, the scheduling engine and the AI service.\n\nChanges appear in a save bar at the bottom of the page. Sign-in and session changes need the current password before they can be saved; the password box turns red if Save is pressed without it. \"Discard\" undoes unsaved edits and \"Restore recommended values\" resets the switches to the defaults."
   },
   {
    "id": "85c2e3f387f9",
@@ -66,18 +66,18 @@
    "text": "Master data can be typed in on each page or imported from the official Excel workbook. An import is checked first (a dry run) and every row or column problem is reported in plain words before anything is saved."
   },
   {
-   "id": "c4c286eadc86",
+   "id": "a6cc98dce613",
    "source": "ORDIQ In-App Guide",
    "section": "Schedules page",
    "priority": 1.35,
-   "text": "The Schedules page is the schedule workspace.\n\n- Generate (CP-SAT): creates three candidate schedules for the term: Candidate A (Balanced), Candidate B (Faculty First) and Candidate C (Student First). Every candidate is checked again by the independent validator against hard rules HC-01 to HC-15.\n- Views: an hourly schedule grid and day column cards, filterable by section, faculty, room and weekday.\n- Editing: a meeting can be moved to another day, time, room or faculty member. Each edit is validated right away and conflicts are shown with the rule explained in plain words. \"Undo Edit\" reverses the last change.\n- Check Schedule: runs the validator again on the open schedule.\n- Compare: shows the candidates side by side (quality score, conflicts, unscheduled meetings).\n- Waived exceptions: a waivable rule (HC-04 to HC-15) can be overridden with a written reason. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.\n- Accept Candidate: makes a candidate the official schedule. ORDIQ only accepts a candidate with zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives the previously accepted schedule for the term.\n- Start Schedule Revision: creates a new draft from the accepted schedule so it can be edited without touching the accepted version.\n- Import / Export: bring in an existing schedule or export the open one."
+   "text": "The Schedules page is the schedule workspace.\n\n- Generate Schedules: creates three candidate schedules for the term: Candidate A (Balanced), Candidate B (Faculty First) and Candidate C (Student First). Every candidate is automatically checked for conflicts against all required scheduling rules.\n- Views: an hourly schedule grid and day column cards, filterable by section, faculty, room and weekday.\n- Editing: a meeting can be moved to another day, time, room or faculty member. Each edit is validated right away and conflicts are shown with the rule explained in plain words. \"Undo Edit\" reverses the last change.\n- Check Schedule: runs the validator again on the open schedule.\n- Compare: shows the candidates side by side (quality score, conflicts, unscheduled meetings).\n- Waived exceptions: a waivable rule (HC-04 to HC-15) can be overridden with a written reason. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.\n- Accept Candidate: makes a candidate the official schedule. ORDIQ only accepts a candidate with zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives the previously accepted schedule for the term.\n- Start Schedule Revision: creates a new draft from the accepted schedule so it can be edited without touching the accepted version.\n- Import / Export: bring in an existing schedule or export the open one."
   },
   {
-   "id": "8ef85817bd2d",
+   "id": "6ea3df9de41f",
    "source": "ORDIQ In-App Guide",
    "section": "Rules & Preferences page",
    "priority": 1.35,
-   "text": "This page has five tabs:\n\n- Hard Constraints: the fixed rules HC-01 to HC-16 that every schedule must meet. The rules themselves cannot be edited; the \"Adjust In\" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).\n- Objective Weights: how much each soft preference (SC-01 to SC-16) counts when the solver builds candidates.\n- Dean Directives: extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is hard or soft.\n- Locked Fixed Blocks: time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.\n- Readiness Gate: the data readiness check (ISO/IEC 25012: completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed."
+   "text": "This page has five tabs:\n\n- Required Rules (hard constraints): the fixed scheduling rules (hard constraints) that every schedule must meet. Hard constraints cannot be edited directly; the \"Adjust In\" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).\n- Priority Weights: how much each scheduling priority (soft preference) counts when generating candidate schedules.\n- Dean Directives: extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is required or preferred.\n- Locked Fixed Blocks: time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.\n- Data Readiness: the data quality and readiness check (completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed."
   },
   {
    "id": "e358c01175b5",
@@ -126,7 +126,7 @@
    "source": "ORDIQ FAQ",
    "section": "What if I lose my phone with Google Authenticator?",
    "priority": 1.3,
-   "text": "Also asked: nawala ang phone, lost authenticator, cannot get the 6-digit code, recovery code.\n\nOn the code step of sign-in, choose \"Use a recovery code\" and enter one of the single-use recovery codes shown when two-factor was first set up. Each recovery code works once. If no recovery codes are left, the system administrator can reset the Dean account with the seed script described in the Operations manual."
+   "text": "Also asked: nawala ang phone, lost authenticator, cannot get the 6-digit code, recovery code.\n\nOn the code step of sign-in, choose \"Use a recovery code\" and enter one of the single-use recovery codes shown when two-factor was first set up. Each recovery code works once. If no recovery codes are left, contact your system administrator to reset the Dean account."
   },
   {
    "id": "b3b692b4801e",
@@ -175,7 +175,7 @@
    "source": "ORDIQ FAQ",
    "section": "How do I create a schedule for the term?",
    "priority": 1.3,
-   "text": "Also asked: paano gumawa ng schedule, generate schedule steps, saan magsisimula, where do I start for a new term, first steps.\n\n1. Make sure the term's data is complete: faculty, subjects, sections, offerings and rooms. The Readiness Gate on Rules & Preferences shows what is missing.\n2. Open Schedules and press Generate (CP-SAT). ORDIQ creates three candidates: Balanced, Faculty First and Student First.\n3. Review and compare them, fix any conflicts or unscheduled meetings, then accept one."
+   "text": "Also asked: paano gumawa ng schedule, generate schedule steps, saan magsisimula, where do I start for a new term, first steps.\n\n1. Make sure the term's data is complete: faculty, subjects, sections, offerings and rooms. The Data Readiness tab on Rules & Preferences shows what is missing.\n2. Open Schedules and press Generate Schedules. ORDIQ creates three candidates: Balanced, Faculty First and Student First.\n3. Review and compare them, fix any conflicts or unscheduled meetings, then accept one."
   },
   {
    "id": "df1f7f9f771f",
@@ -294,7 +294,7 @@
    "source": "ORDIQ FAQ",
    "section": "Does ORDIQ keep student records?",
    "priority": 1.3,
-   "text": "Also asked: may student data ba, individual students, student ID.\n\nNo. ORDIQ stores only the number of students per section (decision D-21). There are no individual student names, IDs, grades or schedules anywhere in the system."
+   "text": "Also asked: may student data ba, individual students, student ID.\n\nNo. ORDIQ stores only the number of students per section. There are no individual student names, IDs, grades or schedules anywhere in the system."
   },
   {
    "id": "d33bff7068a7",
@@ -325,11 +325,11 @@
    "text": "Also asked: load balance score, paano kinukuha ang faculty load balance.\n\nIt is 100 minus the spread (standard deviation) of faculty load utilization, where each faculty member's utilization is assigned units divided by their regular maximum units. 100 means every faculty member carries the same share of their limit; lower means loads are uneven. It appears on the Dashboard; hovering the figure shows the formula."
   },
   {
-   "id": "08d22cc95858",
+   "id": "c386774d62bf",
    "source": "ORDIQ FAQ",
    "section": "What does \"optimized\" mean in ORDIQ?",
    "priority": 1.3,
-   "text": "Also asked: best schedule ba ito, optimal, pinakamaganda ba.\n\nThe solver minimizes a weighted sum of soft-preference penalties, with a large penalty for every unscheduled meeting. \"Proven optimal\" means no better schedule exists for those weights; \"best found\" means the time limit ended the search. It does not mean a global best for every possible priority."
+   "text": "Also asked: best schedule ba ito, optimal, pinakamaganda ba, what is CP-SAT, constraint solver.\n\nThe solver minimizes a weighted sum of soft-preference penalties, with a large penalty for every unscheduled meeting. \"Proven optimal\" means no better schedule exists for those weights; \"best found\" means the time limit ended the search. It does not mean a global best for every possible priority."
   },
   {
    "id": "89f486819a9c",
@@ -490,14 +490,14 @@
    "source": "ORDIQ FAQ",
    "section": "Soft preferences SC-01 to SC-08",
    "priority": 1.3,
-   "text": "Also asked: soft constraints, preferences, objective weights.\n\nSC-01 honor faculty preferred days and times. SC-02 balance teaching loads. SC-03 minimize vacant gaps for faculty and sections. SC-04 use preferred rooms. SC-05 distribute classes evenly across the week. SC-06 minimize changes from the existing schedule when regenerating. SC-07 prefer faculty with a high ML fit score. SC-08 use rooms efficiently, such as not putting 15 students in a 40-seat room. Their weights are set on Rules & Preferences › Objective Weights; a preference counts only once it is approved."
+   "text": "Also asked: soft constraints, preferences, objective weights.\n\nSC-01 honor faculty preferred days and times. SC-02 balance teaching loads. SC-03 minimize vacant gaps for faculty and sections. SC-04 use preferred rooms. SC-05 distribute classes evenly across the week. SC-06 minimize changes from the existing schedule when regenerating. SC-07 prefer faculty with a strong subject match. SC-08 use rooms efficiently, such as not putting 15 students in a 40-seat room. Their weights are set on Rules & Preferences › Priority Weights; a preference counts only once it is approved."
   },
   {
-   "id": "48bfb8615e3c",
+   "id": "5476d3eb4caf",
    "source": "ORDIQ FAQ",
    "section": "Soft preferences SC-09 to SC-16",
    "priority": 1.3,
-   "text": "Also asked: student preferences, survey preferences.\n\nFrom the manuscript and student survey: SC-09 avoid evening classes for lower-year sections; since the college made this a rule (HC-16), SC-09 only matters where the Dean waived HC-16. SC-10 give lower-year sections priority. SC-11 keep laboratories away from late hours. SC-12 spread major and mathematics subjects across days. SC-13 keep a break between long back-to-back classes. SC-14 avoid a late class followed by an early class the next day. SC-15 place PATHFIT late in the day or before a vacant period. SC-16 limit very early starts. Each needs approval before it counts, and some pull against each other."
+   "text": "Also asked: student preferences, survey preferences.\n\nStudent-focused scheduling priorities: SC-09 avoid evening classes for lower-year sections; since the college made this a required rule (HC-16), SC-09 only matters where the Dean waived that rule. SC-10 give lower-year sections priority. SC-11 keep laboratories away from late hours. SC-12 spread major and mathematics subjects across days. SC-13 keep a break between long back-to-back classes. SC-14 avoid a late class followed by an early class the next day. SC-15 place PATHFIT late in the day or before a vacant period. SC-16 limit very early starts. Each needs approval before it counts, and some pull against each other."
   },
   {
    "id": "75edd77b3785",

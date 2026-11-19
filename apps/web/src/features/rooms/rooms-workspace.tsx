@@ -65,7 +65,7 @@ export function RoomsWorkspace() {
       const res = await fetch(
         `/api/v1/rooms?termCode=${encodeURIComponent(selectedTerm.id)}`,
       );
-      if (!res.ok) throw new Error("Requires active Dean session");
+      if (!res.ok) throw new Error("Please sign in to view room records.");
       return (await res.json()) as { items: RoomItem[] };
     },
   });
@@ -345,9 +345,9 @@ export function RoomsWorkspace() {
                     className="px-4 py-12 text-center text-xs text-[var(--ordiq-muted)]"
                   >
                     {roomsQuery.isError
-                      ? "Sign in with the Dean account (/login) to view room inventory."
+                      ? "Please sign in with the Dean account to view room inventory."
                       : totalRooms === 0
-                        ? 'No room records found. Click "Load Room Inventory" above.'
+                        ? 'No room records yet. Use "Add" or "Import" above to add rooms and laboratories.'
                         : "No spaces match your search criteria."}
                   </td>
                 </tr>

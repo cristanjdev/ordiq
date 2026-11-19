@@ -223,7 +223,7 @@ export function ProgramsTermsSection() {
       <div className="overflow-x-auto no-scrollbar">
         {loadError ? (
           <p className="py-10 text-center text-xs text-[var(--ordiq-muted)]">
-            Sign in with the Dean account (/login) to view these records.
+            Please sign in with the Dean account to view these records.
           </p>
         ) : tab === "programs" ? (
           <div>
@@ -373,7 +373,7 @@ export function ProgramsTermsSection() {
         open={termEditor.state !== null}
         mode={termEditor.state?.mode ?? "create"}
         entityLabel="Term"
-        description="Only one term should be Active at a time. Changing teaching hours or days flags the term's schedules for a recheck on the next validation."
+        description="Only one term should be Active at a time. Changing teaching hours or days flags the term's schedules for a conflict recheck."
         fields={termFields()}
         initialValues={termEditor.state?.values}
         onClose={termEditor.close}

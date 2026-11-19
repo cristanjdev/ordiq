@@ -622,7 +622,7 @@ function ProposalsTab({
         "The proposal could not be updated.",
       ),
     onSuccess: async (_, vars) => {
-      setMessage(vars.decision === "APPLY" ? "Change applied and re-validated." : "Proposal rejected.");
+      setMessage(vars.decision === "APPLY" ? "Change applied and checked for conflicts." : "Proposal rejected.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["ai-state"] }),
         queryClient.invalidateQueries({ queryKey: ["ai-briefing"] }),
@@ -733,7 +733,7 @@ function ProposalsTab({
                         <Button
                           size="sm"
                           disabled={review.isPending || !p.valid}
-                          title={p.valid ? undefined : "This move would break a hard rule"}
+                          title={p.valid ? undefined : "This change would create a scheduling conflict"}
                           onClick={() => review.mutate({ proposalId: p.id, decision: "APPLY" })}
                         >
                           {busy && review.variables?.decision === "APPLY" ? (
@@ -883,10 +883,10 @@ function UsageTab({
                 Version {ml.activeVersion.versionNumber} · {formatWhen(ml.activeVersion.trainedAt)}
               </p>
               <div className="grid grid-cols-2 gap-2">
-                <StatTile label="Top-1 accuracy" value={percent(ml.comparisons.modelTop1Accuracy)} />
-                <StatTile label="Top-3 accuracy" value={percent(ml.comparisons.modelTop3Accuracy)} />
-                <StatTile label="Text-match baseline" value={percent(ml.comparisons.textSimilarityBaselineTop1)} />
-                <StatTile label="Random baseline" value={percent(ml.comparisons.randomBaselineTop1)} />
+                <StatTile label="Best-match accuracy" value={percent(ml.comparisons.modelTop1Accuracy)} />
+                <StatTile label="Top-3 match accuracy" value={percent(ml.comparisons.modelTop3Accuracy)} />
+                <StatTile label="Keyword-match baseline" value={percent(ml.comparisons.textSimilarityBaselineTop1)} />
+                <StatTile label="Random-guess baseline" value={percent(ml.comparisons.randomBaselineTop1)} />
               </div>
             </>
           )}

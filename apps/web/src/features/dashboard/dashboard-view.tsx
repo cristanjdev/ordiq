@@ -1326,10 +1326,9 @@ function AnalyticsCard({
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-2xs">
                 <CheckCircle2 className="h-5 w-5" />
               </div>
-              <div className="font-bold text-sm">No Hard Conflicts Detected</div>
+              <div className="font-bold text-sm">No Conflicts Detected</div>
               <div className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80 max-w-xs">
-                The schedule validator verified zero unwaived rule violations. System constraints
-                are fully satisfied.
+                All required scheduling rules are satisfied with no unresolved conflicts.
               </div>
             </div>
           ) : (
@@ -1355,16 +1354,6 @@ function AnalyticsCard({
                     />
                     <span
                       className={cn(
-                        "font-mono text-[10px] font-bold rounded px-1.5 py-0.5 border shadow-2xs",
-                        c.severity === "HARD"
-                          ? "bg-white text-red-800 border-red-200 dark:bg-red-950 dark:text-red-200 dark:border-red-800/60"
-                          : "bg-white text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800/60",
-                      )}
-                    >
-                      {c.constraintId}
-                    </span>
-                    <span
-                      className={cn(
                         "text-[10px] font-semibold",
                         c.severity === "HARD"
                           ? "text-red-600 dark:text-red-400"
@@ -1375,10 +1364,7 @@ function AnalyticsCard({
                         (c.severity === "HARD" ? "Must-follow rule" : "Preference")}
                     </span>
                   </div>
-                  <p
-                    className="text-[11px] leading-relaxed text-[var(--ordiq-ink)]/90 break-words font-medium"
-                    title={c.message}
-                  >
+                  <p className="text-[11px] leading-relaxed text-[var(--ordiq-ink)]/90 break-words font-medium">
                     {c.description ?? c.message}
                   </p>
                 </div>

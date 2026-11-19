@@ -398,13 +398,13 @@ export function computeScheduleAnalytics(
       classesScheduled:
         "Count of placed college class meetings divided by total required lecture/lab meetings across term offerings.",
       conflictsDetected:
-        "Count of unwaived hard constraint violations (HC-01 to HC-16) verified by the independent Python validator.",
+        "Count of unresolved scheduling conflicts across all required rules.",
       facultyLoadBalanceScore:
-        "100 minus the population standard deviation of assigned faculty teaching load utilization percentages (assignedUnits / regularMaxUnits * 100). Not available when the schedule names no faculty.",
+        "100 minus the standard deviation of faculty teaching load utilization percentages. Higher means loads are more evenly distributed. Not available when the schedule names no faculty.",
       roomUtilizationPct:
-        "Mean percentage of weekly scheduled room minutes divided by available teaching window minutes across all college rooms.",
+        "Average percentage of weekly scheduled room minutes divided by available teaching hours across all college rooms.",
       studentChangeRequestRisk:
-        "Sum of section double-bookings (HC-03), unplaced meetings, and unmet approved preferences. Reported as raw indicator counts (not compared as a percentage against the manuscript's non-comparable 16.6% survey or 22-day portal rework figures).",
+        "Total count of section double-bookings, unscheduled class meetings, and unmet approved preferences.",
     },
     facultyLoads,
     roomUtilizations,
@@ -425,7 +425,7 @@ export function computeScheduleAnalytics(
       totalRiskIndicators,
       riskLevel,
       baselineMethodNote:
-        "Baseline care: The manuscript's 22-day rework figure includes portal encoding, and the 16.6% survey vs. 70% estimate of student change requests are not directly comparable. ORDIQ reports exact indicator counts only.",
+        "ORDIQ reports exact counts of section overlaps, unscheduled classes, and unmet preferences.",
     },
     dataReadiness: {
       canGenerate: readiness.canGenerate,

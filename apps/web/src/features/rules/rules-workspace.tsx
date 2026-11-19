@@ -134,24 +134,24 @@ const HARD_CONSTRAINTS_REGISTRY = [
   { code: "HC-09", name: "Specialization matches subject", category: "Faculty", waivable: true, description: "Faculty teach only subjects they are qualified for.", adjust: { label: "Faculty qualifications", href: "/faculty" } },
   { code: "HC-10", name: "Rooms available", category: "Room", waivable: true, description: "Rooms are used only while active and inside their availability windows.", adjust: { label: "Room availability", href: "/rooms" } },
   { code: "HC-11", name: "Allowed periods and breaks", category: "Calendar", waivable: true, description: "Meetings fall inside the term's teaching days and hours and avoid official breaks.", adjust: { label: "Term hours", href: "/courses-sections" } },
-  { code: "HC-12", name: "Dean directives respected", category: "Directive", waivable: true, description: "Approved hard directives (time windows, rooms, assignments) are always honoured.", adjust: { label: "Dean directives", tab: "directives" } },
+  { code: "HC-12", name: "Dean directives respected", category: "Directive", waivable: true, description: "Approved required directives (time windows, rooms, assignments) are always honored.", adjust: { label: "Dean directives", tab: "directives" } },
   { code: "HC-13", name: "Duration and meeting pattern", category: "Calendar", waivable: true, description: "Each meeting has the offering's length and follows its meeting pattern (MWF, TTH, once a week).", adjust: { label: "Offerings", href: "/courses-sections" } },
   { code: "HC-14", name: "Calendar and maintenance restrictions", category: "Calendar", waivable: true, description: "No meetings during calendar restrictions or room maintenance periods.", adjust: { label: "Room maintenance", href: "/rooms" } },
   { code: "HC-15", name: "Sections clear of fixed blocks", category: "Calendar", waivable: true, description: "Sections are never scheduled during their locked fixed blocks (PATHFIT, NSTP, GenEd).", adjust: { label: "Fixed blocks", tab: "fixed-blocks" } },
-  { code: "HC-16", name: "No evening classes for lower years", category: "Calendar", waivable: true, description: "First- and second-year sections have no class that ends after 6:00 PM (college rule 3d).", adjust: { label: "Sections", href: "/courses-sections" } },
+  { code: "HC-16", name: "No evening classes for lower years", category: "Calendar", waivable: true, description: "First- and second-year sections have no class that ends after 6:00 PM.", adjust: { label: "Sections", href: "/courses-sections" } },
 ] as const;
 
 /** Soft objectives as defined in the implementation plan (Section 6). */
 const SOFT_OBJECTIVES_REGISTRY = [
-  { code: "SC-01", name: "Preferred days and times", description: "Honour faculty preferences for days and time windows." },
+  { code: "SC-01", name: "Preferred days and times", description: "Honor faculty preferences for days and time windows." },
   { code: "SC-02", name: "Balanced faculty loads", description: "Spread teaching load evenly across faculty." },
   { code: "SC-03", name: "Minimal gaps", description: "Reduce idle time between classes for sections and faculty." },
   { code: "SC-04", name: "Preferred rooms", description: "Place faculty in the rooms they prefer." },
   { code: "SC-05", name: "Even spread across the week and day", description: "Distribute classes evenly across weekdays and hours instead of crowding one time." },
-  { code: "SC-06", name: "Stability on regeneration", description: "Keep the previous schedule where possible when regenerating." },
-  { code: "SC-07", name: "Faculty fit score", description: "Favour assignments with a high learned fit score." },
+  { code: "SC-06", name: "Minimal changes on regeneration", description: "Keep the previous schedule where possible when regenerating." },
+  { code: "SC-07", name: "Faculty-subject match", description: "Favor faculty assignments with a strong subject match based on qualifications and history." },
   { code: "SC-08", name: "Room efficiency", description: "Match room size to section size to avoid wasted seats." },
-  { code: "SC-09", name: "No evening classes for lower years", description: "Applies where the Dean waived HC-16: still keep those sections out of evening slots where possible." },
+  { code: "SC-09", name: "No evening classes for lower years", description: "When the lower-year evening rule is waived, still keep those sections out of evening slots where possible." },
   { code: "SC-10", name: "Lower-year priority", description: "Give lower-year sections the better time slots first." },
   { code: "SC-11", name: "Labs away from late hours", description: "Schedule laboratory meetings earlier in the day." },
   { code: "SC-12", name: "Spread major and math subjects", description: "Avoid stacking heavy major or mathematics subjects on the same day." },
@@ -230,7 +230,7 @@ export function RulesWorkspace() {
     queryKey: ["soft-weights", termCode],
     queryFn: async () => {
       const res = await fetch(`/api/v1/soft-weights?termCode=${encodeURIComponent(termCode)}`);
-      if (!res.ok) throw new Error("Requires active Dean session");
+      if (!res.ok) throw new Error("Please sign in to view this data.");
       return (await res.json()) as SoftWeightsDto;
     },
   });
@@ -239,7 +239,7 @@ export function RulesWorkspace() {
     queryKey: ["readiness", termCode],
     queryFn: async () => {
       const res = await fetch(`/api/v1/readiness?termCode=${encodeURIComponent(termCode)}`);
-      if (!res.ok) throw new Error("Requires active Dean session");
+      if (!res.ok) throw new Error("Please sign in to view this data.");
       return (await res.json()) as ReadinessReportDto;
     },
   });
@@ -288,7 +288,7 @@ export function RulesWorkspace() {
         throw new Error(body?.error?.message ?? "The weights could not be saved.");
       }
       await queryClient.invalidateQueries({ queryKey: ["soft-weights", termCode] });
-      setNotice({ tone: "success", text: "Objective weights saved. The next generation run uses them." });
+      setNotice({ tone: "success", text: "Priority weights saved. They will apply to the next generated schedule." });
     } catch (error) {
       setNotice({ tone: "error", text: errorMessage(error, "The weights could not be saved.") });
     } finally {
@@ -360,7 +360,7 @@ export function RulesWorkspace() {
       tone: "success",
       text: original
         ? "Directive updated. It needs approval again before it is enforced."
-        : "Directive added. Hard directives are enforced once approved.",
+        : "Directive added. Required directives are enforced once approved.",
     });
   };
 
@@ -447,10 +447,10 @@ export function RulesWorkspace() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-[var(--ordiq-ink)]">
-          Scheduling Rules, Constraints & Fixed Blocks
+          Scheduling Rules & Fixed Blocks
         </h1>
         <p className="mt-0.5 text-xs text-[var(--ordiq-muted)]">
-          Hard constraints, objective weights, Dean directives, locked blocks (PATHFIT/GenEd), and ISO/IEC 25012 readiness for {termCode}.
+          Required rules, priority weights, Dean directives, locked blocks (PATHFIT/GenEd), and data readiness for {termCode}.
         </p>
       </div>
 
@@ -460,7 +460,7 @@ export function RulesWorkspace() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-[var(--ordiq-muted)]">
-                Hard Constraints (HC)
+                Required Rules
               </span>
               <Lock className="h-4 w-4 text-[var(--ordiq-maroon)]" />
             </div>
@@ -468,7 +468,7 @@ export function RulesWorkspace() {
               {HARD_CONSTRAINTS_REGISTRY.length} Enforced
             </div>
             <p className="mt-0.5 text-[11px] text-[var(--ordiq-muted)]">
-              3 can never be waived (HC-01..03)
+              3 double-booking rules can never be waived
             </p>
           </CardContent>
         </Card>
@@ -477,12 +477,12 @@ export function RulesWorkspace() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-[var(--ordiq-muted)]">
-                Soft Objectives (SC)
+                Scheduling Priorities
               </span>
               <Scale className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div className="mt-2 text-2xl font-bold tracking-tight text-[var(--ordiq-ink)]">
-              {SOFT_OBJECTIVES_REGISTRY.length} Objectives
+              {SOFT_OBJECTIVES_REGISTRY.length} Priorities
             </div>
             <p className="mt-0.5 text-[11px] text-[var(--ordiq-muted)]">
               {overrideCount === 0 ? "Using default weights" : `${overrideCount} custom weights for this term`}
@@ -502,7 +502,7 @@ export function RulesWorkspace() {
               {directives.length} Directives
             </div>
             <p className="mt-0.5 text-[11px] text-[var(--ordiq-muted)]">
-              {pendingApproval} hard directives awaiting approval
+              {pendingApproval} required directives awaiting approval
             </p>
           </CardContent>
         </Card>
@@ -511,7 +511,7 @@ export function RulesWorkspace() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-[var(--ordiq-muted)]">
-                ISO/IEC 25012 Gate
+                Data Readiness
               </span>
               <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </div>
@@ -559,11 +559,11 @@ export function RulesWorkspace() {
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2 w-full">
             {(
               [
-                { id: "constraints", label: "Hard Constraints", icon: Lock, count: null },
-                { id: "soft-rules", label: "Objective Weights", icon: Scale, count: null },
+                { id: "constraints", label: "Required Rules", icon: Lock, count: null },
+                { id: "soft-rules", label: "Priority Weights", icon: Scale, count: null },
                 { id: "directives", label: "Dean Directives", icon: Gavel, count: directives.length },
                 { id: "fixed-blocks", label: "Locked Fixed Blocks", icon: Clock, count: fixedBlocks.length },
-                { id: "readiness", label: "Readiness Gate", icon: Sparkles, count: null },
+                { id: "readiness", label: "Data Readiness", icon: Sparkles, count: null },
               ] as const
             ).map((tab) => {
               const Icon = tab.icon;
@@ -701,8 +701,7 @@ export function RulesWorkspace() {
               <table className="w-full min-w-[860px] border-collapse text-xs">
                 <thead>
                   <tr className="bg-[var(--ordiq-surface-muted)] text-[11px] font-semibold uppercase tracking-wider text-[var(--ordiq-muted)]">
-                    <th className="px-4 py-2.5 text-left whitespace-nowrap">Code</th>
-                    <th className="px-4 py-2.5 text-center whitespace-nowrap">Rule</th>
+                    <th className="px-4 py-2.5 text-left whitespace-nowrap">Rule</th>
                     <th className="px-4 py-2.5 text-center whitespace-nowrap">Category</th>
                     <th className="px-4 py-2.5 text-center whitespace-nowrap">Waivability</th>
                     <th className="px-4 py-2.5 text-center whitespace-nowrap">What It Checks</th>
@@ -712,10 +711,7 @@ export function RulesWorkspace() {
                 <tbody>
                   {constraintsPagination.paginatedItems.map((hc) => (
                     <tr key={hc.code} className="hover:bg-[var(--ordiq-surface-muted)]/60 transition-colors">
-                      <td className="px-4 py-2.5 text-left font-mono text-[11px] font-bold text-[var(--ordiq-ink)] whitespace-nowrap">
-                        {hc.code}
-                      </td>
-                      <td className="px-4 py-2.5 text-center font-semibold text-[var(--ordiq-ink)] whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-left font-semibold text-[var(--ordiq-ink)] whitespace-nowrap">
                         {hc.name}
                       </td>
                       <td className="px-4 py-2.5 text-center whitespace-nowrap">
@@ -762,24 +758,24 @@ export function RulesWorkspace() {
               onPageChange={constraintsPagination.setCurrentPage}
               onPageSizeChange={constraintsPagination.setPageSize}
               pageSizeOptions={[5, 10, 15, 20, 50]}
-              itemLabel="constraints"
+              itemLabel="rules"
             />
           </div>
         )}
 
-        {/* Tab 2: Soft objective weights */}
+        {/* Tab 2: Priority weights */}
         {activeTab === "soft-rules" && (
           <div className="p-4 space-y-4">
             <div className="rounded-lg border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] p-3 text-xs text-[var(--ordiq-muted)]">
-              <span className="font-semibold text-[var(--ordiq-ink)]">Objective weights for {termCode}:</span>{" "}
-              Higher weights make the solver work harder on that goal. Saved weights set the Balanced
-              candidate; the Faculty-first and Student-first candidates scale by the same ratio. A weight of 0
-              turns the objective off. They apply from the next generation run.
+              <span className="font-semibold text-[var(--ordiq-ink)]">Priority weights for {termCode}:</span>{" "}
+              Higher weights give that goal stronger priority when generating schedules. Saved weights set the Balanced
+              candidate; the Faculty-first and Student-first candidates scale by the same ratio. Setting a weight to 0
+              turns that priority off. Changes take effect on the next schedule generation.
             </div>
 
             {softWeightsQuery.isError ? (
               <div className="py-8 text-center text-xs text-[var(--ordiq-muted)]">
-                Sign in with the Dean account (/login) to view objective weights.
+                Please sign in with the Dean account to view priority weights.
               </div>
             ) : !softWeightsQuery.data ? (
               <div className="py-8 text-center text-xs text-[var(--ordiq-muted)]">Loading weights...</div>
@@ -797,7 +793,6 @@ export function RulesWorkspace() {
                     >
                       <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-[var(--ordiq-maroon)]">{sc.code}</span>
                           <span className="font-semibold text-xs text-[var(--ordiq-ink)]">{sc.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -866,7 +861,7 @@ export function RulesWorkspace() {
                     <tr>
                       <td colSpan={7} className="px-4 py-12 text-center text-xs text-[var(--ordiq-muted)]">
                         {directivesQuery.isError
-                          ? "Sign in with the Dean account (/login) to view directives."
+                          ? "Please sign in with the Dean account to view directives."
                           : directives.length === 0
                             ? 'No directives for this term yet. Pick a type and use "Add Directive" above.'
                             : "No directives match the search."}
@@ -876,20 +871,20 @@ export function RulesWorkspace() {
                     directivesPagination.paginatedItems.map((d) => {
                     const editable = (EDITABLE_DIRECTIVE_TYPES as readonly string[]).includes(d.type);
                     const busy = busyDirectiveId === d.id;
+                    const directiveLabel = DIRECTIVE_TYPE_LABELS[d.type] ?? titleCase(d.type);
                     return (
                       <tr key={d.id} className="hover:bg-[var(--ordiq-surface-muted)]/60 transition-colors">
                         <td className="px-4 py-2.5 text-left whitespace-nowrap">
                           <div className="font-semibold text-[var(--ordiq-ink)]">
-                            {DIRECTIVE_TYPE_LABELS[d.type] ?? titleCase(d.type)}
+                            {directiveLabel}
                           </div>
-                          <div className="font-mono text-[10px] text-[var(--ordiq-muted)]">{d.id}</div>
                         </td>
                         <td className="px-4 py-2.5 text-center text-[11px] text-[var(--ordiq-ink)] min-w-[220px]">
                           {directiveTarget(d)}
                         </td>
                         <td className="px-4 py-2.5 text-center whitespace-nowrap">
                           <Badge variant={d.hardness === "HARD" ? "default" : "neutral"}>
-                            {d.hardness === "HARD" ? "Hard" : "Soft"}
+                            {d.hardness === "HARD" ? "Required" : "Preferred"}
                           </Badge>
                         </td>
                         <td className="px-4 py-2.5 text-center font-mono text-[11px] whitespace-nowrap">
@@ -924,7 +919,7 @@ export function RulesWorkspace() {
                             </button>
                             {editable && (
                               <RowEditButton
-                                label={`Edit directive ${d.id}`}
+                                label={`Edit ${directiveLabel}`}
                                 onClick={() => directiveEditor.openEdit(d)}
                               />
                             )}
@@ -932,8 +927,8 @@ export function RulesWorkspace() {
                               type="button"
                               onClick={() => setPendingDelete({ kind: "directive", item: d })}
                               className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ordiq-muted)] hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors"
-                              title={`Delete directive ${d.id}`}
-                              aria-label={`Delete directive ${d.id}`}
+                              title={`Delete ${directiveLabel}`}
+                              aria-label={`Delete ${directiveLabel}`}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -986,7 +981,7 @@ export function RulesWorkspace() {
                     <tr>
                       <td colSpan={6} className="px-4 py-12 text-center text-xs text-[var(--ordiq-muted)]">
                         {fixedBlocksQuery.isError
-                          ? "Sign in with the Dean account (/login) to view locked fixed blocks."
+                          ? "Please sign in with the Dean account to view locked fixed blocks."
                           : fixedBlocks.length === 0
                             ? 'No locked blocks for this term yet. Use "Add Block" above.'
                             : "No fixed blocks match the search."}
@@ -1051,10 +1046,10 @@ export function RulesWorkspace() {
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--ordiq-border)] p-3">
                   <div>
                     <h3 className="font-semibold text-xs text-[var(--ordiq-ink)]">
-                      ISO/IEC 25012 Data Quality Audit ({readiness.termCode})
+                      Data Quality & Readiness Check ({readiness.termCode})
                     </h3>
                     <p className="text-[11px] text-[var(--ordiq-muted)]">
-                      Evaluates completeness, accuracy, consistency, and currentness before CP-SAT schedule generation
+                      Evaluates completeness, accuracy, consistency, and currentness before generating schedules
                     </p>
                   </div>
                   {readiness.canGenerate ? (
@@ -1136,7 +1131,7 @@ export function RulesWorkspace() {
                 ) : (
                   <div className="flex items-center gap-2 rounded-lg border border-[var(--ordiq-border)] bg-emerald-50/50 dark:bg-emerald-950/20 p-3 text-xs text-emerald-800 dark:text-emerald-300">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>All ISO/IEC 25012 criteria satisfied. Master data is ready for solver execution.</span>
+                    <span>All data quality checks passed. Your term data is ready for schedule generation.</span>
                   </div>
                 )}
               </>
@@ -1153,7 +1148,7 @@ export function RulesWorkspace() {
         open={blockEditor.state !== null}
         mode={blockEditor.state?.mode ?? "create"}
         entityLabel="Fixed Block"
-        description={`Sections are never scheduled during a locked block (HC-15). Term ${termCode}.`}
+        description={`Sections are never scheduled during a locked block. Term ${termCode}.`}
         fields={fixedBlockFields(sectionOptions)}
         initialValues={blockEditor.state?.values}
         onClose={blockEditor.close}
@@ -1164,7 +1159,7 @@ export function RulesWorkspace() {
         open={directiveEditor.state !== null}
         mode={directiveEditor.state?.mode ?? "create"}
         entityLabel={`Directive: ${DIRECTIVE_TYPE_LABELS[editingDirectiveType] ?? titleCase(editingDirectiveType)}`}
-        description="Hard directives are enforced by HC-12 only after approval. Saving changes clears the approval."
+        description="Required directives are enforced only after approval. Saving changes resets approval."
         fields={directiveFields(editingDirectiveType, {
           faculty: facultyOptions,
           sections: sectionOptions,
@@ -1184,7 +1179,7 @@ export function RulesWorkspace() {
         title={pendingDelete?.kind === "directive" ? "Delete Directive?" : "Delete Fixed Block?"}
         description={
           pendingDelete?.kind === "directive"
-            ? `Directive ${pendingDelete.item.id} (${directiveTarget(pendingDelete.item)}) will be removed. The action is recorded in the audit log.`
+            ? `The directive "${DIRECTIVE_TYPE_LABELS[pendingDelete.item.type] ?? titleCase(pendingDelete.item.type)}" (${directiveTarget(pendingDelete.item)}) will be removed. This action is recorded in the audit log.`
             : pendingDelete
               ? `The fixed block "${pendingDelete.item.label}" for section ${pendingDelete.item.sectionCode} will be removed. Affected schedules are flagged for a recheck.`
               : ""

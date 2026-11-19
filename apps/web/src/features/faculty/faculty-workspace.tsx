@@ -105,7 +105,7 @@ export function FacultyWorkspace() {
       const res = await fetch(
         `/api/v1/faculty?termCode=${encodeURIComponent(selectedTerm.id)}`,
       );
-      if (!res.ok) throw new Error("Requires active Dean session");
+      if (!res.ok) throw new Error("Please sign in to view faculty records.");
       return (await res.json()) as { items: FacultyItem[] };
     },
   });
@@ -218,7 +218,7 @@ export function FacultyWorkspace() {
           Faculty Directory & Teaching Load
         </h1>
         <p className="mt-0.5 text-xs text-[var(--ordiq-muted)]">
-          Manage MSEUF College of Engineering faculty, academic ranks, department assignments, teaching load limits, and AI-safe pseudonym aliases.
+          Manage MSEUF College of Engineering faculty, academic ranks, department assignments, teaching load limits, and privacy aliases.
         </p>
       </div>
 
@@ -285,7 +285,7 @@ export function FacultyWorkspace() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-[var(--ordiq-muted)]">
-                Active & AI-Anonymized
+                Active Faculty
               </span>
               <ShieldCheck className="h-4 w-4 text-[var(--ordiq-maroon)]" />
             </div>
@@ -293,7 +293,7 @@ export function FacultyWorkspace() {
               {activeCount}
             </div>
             <p className="mt-0.5 text-[11px] text-[var(--ordiq-muted)]">
-              100% mapped to pseudonym aliases
+              Privacy-protected for AI Assistant
             </p>
           </CardContent>
         </Card>
@@ -394,7 +394,7 @@ export function FacultyWorkspace() {
             <thead>
               <tr className="bg-[var(--ordiq-surface-muted)] text-[11px] font-semibold uppercase tracking-wider text-[var(--ordiq-muted)]">
                 <th className="px-4 py-2.5 text-left whitespace-nowrap">Faculty Member</th>
-                <th className="px-4 py-2.5 text-center whitespace-nowrap">AI Alias</th>
+                <th className="px-4 py-2.5 text-center whitespace-nowrap">Privacy Alias</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Department</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Employment Type</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Specialization</th>
@@ -419,7 +419,7 @@ export function FacultyWorkspace() {
                     className="px-4 py-12 text-center text-xs text-[var(--ordiq-muted)]"
                   >
                     {facultyQuery.isError
-                      ? "Sign in with the Dean account and TOTP code (/login) to view or manage faculty records."
+                      ? "Please sign in with the Dean account to view or manage faculty records."
                       : totalFaculty === 0
                         ? 'No faculty records yet. Use "Add" or "Import" above to build the college directory.'
                         : "No faculty members match the current search and filter criteria."}
@@ -444,7 +444,7 @@ export function FacultyWorkspace() {
                       <td className="px-4 py-2.5 text-center whitespace-nowrap">
                         <span
                           className="inline-block rounded border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] px-2 py-0.5 font-mono text-[11px] font-semibold text-[var(--ordiq-ink)]"
-                          title="Anonymized token forwarded to LLM for zero-knowledge schedule optimization under RA 10173."
+                          title="Privacy code used instead of the faculty member's real name when using the AI Assistant (Data Privacy Act compliant)."
                         >
                           {faculty.alias}
                         </span>
@@ -551,7 +551,7 @@ export function FacultyWorkspace() {
         open={editor.state !== null}
         mode={editor.state?.mode ?? "create"}
         entityLabel="Faculty Member"
-        description="Load limits are checked by the solver (HC-07). Status On Leave or Inactive keeps the member out of new schedules."
+        description="Teaching load limits are enforced automatically when generating schedules. Faculty marked On Leave or Inactive are excluded from new schedules."
         fields={facultyFields(programOptions, editor.state?.values?.education as string | undefined)}
         initialValues={editor.state?.values}
         onClose={editor.close}

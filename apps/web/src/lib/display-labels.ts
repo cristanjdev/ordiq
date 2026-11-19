@@ -52,8 +52,8 @@ export const SOLVER_STATUS_LABELS: Record<string, string> = {
   PROVEN_OPTIMAL: "Best possible",
   BEST_FOUND: "Best found in time limit",
   INFEASIBLE: "No valid schedule",
-  CANCELLED: "Run cancelled",
-  FAILED: "Run failed",
+  CANCELLED: "Generation cancelled",
+  FAILED: "Generation failed",
 };
 
 export const UNSCHEDULED_REASON_LABELS: Record<string, string> = {
@@ -101,8 +101,8 @@ export const SOFT_CONSTRAINT_NAMES: Record<string, string> = {
   "SC-03": "Minimal gaps",
   "SC-04": "Preferred rooms",
   "SC-05": "Even spread across the week and day",
-  "SC-06": "Stability on regeneration",
-  "SC-07": "Faculty fit score",
+  "SC-06": "Minimal changes on regeneration",
+  "SC-07": "Faculty-subject match",
   "SC-08": "Room efficiency",
   "SC-09": "No evening classes for lower years",
   "SC-10": "Lower-year priority",
@@ -114,19 +114,17 @@ export const SOFT_CONSTRAINT_NAMES: Record<string, string> = {
   "SC-16": "Few very early starts",
 };
 
-/** "SC-04 · Preferred rooms" or "HC-06 · Faculty not available". */
-export const ruleLabel = (code: string): string => {
-  const name = HARD_CONSTRAINT_NAMES[code] ?? SOFT_CONSTRAINT_NAMES[code];
-  return name ? `${code} · ${name}` : code;
-};
+/** Plain-language label for a scheduling rule or preference. */
+export const ruleLabel = (code: string): string =>
+  HARD_CONSTRAINT_NAMES[code] ?? SOFT_CONSTRAINT_NAMES[code] ?? code;
 
 /** "1st Semester, AY 2026 – 2027", matching the term picker. */
 export const termDisplayLabel = (academicYear: string, semester: number): string =>
   `${semester === 1 ? "1st" : semester === 2 ? "2nd" : "Summer"} Semester, AY ${academicYear.replace("-", " – ")}`;
 
-/** "HC-06 · Faculty not available"; unknown codes are shown as is. */
+/** Plain-language label for a required scheduling rule; unknown codes are shown as is. */
 export const hardConstraintLabel = (code: string): string =>
-  HARD_CONSTRAINT_NAMES[code] ? `${code} · ${HARD_CONSTRAINT_NAMES[code]}` : code;
+  HARD_CONSTRAINT_NAMES[code] ?? code;
 
 export const subjectCategoryLabel = lookup(SUBJECT_CATEGORY_LABELS);
 export const componentLabel = lookup(COMPONENT_LABELS);
@@ -165,7 +163,7 @@ export const profileLabel = lookup(PROFILE_LABELS);
 
 /** A schedule without a solver status was imported, not generated. */
 export const solverStatusLabel = (value: string | null | undefined): string =>
-  value ? (SOLVER_STATUS_LABELS[value] ?? titleCase(value)) : "Imported (no solver run)";
+  value ? (SOLVER_STATUS_LABELS[value] ?? titleCase(value)) : "Imported schedule";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 

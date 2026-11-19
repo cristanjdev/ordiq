@@ -25,9 +25,9 @@ To sign out, press the sign-out icon at the top right and confirm. ORDIQ also si
 Settings holds the system-wide switches. Every saved change is recorded in the audit log.
 
 - **Sign-in security:** two-factor authentication (Google Authenticator) on or off; failed attempts before the account locks (3 to 10); lock duration (1 to 1,440 minutes). Turning two-factor off keeps the authenticator setup, so turning it back on needs no new QR scan.
-- **Session & automatic sign-out:** sign out after inactivity (auto-expire) on or off; inactivity limit (5 to 480 minutes, default 30); maximum session length (1 to 72 hours, default 12).
-- **AI Assistant:** turn the assistant on or off, and set the monthly token budget. When it is off, the chat button, the AI Assistant page and the AI menu item are hidden and nothing is sent to the AI provider.
-- **Server configuration:** read-only status of the web app, the scheduling engine and the AI provider.
+- **Session & automatic sign-out:** sign out after inactivity on or off; inactivity limit (5 to 480 minutes, default 30); maximum session length (1 to 72 hours, default 12).
+- **AI Assistant:** turn the assistant on or off, and set the monthly AI usage limit (token budget). When it is off, the chat button, the AI Assistant page and the AI menu item are hidden and nothing is sent to the AI service.
+- **Server configuration:** read-only status of the web app, the scheduling engine and the AI service.
 
 Changes appear in a save bar at the bottom of the page. Sign-in and session changes need the current password before they can be saved; the password box turns red if Save is pressed without it. "Discard" undoes unsaved edits and "Restore recommended values" resets the switches to the defaults.
 
@@ -59,7 +59,7 @@ Master data can be typed in on each page or imported from the official Excel wor
 
 The Schedules page is the schedule workspace.
 
-- **Generate (CP-SAT):** creates three candidate schedules for the term: Candidate A (Balanced), Candidate B (Faculty First) and Candidate C (Student First). Every candidate is checked again by the independent validator against hard rules HC-01 to HC-15.
+- **Generate Schedules:** creates three candidate schedules for the term: Candidate A (Balanced), Candidate B (Faculty First) and Candidate C (Student First). Every candidate is automatically checked for conflicts against all required scheduling rules.
 - **Views:** an hourly schedule grid and day column cards, filterable by section, faculty, room and weekday.
 - **Editing:** a meeting can be moved to another day, time, room or faculty member. Each edit is validated right away and conflicts are shown with the rule explained in plain words. "Undo Edit" reverses the last change.
 - **Check Schedule:** runs the validator again on the open schedule.
@@ -73,11 +73,11 @@ The Schedules page is the schedule workspace.
 
 This page has five tabs:
 
-- **Hard Constraints:** the fixed rules HC-01 to HC-16 that every schedule must meet. The rules themselves cannot be edited; the "Adjust In" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).
-- **Objective Weights:** how much each soft preference (SC-01 to SC-16) counts when the solver builds candidates.
-- **Dean Directives:** extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is hard or soft.
+- **Required Rules (hard constraints):** the fixed scheduling rules (hard constraints) that every schedule must meet. Hard constraints cannot be edited directly; the "Adjust In" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).
+- **Priority Weights:** how much each scheduling priority (soft preference) counts when generating candidate schedules.
+- **Dean Directives:** extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is required or preferred.
 - **Locked Fixed Blocks:** time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.
-- **Readiness Gate:** the data readiness check (ISO/IEC 25012: completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed.
+- **Data Readiness:** the data quality and readiness check (completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed.
 
 ## Reports page
 

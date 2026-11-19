@@ -983,7 +983,7 @@ export function LoginView({
                         <div>
                           <span className="text-slate-400 dark:text-zinc-500 text-[10px] block">Key Type</span>
                           <span className="font-semibold text-slate-700 dark:text-zinc-200 block">
-                            Time-based (TOTP)
+                            Time-based
                           </span>
                         </div>
                         <div>

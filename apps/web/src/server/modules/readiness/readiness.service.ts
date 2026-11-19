@@ -1,3 +1,4 @@
+import { roomTypeLabel } from "@/lib/display-labels";
 import { getMasterDataState } from "../master-data/master-data.store";
 
 export type Iso25012Dimension =
@@ -107,7 +108,7 @@ export function getTermReadinessReport(
         severity: "WARNING",
         dimension: "completeness",
         entityCode: fac.code,
-        message: `Faculty member ${fac.code} (${fac.name}) has no declared AVAILABLE time windows for ${termCode}.`,
+        message: `Faculty member ${fac.code} (${fac.name}) has no declared available teaching hours for ${termCode}.`,
       });
     }
   }
@@ -127,7 +128,7 @@ export function getTermReadinessReport(
         severity: "CRITICAL",
         dimension: "completeness",
         entityCode: subjCode,
-        message: `Offered subject ${subjCode} has no qualified active faculty member (HC-09).`,
+        message: `Offered subject ${subjCode} has no qualified active faculty member.`,
       });
     }
   }
@@ -155,7 +156,7 @@ export function getTermReadinessReport(
         severity: "CRITICAL",
         dimension: "accuracy",
         entityCode: off.code,
-        message: `Section ${sec.code} (${sec.studentCount} students) exceeds the largest ${off.requiredRoomType} room capacity (${maxCap} seats) for offering ${off.code} (HC-04).`,
+        message: `Section ${sec.code} (${sec.studentCount} students) exceeds the largest ${roomTypeLabel(off.requiredRoomType).toLowerCase()} capacity (${maxCap} seats) for ${off.subjectCode}.`,
       });
     }
   }
@@ -222,7 +223,7 @@ export function getTermReadinessReport(
         severity: "WARNING",
         dimension: "consistency",
         entityCode: `${sectionCode}:${subjectCode}`,
-        message: `Offerings for section ${sectionCode} in subject ${subjectCode} total ${scheduledMinutes} min/week, but subject contactHours requires ${expectedMinutes} min/week (HC-08).`,
+        message: `Offerings for section ${sectionCode} in subject ${subjectCode} total ${scheduledMinutes} min/week, while the subject requires ${expectedMinutes} min/week.`,
       });
     }
   }

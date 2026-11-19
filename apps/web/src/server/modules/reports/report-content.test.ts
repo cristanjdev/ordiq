@@ -109,7 +109,10 @@ describe("report content", () => {
       "Waived with approval",
       "Classes not scheduled",
     ]);
-    for (const row of content.sections[0]?.rows ?? []) expect(row[0]).toMatch(/^HC-\d\d · /);
+    for (const row of content.sections[0]?.rows ?? []) {
+      expect(row[0]?.trim().length).toBeGreaterThan(0);
+      expect(row[0]).not.toMatch(/^HC-\d\d/);
+    }
   });
 
   it("exports every report, filtered and unfiltered, with readable headings", async () => {
