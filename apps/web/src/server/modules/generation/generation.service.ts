@@ -19,12 +19,21 @@ import { getTermReadinessReport } from "../readiness/readiness.service";
 
 export type CandidateProfileName = "BALANCED" | "FACULTY_FIRST" | "STUDENT_FIRST";
 
+/**
+ * The college asked for one optimal schedule instead of three candidates (D-29):
+ * Generate runs only the Balanced profile, which carries the Dean's saved weights.
+ */
+export const DEFAULT_GENERATION_PROFILES: CandidateProfileName[] = ["BALANCED"];
+/** On the college's full term (585 meetings) about 10 s goes to building the model. */
+export const PER_PROFILE_TIME_LIMIT_SECONDS = 20;
+export const SINGLE_SCHEDULE_TIME_LIMIT_SECONDS = 40;
+
 export const CANDIDATE_PROFILES: Record<
   CandidateProfileName,
   { label: string; weights: Record<SoftConstraintCode, number> }
 > = {
   BALANCED: {
-    label: "Candidate A — Balanced",
+    label: "Optimal Schedule",
     weights: {
       "SC-01": 10,
       "SC-02": 8,
@@ -329,9 +338,11 @@ export async function checkExistingSchedule(
 }
 
 /**
- * Runs a full GenerationRun producing candidates across weight profiles (D-19),
- * re-validating every solver output through POST /v1/validate and marking SOLVER_MODEL_BUG
- * if the independent validator detects any unwaived non-HC-08 hard violation on solver output (Phase 2D).
+ * Runs a GenerationRun. By default it produces one optimal schedule with the Dean's
+ * saved priorities in strict order (D-28, D-29); other weight profiles (D-19) can
+ * still be requested explicitly. Every solver output is re-validated through
+ * POST /v1/validate, and the run is marked SOLVER_MODEL_BUG if the independent
+ * validator finds any unwaived non-HC-08 hard violation (Phase 2D).
  */
 export async function runScheduleGeneration(
   termCode: string,
@@ -358,11 +369,11 @@ export async function runScheduleGeneration(
     );
   }
 
-  const profiles = options?.profiles ?? [
-    "BALANCED",
-    "FACULTY_FIRST",
-    "STUDENT_FIRST",
-  ];
+  const profiles = options?.profiles ?? DEFAULT_GENERATION_PROFILES;
+  // One profile gets the time three used to share, for a better single schedule.
+  const timeLimitSeconds =
+    options?.timeLimitSeconds ??
+    (profiles.length === 1 ? SINGLE_SCHEDULE_TIME_LIMIT_SECONDS : PER_PROFILE_TIME_LIMIT_SECONDS);
   const client = options?.engineClient ?? createEngineClient();
   const actor = options?.actor ?? "dean";
 
@@ -390,9 +401,7 @@ export async function runScheduleGeneration(
     const jobResp = await client.startSolveJob({
       problem,
       profile_name: profileName,
-      // 20 s per profile: on the college's full term (585 meetings) 10 s was used up
-      // building the model, so every profile fell back to the same first-fit schedule.
-      time_limit_seconds: options?.timeLimitSeconds ?? 20,
+      time_limit_seconds: timeLimitSeconds,
     });
 
     const solution: EngineSolution | null | undefined = jobResp.solution;

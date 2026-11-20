@@ -4,7 +4,7 @@ This guide describes the ORDIQ screens as they are in the current release. When 
 
 ## Layout of the app
 
-The top bar shows the MSEUF logo, the term selector, the light/dark theme switch, the notifications bell, the Dean's name and the sign-out button. Every page shows data for the term chosen in the term selector.
+The top bar shows the ORDIQ logo, the term selector, the light/dark theme switch, the notifications bell, the Dean's name and the sign-out button. Every page shows data for the term chosen in the term selector. The last entry of the term selector, "+ Add new semester…", adds the next or an upcoming semester: it is filled in as the semester after the latest one, starts as a Draft, and becomes the selected term once saved. Set it to Active when it becomes the current semester.
 
 The left sidebar has: Dashboard, Faculty, Courses & Sections, Rooms & Laboratories, Schedules, Rules & Preferences, Reports, AI Assistant and Settings. On phones the sidebar opens from the menu button at the top left.
 
@@ -45,7 +45,7 @@ The Faculty page lists the engineering faculty with their employment type (Full-
 
 ## Courses & Sections page
 
-This page has three tabs: Subjects Catalog (subject codes, units, lecture and laboratory hours), Student Sections (section codes and their student counts only; ORDIQ keeps no individual student records) and Course Offerings (which subject is offered to which section this term). Programs and terms are managed here too.
+This page has three tabs: Subjects Catalog (subject codes, units, lecture and laboratory hours, and the department each subject belongs to: College of Engineering, College of Education or College of Arts and Sciences; the catalog can be filtered by department, program and year level), Student Sections (section codes and their student counts only; ORDIQ keeps no individual student records) and Course Offerings (which subject is offered to which section this term). Programs and terms are managed here too.
 
 ## Rooms & Laboratories page
 
@@ -59,13 +59,13 @@ Master data can be typed in on each page or imported from the official Excel wor
 
 The Schedules page is the schedule workspace.
 
-- **Generate Schedules:** creates three candidate schedules for the term: Candidate A (Balanced), Candidate B (Faculty First) and Candidate C (Student First). Every candidate is automatically checked for conflicts against all required scheduling rules.
+- **Generate Optimal Schedule:** creates one optimal schedule for the term: the best schedule ORDIQ finds that satisfies the required rules, following the college's strict order of priority (department rules first, then faculty preferences). It is checked for conflicts against all required scheduling rules. Generating again replaces the draft; older drafts and the college's own imported schedule are kept for reports but no longer shown here. The schedule line shows its version and quality score (0 to 100: how well the scheduling priorities, the soft preferences, are met).
 - **Views:** an hourly schedule grid and day column cards, filterable by section, faculty, room and weekday.
 - **Editing:** a meeting can be moved to another day, time, room or faculty member. Each edit is validated right away and conflicts are shown with the rule explained in plain words. "Undo Edit" reverses the last change.
 - **Check Schedule:** runs the validator again on the open schedule.
-- **Compare:** shows the candidates side by side (quality score, conflicts, unscheduled meetings).
-- **Waived exceptions:** a waivable rule (HC-04 to HC-15) can be overridden with a written reason. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.
-- **Accept Candidate:** makes a candidate the official schedule. ORDIQ only accepts a candidate with zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives the previously accepted schedule for the term.
+- **Evaluation:** the evaluation of the open schedule, in two lists. Unsatisfied Constraints: unresolved required-rule conflicts and classes that could not be scheduled, each with its reason. Possible Conflicts of Interest: things that are not rule breaks but deserve a look before accepting: faculty assigned more than their regular load, rooms holding more students than seats, waived rule exceptions, and faculty preferences the schedule could not follow.
+- **Waived exceptions:** a waivable rule (HC-04 to HC-16) can be overridden with a written reason. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.
+- **Accept Schedule:** makes the schedule the official one. ORDIQ only accepts a schedule with zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives the previously accepted schedule for the term.
 - **Start Schedule Revision:** creates a new draft from the accepted schedule so it can be edited without touching the accepted version.
 - **Import / Export:** bring in an existing schedule or export the open one.
 
@@ -74,7 +74,7 @@ The Schedules page is the schedule workspace.
 This page has five tabs:
 
 - **Required Rules (hard constraints):** the fixed scheduling rules (hard constraints) that every schedule must meet. Hard constraints cannot be edited directly; the "Adjust In" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).
-- **Priority Weights:** how much each scheduling priority (soft preference) counts when generating candidate schedules.
+- **Priority Weights:** how much each scheduling priority (soft preference) counts when generating the optimal schedule.
 - **Dean Directives:** extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is required or preferred.
 - **Locked Fixed Blocks:** time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.
 - **Data Readiness:** the data quality and readiness check (completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed.
@@ -94,7 +94,7 @@ The AI Assistant page has four tabs:
 
 ## Chat panel
 
-The chat panel answers questions about the selected term in English, Filipino or Taglish, using the live schedule data. The menu (three dots) starts a new conversation or opens a recent one. The assistant can check conflicts, summarize loads and room use, explain unscheduled classes, find alternative slots, recommend faculty, add directives, generate new candidates and propose a change. It cannot apply a proposal, accept a schedule, delete records, edit master data or create accounts; those stay with the Dean in the workspace. Faculty names are replaced with codes before anything is sent to the AI provider and restored in the reply.
+The chat panel answers questions about the selected term in English, Filipino or Taglish, using the live schedule data. The menu (three dots) starts a new conversation or opens a recent one. The assistant can check conflicts, summarize loads and room use, explain unscheduled classes, find alternative slots, recommend faculty, add directives, generate a new optimal schedule and propose a change. It cannot apply a proposal, accept a schedule, delete records, edit master data or create accounts; those stay with the Dean in the workspace. Faculty names are replaced with codes before anything is sent to the AI provider and restored in the reply.
 
 ## Notifications
 

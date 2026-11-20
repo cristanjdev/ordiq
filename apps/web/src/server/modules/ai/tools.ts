@@ -156,7 +156,8 @@ export const AiToolSchemas = {
     termCode: z.string().min(1),
     profiles: z
       .array(z.enum(["BALANCED", "FACULTY_FIRST", "STUDENT_FIRST"]))
-      .default(["BALANCED", "FACULTY_FIRST", "STUDENT_FIRST"]),
+      // One optimal schedule by default (D-29).
+      .default(["BALANCED"]),
   }),
   propose_change: z.object({
     termCode: z.string().min(1),

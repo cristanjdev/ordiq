@@ -768,9 +768,9 @@ export function RulesWorkspace() {
           <div className="p-4 space-y-4">
             <div className="rounded-lg border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] p-3 text-xs text-[var(--ordiq-muted)]">
               <span className="font-semibold text-[var(--ordiq-ink)]">Priority weights for {termCode}:</span>{" "}
-              Higher weights give that goal stronger priority when generating schedules. Saved weights set the Balanced
-              candidate; the Faculty-first and Student-first candidates scale by the same ratio. Setting a weight to 0
-              turns that priority off. Changes take effect on the next schedule generation.
+              Higher weights give that goal stronger priority when generating the optimal schedule. Department
+              priorities always come before faculty preferences. Setting a weight to 0 turns that priority off.
+              Changes take effect on the next schedule generation.
             </div>
 
             {softWeightsQuery.isError ? (

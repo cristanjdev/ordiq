@@ -242,7 +242,7 @@ export function FacultyWorkspace() {
               {totalFaculty}
             </div>
             <p className="mt-0.5 text-[11px] text-[var(--ordiq-muted)]">
-              Across 7 engineering departments
+              Across 7 engineering programs
             </p>
           </CardContent>
         </Card>
@@ -363,7 +363,7 @@ export function FacultyWorkspace() {
               className="h-8 rounded-md border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-2.5 text-xs text-[var(--ordiq-ink)] focus:outline-none focus:ring-1 focus:ring-[var(--ordiq-maroon)]"
               aria-label="Filter by Program"
             >
-              <option value="ALL">All Departments</option>
+              <option value="ALL">All Programs</option>
               {programs.map((p) => (
                 <option key={p} value={p}>
                   {p} Engineering

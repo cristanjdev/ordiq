@@ -46,6 +46,62 @@ export interface RoomItem {
   status: "ACTIVE" | "MAINTENANCE" | "INACTIVE";
 }
 
+interface RoomUsage {
+  roomCode: string;
+  usedMinutes: number;
+  availableMinutes: number;
+  utilizationPct: number;
+}
+
+function hoursText(minutes: number): string {
+  const h = Math.round((minutes / 60) * 2) / 2;
+  return `${h % 1 === 0 ? h.toFixed(0) : h.toFixed(1)} hr${h === 1 ? "" : "s"}`;
+}
+
+/** Free teaching hours per week left in the room under the term's current schedule. */
+function RoomAvailabilityCell({
+  status,
+  usage,
+  loading,
+}: {
+  status: RoomItem["status"];
+  usage: RoomUsage | undefined;
+  loading: boolean;
+}) {
+  if (status !== "ACTIVE") {
+    return (
+      <span className="text-[11px] font-medium text-[var(--ordiq-muted)]">
+        Not available ({titleCase(status)})
+      </span>
+    );
+  }
+  if (loading) {
+    return <span className="text-[11px] text-[var(--ordiq-muted)]">Checking…</span>;
+  }
+  if (!usage || usage.availableMinutes <= 0) {
+    return <span className="text-[11px] text-[var(--ordiq-muted)]">—</span>;
+  }
+  const free = Math.max(0, usage.availableMinutes - usage.usedMinutes);
+  const usedPct = Math.min(100, Math.max(0, usage.utilizationPct));
+  return (
+    <div
+      className="mx-auto w-full max-w-[150px]"
+      title={`${hoursText(usage.usedMinutes)} scheduled out of ${hoursText(usage.availableMinutes)} of teaching time per week`}
+    >
+      <div className="text-[11px] font-bold text-[var(--ordiq-ink)]">
+        {free === 0 ? "Fully booked" : `${hoursText(free)} free / week`}
+      </div>
+      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[var(--ordiq-surface-muted)]">
+        <div
+          className={usedPct >= 90 ? "h-full bg-red-500" : usedPct >= 70 ? "h-full bg-amber-500" : "h-full bg-emerald-500"}
+          style={{ width: `${usedPct}%` }}
+        />
+      </div>
+      <div className="mt-0.5 text-[10px] text-[var(--ordiq-muted)]">{Math.round(usedPct)}% in use</div>
+    </div>
+  );
+}
+
 export function RoomsWorkspace() {
   const { selectedTerm } = useShell();
   const queryClient = useQueryClient();
@@ -69,6 +125,20 @@ export function RoomsWorkspace() {
       return (await res.json()) as { items: RoomItem[] };
     },
   });
+
+  // Weekly use of each room in the term's current schedule, for the availability column.
+  const usageQuery = useQuery<{ roomUtilizations: RoomUsage[] }>({
+    queryKey: ["room-usage", selectedTerm.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/v1/analytics?termCode=${encodeURIComponent(selectedTerm.id)}`);
+      if (!res.ok) throw new Error("Room usage unavailable.");
+      return (await res.json()) as { roomUtilizations: RoomUsage[] };
+    },
+  });
+  const usageByRoom = React.useMemo(
+    () => new Map((usageQuery.data?.roomUtilizations ?? []).map((u) => [u.roomCode, u])),
+    [usageQuery.data],
+  );
 
   const deleteRoomMutation = useMutation({
     mutationFn: async (code: string) => {
@@ -324,7 +394,7 @@ export function RoomsWorkspace() {
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Facility Name</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Type</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Seating Capacity</th>
-                <th className="px-4 py-2.5 text-center whitespace-nowrap">Installed Equipment</th>
+                <th className="px-4 py-2.5 text-center whitespace-nowrap">Room Availability</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Department Allocation / Restrictions</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Status</th>
                 <th className="px-4 py-2.5 text-center whitespace-nowrap">Actions</th>
@@ -382,17 +452,12 @@ export function RoomsWorkspace() {
                           <span>&ge; {minRequired} std</span>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 text-center min-w-[180px]">
-                        <div className="flex flex-wrap justify-center gap-1">
-                          {room.equipment.map((eq) => (
-                            <span
-                              key={eq}
-                              className="rounded bg-[var(--ordiq-surface-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--ordiq-ink)] whitespace-nowrap"
-                            >
-                              {eq}
-                            </span>
-                          ))}
-                        </div>
+                      <td className="px-4 py-2.5 text-center min-w-[170px]">
+                        <RoomAvailabilityCell
+                          status={room.status}
+                          usage={usageByRoom.get(room.code)}
+                          loading={usageQuery.isLoading}
+                        />
                       </td>
                       <td className="px-4 py-2.5 text-center text-[11px] text-[var(--ordiq-muted)] min-w-[200px]">
                         {room.restrictions || "General College Use"}

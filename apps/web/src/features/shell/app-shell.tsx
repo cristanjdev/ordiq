@@ -26,6 +26,7 @@ import { useSystemSettings } from "@/features/settings/settings-api";
 import * as React from "react";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { MseufLogo } from "@/components/ui/mseuf-logo";
+import { NEW_TERM_OPTION, useNewTermDialog } from "./new-term-button";
 import { OrdiqLogo } from "@/components/ui/ordiq-logo";
 import { useAuthSession } from "@/features/auth/auth-session-provider";
 import { usePresence } from "@/lib/use-presence";
@@ -126,6 +127,7 @@ export function AppShell({
     mobileNavOpen,
     setMobileNavOpen,
   } = useShell();
+  const newTerm = useNewTermDialog();
   const [darkMode, setDarkMode] = React.useState(false);
   const [sidebarOpen, setSidebarOpen] = React.useState(initialSidebarOpen);
   const toggleSidebar = React.useCallback(() => {
@@ -320,23 +322,36 @@ export function AppShell({
             {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          {/* MSEUF Branding Link (The ONLY top logo header, matching reference) */}
-          <Link href="/" className="flex items-center gap-3">
-            <MseufLogo size={36} variant="white" className="drop-shadow-xs" />
-            <div className="flex flex-col justify-center leading-tight">
-              <div className="flex items-center gap-2.5">
-                <span className="text-lg sm:text-xl font-bold tracking-wider text-white">
-                  MSEUF
-                </span>
-                <div className="hidden h-4 w-px bg-white/25 sm:block" />
-                <span className="hidden text-xs font-semibold text-white/90 sm:inline-block">
-                  Class Scheduling &amp; Resource Allocation System
-                </span>
+          {/* ORDIQ branding: name and full title, then the tagline after a divider on wide screens */}
+          <Link href="/" className="flex items-center">
+            {/*
+              With the sidebar open, this block is the sidebar's width (256px) minus the
+              header's 24px left padding, so the divider at its right end lines up with
+              the sidebar's edge.
+            */}
+            <div
+              className={cn(
+                "flex items-center gap-3",
+                sidebarOpen && "xl:w-[232px] xl:justify-between",
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <MseufLogo size={36} variant="white" className="drop-shadow-xs" />
+                {/* The name and two-line title together stay about as tall as the 36px icon. */}
+                <div className="flex flex-col justify-center">
+                  <span className="text-lg sm:text-base font-bold leading-none tracking-wider text-white">
+                    ORDIQ
+                  </span>
+                  <span className="mt-0.5 hidden max-w-[165px] text-[9px] leading-[1.15] font-medium text-white/80 sm:block">
+                    Intelligent Class Scheduling and Resource Allocation
+                  </span>
+                </div>
               </div>
-              <p className="hidden text-[10px] text-white/75 sm:block mt-0.5">
-                Smarter Schedules. Better Decisions.
-              </p>
+              <div className="hidden h-9 w-px shrink-0 bg-orange-400/60 xl:block" aria-hidden="true" />
             </div>
+            <span className="ml-3 hidden text-sm italic text-white/90 xl:inline">
+              Order Meets Intelligence.
+            </span>
           </Link>
         </div>
 
@@ -348,17 +363,24 @@ export function AppShell({
             <select
               aria-label="Academic Term Selector"
               value={selectedTerm.id}
-              onChange={(e) => setSelectedTermId(e.target.value)}
-              className="h-8 sm:h-9 appearance-none rounded-lg bg-white pl-8 sm:pl-9 pr-7 sm:pr-8 text-xs font-semibold text-[#2d0508] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#ea580c] sm:min-w-[235px] cursor-pointer"
+              disabled={newTerm.opening}
+              onChange={(e) => {
+                // The last entry adds a semester; the picker keeps the current one meanwhile.
+                if (e.target.value === NEW_TERM_OPTION) newTerm.start();
+                else setSelectedTermId(e.target.value);
+              }}
+              className="h-8 sm:h-9 appearance-none rounded-lg bg-white pl-8 sm:pl-9 pr-7 sm:pr-8 text-xs font-semibold text-[#2d0508] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#ea580c] sm:min-w-[235px] cursor-pointer disabled:cursor-wait"
             >
               {terms.map((term) => (
                 <option key={term.id} value={term.id}>
                   {term.label}
                 </option>
               ))}
+              <option value={NEW_TERM_OPTION}>+ Add new semester…</option>
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 sm:right-2.5 h-3.5 sm:h-4 w-3.5 sm:w-4 text-[#685659]" />
           </div>
+          {newTerm.dialog}
 
           {/* Theme Toggle Button (Light / Dark) */}
           <button

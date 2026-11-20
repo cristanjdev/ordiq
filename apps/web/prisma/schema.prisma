@@ -161,6 +161,7 @@ model Subject {
   programCode         String?  @map("program_code")
   yearLevel           Int      @map("year_level")
   category            String // MAJOR | GENERAL_ENGINEERING | MATHEMATICS | SCIENCE | GENERAL_EDUCATION | PATHFIT
+  department          String   @default("ENGINEERING") // ENGINEERING | EDUCATION | ARTS_AND_SCIENCES
   units               Float
   contactHours        Float    @map("contact_hours")
   lectureHours        Float    @default(3) @map("lecture_hours")

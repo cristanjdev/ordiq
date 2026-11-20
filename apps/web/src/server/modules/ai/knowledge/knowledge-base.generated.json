@@ -1,6 +1,6 @@
 {
- "generatedAt": "2026-11-19T15:25:04.620Z",
- "passageCount": 206,
+ "generatedAt": "2026-11-20T18:23:44.581Z",
+ "passageCount": 208,
  "passages": [
   {
    "id": "40b66530325b",
@@ -10,11 +10,11 @@
    "text": "This guide describes the ORDIQ screens as they are in the current release. When an older document describes a screen differently, this guide is the current one."
   },
   {
-   "id": "6a47d4b40c3d",
+   "id": "b27dd360bfd7",
    "source": "ORDIQ In-App Guide",
    "section": "Layout of the app",
    "priority": 1.35,
-   "text": "The top bar shows the MSEUF logo, the term selector, the light/dark theme switch, the notifications bell, the Dean's name and the sign-out button. Every page shows data for the term chosen in the term selector.\n\nThe left sidebar has: Dashboard, Faculty, Courses & Sections, Rooms & Laboratories, Schedules, Rules & Preferences, Reports, AI Assistant and Settings. On phones the sidebar opens from the menu button at the top left.\n\nThe AI chat panel opens from the round ORDIQ button at the bottom right of the screen. On very wide screens it docks beside the page; on smaller screens it slides in as a drawer."
+   "text": "The top bar shows the ORDIQ logo, the term selector, the light/dark theme switch, the notifications bell, the Dean's name and the sign-out button. Every page shows data for the term chosen in the term selector. The last entry of the term selector, \"+ Add new semester…\", adds the next or an upcoming semester: it is filled in as the semester after the latest one, starts as a Draft, and becomes the selected term once saved. Set it to Active when it becomes the current semester.\n\nThe left sidebar has: Dashboard, Faculty, Courses & Sections, Rooms & Laboratories, Schedules, Rules & Preferences, Reports, AI Assistant and Settings. On phones the sidebar opens from the menu button at the top left.\n\nThe AI chat panel opens from the round ORDIQ button at the bottom right of the screen. On very wide screens it docks beside the page; on smaller screens it slides in as a drawer."
   },
   {
    "id": "71752934356b",
@@ -49,7 +49,7 @@
    "source": "ORDIQ In-App Guide",
    "section": "Courses & Sections page",
    "priority": 1.35,
-   "text": "This page has three tabs: Subjects Catalog (subject codes, units, lecture and laboratory hours), Student Sections (section codes and their student counts only; ORDIQ keeps no individual student records) and Course Offerings (which subject is offered to which section this term). Programs and terms are managed here too."
+   "text": "This page has three tabs: Subjects Catalog (subject codes, units, lecture and laboratory hours, and the department each subject belongs to: College of Engineering, College of Education or College of Arts and Sciences; the catalog can be filtered by department, program and year level), Student Sections (section codes and their student counts only; ORDIQ keeps no individual student records) and Course Offerings (which subject is offered to which section this term). Programs and terms are managed here too."
   },
   {
    "id": "25b9a93276a9",
@@ -66,18 +66,18 @@
    "text": "Master data can be typed in on each page or imported from the official Excel workbook. An import is checked first (a dry run) and every row or column problem is reported in plain words before anything is saved."
   },
   {
-   "id": "a6cc98dce613",
+   "id": "84825fa4c1dd",
    "source": "ORDIQ In-App Guide",
    "section": "Schedules page",
    "priority": 1.35,
-   "text": "The Schedules page is the schedule workspace.\n\n- Generate Schedules: creates three candidate schedules for the term: Candidate A (Balanced), Candidate B (Faculty First) and Candidate C (Student First). Every candidate is automatically checked for conflicts against all required scheduling rules.\n- Views: an hourly schedule grid and day column cards, filterable by section, faculty, room and weekday.\n- Editing: a meeting can be moved to another day, time, room or faculty member. Each edit is validated right away and conflicts are shown with the rule explained in plain words. \"Undo Edit\" reverses the last change.\n- Check Schedule: runs the validator again on the open schedule.\n- Compare: shows the candidates side by side (quality score, conflicts, unscheduled meetings).\n- Waived exceptions: a waivable rule (HC-04 to HC-15) can be overridden with a written reason. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.\n- Accept Candidate: makes a candidate the official schedule. ORDIQ only accepts a candidate with zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives the previously accepted schedule for the term.\n- Start Schedule Revision: creates a new draft from the accepted schedule so it can be edited without touching the accepted version.\n- Import / Export: bring in an existing schedule or export the open one."
+   "text": "- Generate Optimal Schedule: creates one optimal schedule for the term: the best schedule ORDIQ finds that satisfies the required rules, following the college's strict order of priority (department rules first, then faculty preferences). It is checked for conflicts against all required scheduling rules. Generating again replaces the draft; older drafts and the college's own imported schedule are kept for reports but no longer shown here. The schedule line shows its version and quality score (0 to 100: how well the scheduling priorities, the soft preferences, are met).\n- Views: an hourly schedule grid and day column cards, filterable by section, faculty, room and weekday.\n- Editing: a meeting can be moved to another day, time, room or faculty member. Each edit is validated right away and conflicts are shown with the rule explained in plain words. \"Undo Edit\" reverses the last change.\n- Check Schedule: runs the validator again on the open schedule.\n- Evaluation: the evaluation of the open schedule, in two lists. Unsatisfied Constraints: unresolved required-rule conflicts and classes that could not be scheduled, each with its reason. Possible Conflicts of Interest: things that are not rule breaks but deserve a look before accepting: faculty assigned more than their regular load, rooms holding more students than seats, waived rule exceptions, and faculty preferences the schedule could not follow.\n- Waived exceptions: a waivable rule (HC-04 to HC-16) can be overridden with a written reason. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived.\n- Accept Schedule: makes the schedule the official one. ORDIQ only accepts a schedule with zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives the previously accepted schedule for the term.\n- Start Schedule Revision: creates a new draft from the accepted schedule so it can be edited without touching the accepted version.\n- Import / Export: bring in an existing schedule or export the open one."
   },
   {
    "id": "6ea3df9de41f",
    "source": "ORDIQ In-App Guide",
    "section": "Rules & Preferences page",
    "priority": 1.35,
-   "text": "This page has five tabs:\n\n- Required Rules (hard constraints): the fixed scheduling rules (hard constraints) that every schedule must meet. Hard constraints cannot be edited directly; the \"Adjust In\" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).\n- Priority Weights: how much each scheduling priority (soft preference) counts when generating candidate schedules.\n- Dean Directives: extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is required or preferred.\n- Locked Fixed Blocks: time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.\n- Data Readiness: the data quality and readiness check (completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed."
+   "text": "This page has five tabs:\n\n- Required Rules (hard constraints): the fixed scheduling rules (hard constraints) that every schedule must meet. Hard constraints cannot be edited directly; the \"Adjust In\" column links to the page where each rule's inputs are changed (for example room capacity on Rooms & Laboratories, or faculty availability on Faculty).\n- Priority Weights: how much each scheduling priority (soft preference) counts when generating the optimal schedule.\n- Dean Directives: extra rules for the next generation run, such as keeping a faculty member off a day, a time window for a section, avoiding or requiring a room, pinning a meeting, assigning a faculty member, or changing a weight. Each directive is required or preferred.\n- Locked Fixed Blocks: time blocks that are already taken, such as classes run by other departments (General Education, PATHFIT, NSTP) or college events.\n- Data Readiness: the data quality and readiness check (completeness, accuracy, consistency, currentness). Critical gaps block schedule generation until they are fixed."
   },
   {
    "id": "e358c01175b5",
@@ -98,7 +98,7 @@
    "source": "ORDIQ In-App Guide",
    "section": "Chat panel",
    "priority": 1.35,
-   "text": "The chat panel answers questions about the selected term in English, Filipino or Taglish, using the live schedule data. The menu (three dots) starts a new conversation or opens a recent one. The assistant can check conflicts, summarize loads and room use, explain unscheduled classes, find alternative slots, recommend faculty, add directives, generate new candidates and propose a change. It cannot apply a proposal, accept a schedule, delete records, edit master data or create accounts; those stay with the Dean in the workspace. Faculty names are replaced with codes before anything is sent to the AI provider and restored in the reply."
+   "text": "The chat panel answers questions about the selected term in English, Filipino or Taglish, using the live schedule data. The menu (three dots) starts a new conversation or opens a recent one. The assistant can check conflicts, summarize loads and room use, explain unscheduled classes, find alternative slots, recommend faculty, add directives, generate a new optimal schedule and propose a change. It cannot apply a proposal, accept a schedule, delete records, edit master data or create accounts; those stay with the Dean in the workspace. Faculty names are replaced with codes before anything is sent to the AI provider and restored in the reply."
   },
   {
    "id": "5be195b61043",
@@ -175,14 +175,28 @@
    "source": "ORDIQ FAQ",
    "section": "How do I create a schedule for the term?",
    "priority": 1.3,
-   "text": "Also asked: paano gumawa ng schedule, generate schedule steps, saan magsisimula, where do I start for a new term, first steps.\n\n1. Make sure the term's data is complete: faculty, subjects, sections, offerings and rooms. The Data Readiness tab on Rules & Preferences shows what is missing.\n2. Open Schedules and press Generate Schedules. ORDIQ creates three candidates: Balanced, Faculty First and Student First.\n3. Review and compare them, fix any conflicts or unscheduled meetings, then accept one."
+   "text": "Also asked: paano gumawa ng schedule, generate schedule steps, saan magsisimula, where do I start for a new term, first steps.\n\n1. Make sure the term's data is complete: faculty, subjects, sections, offerings and rooms. The Data Readiness tab on Rules & Preferences shows what is missing.\n2. Open Schedules and press Generate Optimal Schedule. ORDIQ creates one optimal schedule for the term.\n3. Open its Evaluation, fix any unsatisfied constraints (conflicts or unscheduled classes), look over the possible conflicts of interest, then accept it."
   },
   {
-   "id": "df1f7f9f771f",
+   "id": "7920957a7349",
    "source": "ORDIQ FAQ",
-   "section": "What is the difference between Balanced, Faculty First and Student First?",
+   "section": "Why is there only one schedule? Where are the candidates?",
    "priority": 1.3,
-   "text": "Also asked: candidate A B C, ano ang pinagkaiba ng candidates, weight profiles.\n\nThey are three candidate schedules built from the same data with different weights on the soft preferences. Candidate A (Balanced) keeps the weights moderate across faculty and student preferences. Candidate B (Faculty First) weighs faculty preferred days and times (SC-01), load balance (SC-02), preferred rooms (SC-04) and faculty fit (SC-07) more heavily. Candidate C (Student First) weighs fewer gaps (SC-03), an even spread across the week (SC-05), no evening classes for lower years (SC-09), lower-year priority (SC-10), no late laboratories (SC-11) and spreading major subjects (SC-12) more heavily. All three must meet the same hard rules, and in all three the faculty's own preferred days, times and rooms (SC-01, SC-04) count only after the department's preferences, following the college's strict order of priority."
+   "text": "Also asked: candidate A B C, Balanced Faculty First Student First, ano ang pinagkaiba ng candidates, weight profiles, compare candidates.\n\nThe college asked for one optimal schedule instead of several candidates, so the Dean can focus on understanding a single schedule. ORDIQ builds the best schedule it can find that satisfies the required rules, using the Dean's priority weights in a strict order: the department's rules and priorities first, then the faculty's own preferred days, times and rooms (SC-01, SC-04). The older Faculty First and Student First candidates are no longer generated. Each new generation replaces the draft; earlier drafts and the college's own imported schedule are kept for the reports and the evaluation."
+  },
+  {
+   "id": "349ee65fa892",
+   "source": "ORDIQ FAQ",
+   "section": "What does the schedule evaluation show?",
+   "priority": 1.3,
+   "text": "Also asked: unsatisfied constraints, possible conflicts of interest, evaluation tab, ano ang evaluation.\n\nThe Evaluation view on the Schedules page has two lists. Unsatisfied Constraints are the required rules the schedule does not meet (unresolved conflicts) and the classes it could not place, each with the reason. Possible Conflicts of Interest are not rule breaks but are worth checking before accepting: faculty assigned more than their regular teaching load, rooms holding more students than seats, rule exceptions the Dean waived, and faculty preferences the schedule could not follow."
+  },
+  {
+   "id": "bdfd04bd38e1",
+   "source": "ORDIQ FAQ",
+   "section": "What is the quality score of the optimized schedule?",
+   "priority": 1.3,
+   "text": "Also asked: quality score, score ng schedule, ano ang score, schedule score meaning.\n\nThe quality score runs from 0 to 100 and shows how well the schedule meets the scheduling priorities (the soft preferences and their weights on Rules & Preferences). Higher is better. The independent validator computes it, and it appears on the schedule line on the Schedules page and in the reports. It does not replace the Evaluation: check there for unresolved conflicts and unscheduled classes as well."
   },
   {
    "id": "7ef0be77a777",
@@ -203,21 +217,21 @@
    "source": "ORDIQ FAQ",
    "section": "How do I accept a schedule?",
    "priority": 1.3,
-   "text": "Also asked: paano i-accept ang schedule, approve the candidate, gawing official.\n\nOn the Schedules page, open the candidate and press Accept Candidate, then confirm. ORDIQ accepts it only when it has zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives any previously accepted schedule for the term. \"Accepted\" means approved for portal encoding; university approval happens outside ORDIQ."
+   "text": "Also asked: paano i-accept ang schedule, approve the candidate, gawing official.\n\nOn the Schedules page, open the schedule and press Accept Schedule, then confirm. ORDIQ accepts it only when it has zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives any previously accepted schedule for the term. \"Accepted\" means approved for portal encoding; university approval happens outside ORDIQ."
   },
   {
    "id": "9a2de855f165",
    "source": "ORDIQ FAQ",
    "section": "Why can't I accept the schedule?",
    "priority": 1.3,
-   "text": "Also asked: ayaw ma-accept, hindi ma-accept ang candidate, accept failed.\n\nORDIQ blocks acceptance while the candidate still has unwaived hard conflicts or unscheduled meetings. Fix or waive the conflicts (only HC-04 to HC-15 can be waived) and place the remaining meetings, then accept again."
+   "text": "Also asked: ayaw ma-accept, hindi ma-accept ang candidate, accept failed.\n\nORDIQ blocks acceptance while the schedule still has unwaived hard conflicts or unscheduled meetings; the Evaluation view lists them. Fix or waive the conflicts (only HC-04 to HC-16 can be waived) and place the remaining meetings, then accept again."
   },
   {
    "id": "03f3f4ad460d",
    "source": "ORDIQ FAQ",
    "section": "Can the AI Assistant accept a schedule or apply a change?",
    "priority": 1.3,
-   "text": "Also asked: kaya ba ng chatbot mag-accept, can the AI apply proposals.\n\nNo. The assistant can check, explain, generate candidates, add directives and propose a change, but it has no way to apply a proposal, accept a schedule, delete records or edit master data. The Dean does those in the workspace, and proposals are applied or rejected on AI Assistant › Proposals."
+   "text": "Also asked: kaya ba ng chatbot mag-accept, can the AI apply proposals.\n\nNo. The assistant can check, explain, generate the optimal schedule, add directives and propose a change, but it has no way to apply a proposal, accept a schedule, delete records or edit master data. The Dean does those in the workspace, and proposals are applied or rejected on AI Assistant › Proposals."
   },
   {
    "id": "c787c5b7ad3f",
@@ -241,11 +255,11 @@
    "text": "Also asked: waive, documented exception, override a rule.\n\nA waived exception lets a waivable hard rule (HC-04 to HC-15) be broken on purpose, with a written reason that is kept in the record and shown in the Conflicts and Exceptions report. Double booking of a faculty member, room or section (HC-01, HC-02, HC-03) can never be waived."
   },
   {
-   "id": "80773d704c8b",
+   "id": "3557fb2739c0",
    "source": "ORDIQ FAQ",
    "section": "What is a Dean directive?",
    "priority": 1.3,
-   "text": "Also asked: ano ang directive, add a rule for the next run.\n\nA directive is an extra rule the Dean adds for the next generation run. The types are: keep a faculty member off a day, a time window for a faculty member or a section, avoid a room, require a room, pin a meeting, assign a faculty member, and change a preference weight. Each is hard (must hold) or soft (preferred). Directives are on Rules & Preferences › Dean Directives, and the assistant can add one from a chat request. They do not change existing schedules until candidates are generated again."
+   "text": "Also asked: ano ang directive, add a rule for the next run, section classes only in the morning, keep a section or faculty to certain hours.\n\nA directive is an extra rule the Dean adds for the next generation run. The types are: keep a faculty member off a day, a time window for a faculty member or a section, avoid a room, require a room, pin a meeting, assign a faculty member, and change a preference weight. Each is hard (must hold) or soft (preferred). Directives are on Rules & Preferences › Dean Directives, and the assistant can add one from a chat request. They do not change existing schedules until the schedule is generated again."
   },
   {
    "id": "e239ca98ab53",
@@ -357,7 +371,7 @@
    "source": "ORDIQ FAQ",
    "section": "What is ORDIQ?",
    "priority": 1.3,
-   "text": "Also asked: ano ang ORDIQ, what does the system do, purpose.\n\nORDIQ (\"Order Meets Intelligence\") is the class scheduling and resource allocation system of the MSEUF College of Engineering. It builds candidate schedules with a constraint solver, checks every schedule with an independent validator, recommends faculty with machine learning, and offers a chat assistant in English, Filipino and Taglish. The Dean makes every final decision."
+   "text": "Also asked: ano ang ORDIQ, what does the system do, purpose.\n\nORDIQ (\"Order Meets Intelligence\") is the class scheduling and resource allocation system of the MSEUF College of Engineering. It builds the optimal schedule with a constraint solver, checks every schedule with an independent validator, recommends faculty with machine learning, and offers a chat assistant in English, Filipino and Taglish. The Dean makes every final decision."
   },
   {
    "id": "43a6e8c4e226",
@@ -451,11 +465,11 @@
    "text": "Also asked: lunch break, sobrang aga o gabi.\n\nClasses must fall within the term's allowed hours and avoid official breaks. Waivable with a reason. Term hours are on Courses & Sections."
   },
   {
-   "id": "3cc8d7cf8af9",
+   "id": "108b4d314d88",
    "source": "ORDIQ FAQ",
    "section": "HC-12: Required Dean directives are respected",
    "priority": 1.3,
-   "text": "Also asked: hard directive.\n\nDirectives marked hard must hold in every candidate. Waivable with a reason. Directives are on Rules & Preferences › Dean Directives."
+   "text": "Also asked: hard directive.\n\nDirectives marked hard must hold in every generated schedule. Waivable with a reason. Directives are on Rules & Preferences › Dean Directives."
   },
   {
    "id": "9c59fba2ad23",
@@ -728,7 +742,7 @@
    "source": "Implementation Plan",
    "section": "3. Decision log",
    "priority": 1,
-   "text": "| D-27 | The privacy gateway for live providers is AI SDK middleware on the model (`createPrivacyMiddleware`). Every request, including each step of the tool loop and every tool result, is pseudonymized and captured there. Refusals stay deterministic and run before any provider call. Without a usable provider, under tests, or when a call fails, the built-in deterministic assistant answers | Code above the model cannot forget to scrub a field. The assistant keeps working offline, and tests never spend tokens | Implemented |\n| D-28 | The college's rules and priority order (November 2026 answers): lower-year evening classes become hard rule `HC-16`, and faculty preferences (`SC-01`, `SC-04`) are optimized lexicographically after the department's objective in a second CP-SAT pass with the first pass's value as an upper bound | Answers 3, 10 and 11 make the evening rule mandatory and ask for a strict order, which a single weighted sum cannot guarantee | Decided |\n\nRecord larger decisions as short ADRs in `docs/adr/`."
+   "text": "| D-27 | The privacy gateway for live providers is AI SDK middleware on the model (`createPrivacyMiddleware`). Every request, including each step of the tool loop and every tool result, is pseudonymized and captured there. Refusals stay deterministic and run before any provider call. Without a usable provider, under tests, or when a call fails, the built-in deterministic assistant answers | Code above the model cannot forget to scrub a field. The assistant keeps working offline, and tests never spend tokens | Implemented |\n| D-28 | The college's rules and priority order (November 2026 answers): lower-year evening classes become hard rule `HC-16`, and faculty preferences (`SC-01`, `SC-04`) are optimized lexicographically after the department's objective in a second CP-SAT pass with the first pass's value as an upper bound | Answers 3, 10 and 11 make the evening rule mandatory and ask for a strict order, which a single weighted sum cannot guarantee | Decided |\n| D-29 | One optimal schedule instead of three candidates (client revision 5, November 2026; supersedes the workspace side of D-19). Generate runs only the Balanced profile, which carries the Dean's saved weights, in the D-28 strict order, with 40 s for the single solve. The workspace shows the accepted schedule and the latest generated draft; older drafts and the imported manual baseline stay stored for reports and the evaluation. A Schedule Evaluation view lists Unsatisfied Constraints (unwaived hard conflicts, unscheduled classes) and Possible Conflicts of Interest (faculty above their regular load, rooms holding more students than seats, waived exceptions, unmet faculty preferences `SC-01`/`SC-04`); a 90% threshold was tried first but flagged nearly every class on the real term, where full 40-seat rooms and full part-time loads are normal. Classes with unplaced meetings are listed once, under unscheduled classes, not again as `HC-08` conflicts. The Faculty-First and Student-First profiles remain in the engine for tests and explicit API requests | The college wants the Dean to focus on understanding one schedule rather than choosing among candidates | Implemented |"
   },
   {
    "id": "c8c66bb69f79",

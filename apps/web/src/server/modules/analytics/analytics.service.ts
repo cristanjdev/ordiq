@@ -130,10 +130,13 @@ export function resolveTargetSchedule(
   const accepted = termSchedules.find((s) => s.status === "ACCEPTED");
   if (accepted) return accepted;
 
-  const generated = termSchedules
-    .filter((s) => s.source === "GENERATED")
-    .sort((a, b) => (b.qualityScore ?? 0) - (a.qualityScore ?? 0));
-  if (generated[0]) return generated[0];
+  // Schedules are kept in creation order, so the last generated draft is the
+  // latest optimal schedule (each Generate makes one, D-29).
+  const generated = termSchedules.filter(
+    (s) => s.source === "GENERATED" && s.status !== "ARCHIVED",
+  );
+  const latest = generated[generated.length - 1];
+  if (latest) return latest;
 
   return termSchedules[0] ?? null;
 }

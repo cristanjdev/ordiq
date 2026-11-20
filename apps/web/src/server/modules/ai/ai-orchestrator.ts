@@ -295,7 +295,7 @@ export function selectToolAndArgsForPrompt(
       toolName: "generate_schedule",
       args: {
         termCode,
-        profiles: ["BALANCED", "FACULTY_FIRST", "STUDENT_FIRST"],
+        profiles: ["BALANCED"],
       },
     };
   }

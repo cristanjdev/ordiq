@@ -12,6 +12,7 @@ import {
   Calendar,
   CalendarDays,
   CheckCircle2,
+  ClipboardCheck,
   Clock,
   Columns,
   GitBranch,
@@ -28,7 +29,12 @@ import {
   Unlock,
   User,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ScheduleEvaluation,
+  ScheduleEvaluationPanel,
+} from "./schedule-evaluation-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -132,6 +138,12 @@ interface ScheduleDto {
   } | null;
 }
 
+function scheduleOptionLabel(s: ScheduleDto): string {
+  return `${s.candidateLabel} · ${scheduleStatusLabel(s.status)} (version ${s.version}${
+    s.qualityScore !== null ? ` • Score ${s.qualityScore}` : ""
+  })`;
+}
+
 function formatMin(minutes: number): string {
   const h24 = Math.floor(minutes / 60);
   const m = minutes % 60;
@@ -195,6 +207,20 @@ function parseOfferingCode(
   return { sectionCode: "", subjectCode: code, component: code.endsWith("L") ? "LAB" : "LECTURE" };
 }
 
+/**
+ * The schedules the Dean works with (D-29): the accepted schedule, if any, and
+ * the latest generated draft. Older drafts and the imported manual baseline
+ * stay stored for reports and the evaluation, but are not offered here. The
+ * API lists schedules in creation order.
+ */
+function currentSchedules(all: ScheduleDto[]): ScheduleDto[] {
+  const own = all.filter((s) => s.source !== "IMPORTED" && s.status !== "ARCHIVED");
+  const accepted = own.filter((s) => s.status === "ACCEPTED");
+  const drafts = own.filter((s) => s.status === "CANDIDATE");
+  const latestDraft = drafts[drafts.length - 1];
+  return latestDraft ? [...accepted, latestDraft] : accepted;
+}
+
 export function ScheduleWorkspace() {
   const { selectedTerm } = useShell();
   const termCode = selectedTerm.id;
@@ -203,7 +229,7 @@ export function ScheduleWorkspace() {
   termRef.current = termCode;
   const [schedules, setSchedules] = useState<ScheduleDto[]>([]);
   const [activeId, setActiveId] = useState<string>("");
-  const [viewMode, setViewMode] = useState<"grid" | "calendar" | "compare">(
+  const [viewMode, setViewMode] = useState<"grid" | "calendar" | "evaluation">(
     "grid",
   );
   const [filterText, setFilterText] = useState("");
@@ -248,14 +274,14 @@ export function ScheduleWorkspace() {
       }
       if (schedulesResp.ok) {
         const data = (await schedulesResp.json()) as { schedules: ScheduleDto[] };
-        const list = data.schedules ?? [];
+        const list = currentSchedules(data.schedules ?? []);
         setSchedules(list);
         // Keep the open schedule if it is still there; otherwise open the
-        // term's accepted schedule, else its first candidate.
+        // term's accepted schedule, else the latest optimal schedule.
         setActiveId((current) =>
           list.some((x) => x.id === current)
             ? current
-            : ((list.find((x) => x.status === "ACCEPTED") ?? list[0])?.id ?? ""),
+            : ((list.find((x) => x.status === "ACCEPTED") ?? list[list.length - 1])?.id ?? ""),
         );
       }
     } finally {
@@ -282,23 +308,22 @@ export function ScheduleWorkspace() {
   // First load shows placeholder rows; later reloads show a thin bar instead.
   const initialLoading = loadingSchedules && schedules.length === 0;
 
-  async function handleGenerateCandidates() {
+  async function handleGenerateOptimal() {
     setLoading(true);
-    setStatusMessage(`Generating 3 candidate profiles for ${selectedTerm.label}...`);
+    setStatusMessage(`Generating the optimal schedule for ${selectedTerm.label} (about a minute)...`);
     try {
       const resp = await fetch("/api/v1/generation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "generate",
-          termCode,
-          profiles: ["BALANCED", "FACULTY_FIRST", "STUDENT_FIRST"],
-          timeLimitSeconds: 8,
-        }),
+        body: JSON.stringify({ action: "generate", termCode, profiles: ["BALANCED"] }),
       });
       if (resp.ok) {
+        const data = (await resp.json()) as { candidates?: Array<{ id: string }> };
+        const newId = data.candidates?.[0]?.id;
+        if (newId) setActiveId(newId);
         await refreshSchedules();
-        setStatusMessage("Generated 3 validated candidate schedules.");
+        setViewMode("evaluation");
+        setStatusMessage("Generated the optimal schedule. Its evaluation is shown below.");
       } else {
         const err = (await resp.json()) as { error?: { message?: string } };
         setStatusMessage(err.error?.message ?? "Generation failed.");
@@ -466,7 +491,29 @@ export function ScheduleWorkspace() {
   });
 
   const entriesPagination = usePagination(filteredEntries, 15);
-  const schedulesPagination = usePagination(schedules, 5);
+
+  // Unsatisfied rules and scheduling risks of the open schedule. The key changes
+  // whenever an edit, waiver or recheck changes the schedule.
+  const evaluationQuery = useQuery({
+    queryKey: [
+      "schedule-evaluation",
+      activeSchedule?.id,
+      activeSchedule?.version,
+      activeSchedule?.validationReport?.hard_violation_count,
+      activeSchedule?.validationReport?.waived_violation_count,
+      activeSchedule?.unscheduled?.length,
+      activeSchedule?.entries.length,
+    ],
+    enabled: Boolean(activeSchedule),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/v1/schedules/evaluation?scheduleId=${encodeURIComponent(activeSchedule?.id ?? "")}`,
+      );
+      if (!res.ok) throw new Error("The evaluation could not be loaded.");
+      return ((await res.json()) as { evaluation: ScheduleEvaluation }).evaluation;
+    },
+  });
+  const evaluation = evaluationQuery.data ?? null;
 
   const startHour = Math.floor((selectedTerm.dayStartMin ?? 7 * 60 + 30) / 60);
   const endHour = Math.ceil((selectedTerm.dayEndMin ?? 20 * 60 + 30) / 60);
@@ -484,8 +531,8 @@ export function ScheduleWorkspace() {
         <div className="flex items-center gap-2 font-medium">
           <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600" />
           <span>
-            <strong>CANDIDATE DECISION-SUPPORT NOTICE:</strong> Schedules inside
-            ORDIQ are candidate proposals for the Dean&apos;s review and are{" "}
+            <strong>DECISION-SUPPORT NOTICE:</strong> Schedules inside
+            ORDIQ are proposals for the Dean&apos;s review and are{" "}
             <u>not official and not for release</u> until encoded in the
             university portal.
           </span>
@@ -501,11 +548,11 @@ export function ScheduleWorkspace() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[var(--ordiq-ink)]">
-            Schedule Workspace & Candidate Comparison
+            Schedule Workspace
           </h1>
           <p className="mt-0.5 text-xs text-[var(--ordiq-muted)]">
-            Spreadsheet grid, weekly timetable, instant conflict checks,
-            and documented rule exceptions.
+            The optimal schedule for the term, its evaluation, spreadsheet grid,
+            weekly timetable and documented rule exceptions.
           </p>
         </div>
 
@@ -514,12 +561,12 @@ export function ScheduleWorkspace() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => void handleGenerateCandidates()}
+            onClick={() => void handleGenerateOptimal()}
             disabled={loading}
             className="h-8 border-[var(--ordiq-border)] text-xs font-semibold hover:border-[var(--ordiq-maroon)] hover:text-[var(--ordiq-maroon)]"
           >
             <Sparkles className="h-3.5 w-3.5 text-[var(--ordiq-maroon)]" />
-            <span>Generate Schedules</span>
+            <span>Generate Optimal Schedule</span>
           </Button>
           <Button
             variant="outline"
@@ -550,7 +597,7 @@ export function ScheduleWorkspace() {
               className="h-8 border-emerald-600/60 text-emerald-700 dark:text-emerald-400 text-xs font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
             >
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Accept Candidate</span>
+              <span>Accept Schedule</span>
             </Button>
           )}
           {activeSchedule?.status === "ACCEPTED" && (
@@ -568,37 +615,35 @@ export function ScheduleWorkspace() {
         </div>
       </div>
 
-      {/* Candidate Selector & View Switcher Bar */}
+      {/* Schedule Selector & View Switcher Bar */}
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] p-3">
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 min-w-0">
           <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-[var(--ordiq-muted)]">
             Schedule:
           </span>
-          <select
-            aria-label="Select candidate schedule"
-            title={
-              activeSchedule
-                ? `${activeSchedule.candidateLabel} · ${scheduleStatusLabel(activeSchedule.status)} (version ${activeSchedule.version}${
-                    activeSchedule.qualityScore !== null ? ` • Score ${activeSchedule.qualityScore}` : ""
-                  })`
-                : undefined
-            }
-            value={activeSchedule?.id ?? ""}
-            onChange={(e) => setActiveId(e.target.value)}
-            className="h-8 min-w-0 max-w-[240px] sm:max-w-[280px] md:max-w-[340px] lg:max-w-[380px] xl:max-w-[440px] 2xl:max-w-[500px] truncate rounded-md border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] px-2.5 sm:px-3 text-xs font-medium text-[var(--ordiq-ink)] focus:outline-none"
-          >
-            {schedules.length === 0 && (
-              <option value="">
-                {initialLoading ? "Loading schedules…" : "No schedules yet — generate candidates first"}
-              </option>
-            )}
-            {schedules.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.candidateLabel} · {scheduleStatusLabel(s.status)} (version {s.version}
-                {s.qualityScore !== null ? ` • Score ${s.qualityScore}` : ""})
-              </option>
-            ))}
-          </select>
+          {schedules.length > 1 ? (
+            // Only when there is an accepted schedule and a newer draft or revision.
+            <select
+              aria-label="Select schedule"
+              value={activeSchedule?.id ?? ""}
+              onChange={(e) => setActiveId(e.target.value)}
+              className="h-8 min-w-0 max-w-[240px] sm:max-w-[280px] md:max-w-[340px] lg:max-w-[380px] truncate rounded-md border border-[var(--ordiq-border)] bg-[var(--ordiq-surface-muted)] px-2.5 sm:px-3 text-xs font-medium text-[var(--ordiq-ink)] focus:outline-none"
+            >
+              {schedules.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {scheduleOptionLabel(s)}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="min-w-0 truncate text-xs font-semibold text-[var(--ordiq-ink)]">
+              {activeSchedule
+                ? scheduleOptionLabel(activeSchedule)
+                : initialLoading
+                  ? "Loading schedule…"
+                  : "No schedule yet. Press Generate Optimal Schedule."}
+            </span>
+          )}
           {activeSchedule?.recheckNeeded && (
             <Badge variant="warning" className="shrink-0 whitespace-nowrap">
               Recheck Needed
@@ -628,90 +673,39 @@ export function ScheduleWorkspace() {
           </Button>
           <Button
             size="sm"
-            variant={viewMode === "compare" ? "default" : "outline"}
-            onClick={() => setViewMode("compare")}
+            variant={viewMode === "evaluation" ? "default" : "outline"}
+            onClick={() => setViewMode("evaluation")}
             className="h-8 px-2.5 sm:px-3 text-xs font-semibold whitespace-nowrap"
           >
-            <span className="hidden sm:inline xl:hidden">Compare ({schedules.length})</span>
-            <span className="sm:hidden xl:inline">Compare Candidates ({schedules.length})</span>
+            <ClipboardCheck className="mr-1.5 h-3.5 w-3.5" />
+            Evaluation
+            {evaluation && evaluation.counts.unsatisfied + evaluation.counts.risks > 0 && (
+              <span className="ml-1.5 rounded-full bg-amber-500/20 px-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                {evaluation.counts.unsatisfied + evaluation.counts.risks}
+              </span>
+            )}
           </Button>
         </div>
       </div>
 
       {/* Main View Area */}
       <TableRefreshBar active={loadingSchedules && !initialLoading} className="rounded-full" />
-      {viewMode === "compare" ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Side-by-Side Candidate Comparison</CardTitle>
-            <CardDescription>
-              Compare conflicts, waived rules, unscheduled meetings, and quality
-              scores across profiles.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto no-scrollbar">
-              <table className="w-full min-w-[800px] text-sm">
-                <thead className="bg-[var(--ordiq-surface-muted)] text-[11px] uppercase tracking-wider text-[var(--ordiq-muted)]">
-                  <tr>
-                    <th className="px-3 py-2 text-left whitespace-nowrap">Candidate</th>
-                    <th className="px-3 py-2 text-center whitespace-nowrap">Status</th>
-                    <th className="px-3 py-2 text-center whitespace-nowrap">Generation Result</th>
-                    <th className="px-3 py-2 text-center whitespace-nowrap">Quality Score</th>
-                    <th className="px-3 py-2 text-center whitespace-nowrap">Conflicts</th>
-                    <th className="px-3 py-2 text-center whitespace-nowrap">Waived Exceptions</th>
-                    <th className="px-3 py-2 text-center whitespace-nowrap">Unscheduled</th>
-                    <th className="px-3 py-2 text-center whitespace-nowrap">Meetings Placed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {initialLoading && (
-                    <TableSkeletonRows columns={8} rows={4} label="Loading candidate schedules" />
-                  )}
-                  {schedulesPagination.paginatedItems.map((s) => (
-                    <tr key={s.id} className="hover:bg-[var(--ordiq-surface-muted)]/60">
-                      <td className="px-3 py-2 font-medium text-left">
-                        {s.candidateLabel}
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        <Badge variant={s.status === "ACCEPTED" ? "success" : "neutral"}>
-                          {scheduleStatusLabel(s.status)}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        {solverStatusLabel(s.solverStatus)}
-                      </td>
-                      <td className="px-3 py-2 font-semibold text-center">
-                        {s.qualityScore ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        {s.validationReport?.hard_violation_count ?? 0}
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        {s.validationReport?.waived_violation_count ?? 0}
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        {s.unscheduled?.length ?? 0}
-                      </td>
-                      <td className="px-3 py-2 text-center">{s.entries.length}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {schedules.length > 5 && (
-              <TablePagination
-                currentPage={schedulesPagination.currentPage}
-                pageSize={schedulesPagination.pageSize}
-                totalItems={schedulesPagination.totalItems}
-                onPageChange={schedulesPagination.setCurrentPage}
-                onPageSizeChange={schedulesPagination.setPageSize}
-                pageSizeOptions={[5, 10, 20]}
-                itemLabel="candidates"
-              />
-            )}
-          </CardContent>
-        </Card>
+      {viewMode === "evaluation" ? (
+        <ScheduleEvaluationPanel
+          schedule={
+            activeSchedule
+              ? {
+                  label: scheduleOptionLabel(activeSchedule),
+                  solverResult: solverStatusLabel(activeSchedule.solverStatus),
+                  qualityScore: activeSchedule.qualityScore,
+                  meetingsPlaced: activeSchedule.entries.length,
+                }
+              : null
+          }
+          evaluation={evaluation}
+          loading={evaluationQuery.isLoading || initialLoading}
+          error={evaluationQuery.isError}
+        />
       ) : viewMode === "calendar" ? (
         <Card className="border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] shadow-xs">
           <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between pb-3">

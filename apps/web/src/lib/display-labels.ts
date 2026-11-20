@@ -25,6 +25,36 @@ export const SUBJECT_CATEGORY_LABELS: Record<string, string> = {
   PATHFIT: "PATHFit (P.E.)",
 };
 
+/** The college a subject belongs to (service subjects come from other colleges). */
+export const SUBJECT_DEPARTMENTS = ["ENGINEERING", "EDUCATION", "ARTS_AND_SCIENCES"] as const;
+export type SubjectDepartment = (typeof SUBJECT_DEPARTMENTS)[number];
+export const DEFAULT_SUBJECT_DEPARTMENT: SubjectDepartment = "ENGINEERING";
+
+export const SUBJECT_DEPARTMENT_LABELS: Record<string, string> = {
+  ENGINEERING: "College of Engineering",
+  EDUCATION: "College of Education",
+  ARTS_AND_SCIENCES: "College of Arts and Sciences",
+};
+
+/**
+ * Reads a department written as its code ("ARTS_AND_SCIENCES") or its name
+ * ("College of Arts and Sciences", "Arts & Sciences"), as typed in an import file.
+ * A blank value becomes undefined; anything unrecognised is returned unchanged so
+ * validation reports it.
+ */
+export function parseSubjectDepartment(value: unknown): unknown {
+  if (value === null) return undefined;
+  if (typeof value !== "string") return value;
+  const key = value
+    .trim()
+    .toUpperCase()
+    .replace(/&/g, "AND")
+    .replace(/^COLLEGE OF\s+/, "")
+    .replace(/[\s-]+/g, "_");
+  if (key === "") return undefined;
+  return (SUBJECT_DEPARTMENTS as readonly string[]).includes(key) ? key : value;
+}
+
 export const COMPONENT_LABELS: Record<string, string> = {
   LECTURE: "Lecture",
   LAB: "Laboratory",
@@ -127,6 +157,7 @@ export const hardConstraintLabel = (code: string): string =>
   HARD_CONSTRAINT_NAMES[code] ?? code;
 
 export const subjectCategoryLabel = lookup(SUBJECT_CATEGORY_LABELS);
+export const subjectDepartmentLabel = lookup(SUBJECT_DEPARTMENT_LABELS);
 export const componentLabel = lookup(COMPONENT_LABELS);
 export const roomTypeLabel = lookup(ROOM_TYPE_LABELS);
 export const meetingPatternLabel = lookup(MEETING_PATTERN_LABELS);

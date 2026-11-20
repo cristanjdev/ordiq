@@ -17,6 +17,7 @@ const columnLabels: Record<string, string> = {
   contactHours: "Contact Hours",
   lectureHours: "Lecture Hours",
   labHours: "Laboratory Hours",
+  department: "Department",
   curriculumVersion: "Curriculum Version",
   isCurrentCurriculum: "Current Curriculum?",
   studentCount: "Student Count",

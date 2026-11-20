@@ -24,7 +24,7 @@ const generationActionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-// Generating three candidates on a full term takes about a minute (20 s per profile).
+// One optimal schedule on a full term takes up to about a minute (40 s solve plus checks).
 export const maxDuration = 300;
 
 export const GET = withDeanRoute(async (request) => {

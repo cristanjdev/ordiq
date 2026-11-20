@@ -152,13 +152,13 @@ export function DashboardView() {
         body: JSON.stringify({
           action: "generate",
           termCode,
-          profiles: ["BALANCED", "FACULTY_FIRST", "STUDENT_FIRST"],
+          profiles: ["BALANCED"],
         }),
       }),
-    onSuccess: async (result) => {
+    onSuccess: async () => {
       setNotice({
         tone: "ok",
-        text: `Generated ${result.candidates.length} validated candidate schedule(s). Compare and accept one in Schedules.`,
+        text: "Generated the optimal schedule. Review its evaluation and accept it in Schedules.",
       });
       await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
@@ -1017,7 +1017,7 @@ function WeeklyScheduleCard({
           <WeekSkeleton hours={hours} days={days} />
         ) : !hasSchedule ? (
           <div className="py-10 text-center text-xs text-[var(--ordiq-muted)]">
-            No schedule yet. Generate candidates to see the week here.
+            No schedule yet. Generate the optimal schedule to see the week here.
           </div>
         ) : (
           <>

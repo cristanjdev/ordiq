@@ -41,9 +41,9 @@ export const ISO_25010_TEST_CASE_CATALOGUE: readonly Iso25010TestCaseItem[] = [
     id: "TC-FS-02",
     qualityCharacteristic: "functionalSuitability",
     stage: "STAGE_1_BASELINE",
-    title: "CP-SAT Multi-Profile Candidate Generation (D-19)",
+    title: "CP-SAT Optimal Schedule Generation (D-28, D-29)",
     verificationTarget:
-      "Produces BALANCED, FACULTY_FIRST, and STUDENT_FIRST candidates with 0 unwaived hard conflicts.",
+      "Produces one optimal schedule in strict order of priority with 0 unwaived hard conflicts.",
     status: "NOT_RECORDED",
   },
   {

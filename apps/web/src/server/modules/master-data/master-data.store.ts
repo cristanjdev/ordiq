@@ -7,6 +7,7 @@ import type {
   ScheduleStatus,
   Weekday,
 } from "@ordiq/contracts";
+import type { SubjectDepartment } from "@/lib/display-labels";
 
 export interface TermRecord {
   id: string;
@@ -61,6 +62,8 @@ export interface SubjectRecord {
   labHours: number;
   curriculumVersion: string;
   isCurrentCurriculum: boolean;
+  /** The college the subject belongs to. */
+  department: SubjectDepartment;
 }
 
 export interface SectionRecord {

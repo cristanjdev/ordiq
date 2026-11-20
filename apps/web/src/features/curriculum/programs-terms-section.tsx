@@ -17,6 +17,7 @@ import {
 import { TablePagination, usePagination } from "@/components/ui/table-pagination";
 import { deleteRecord, errorMessage, fetchItems, saveRecord } from "@/features/data/record-api";
 import { programFields, termFields, titleCase } from "@/features/data/record-fields";
+import { nextTermValues } from "@/features/data/term-defaults";
 import { useRecordEditor } from "@/features/data/use-record-editor";
 import { cn } from "@/lib/utils";
 
@@ -145,23 +146,7 @@ export function ProgramsTermsSection() {
       programEditor.openCreate({ code: "", name: "", coordinator: "" });
       return;
     }
-    const latest = terms[0];
-    const [y1, y2] = (latest?.academicYear ?? "2026-2027").split("-").map(Number);
-    const nextSemester = latest?.semester === 1 ? 2 : 1;
-    const year =
-      latest?.semester === 2 && y1 !== undefined && y2 !== undefined
-        ? `${y1 + 1}-${y2 + 1}`
-        : (latest?.academicYear ?? "2026-2027");
-    termEditor.openCreate({
-      code: `AY${year}-S${nextSemester}`,
-      academicYear: year,
-      semester: String(nextSemester),
-      status: "DRAFT",
-      dayStartMin: latest?.dayStartMin ?? 450,
-      dayEndMin: latest?.dayEndMin ?? 1230,
-      slotSizeMin: latest?.slotSizeMin ?? 30,
-      teachingDays: latest?.teachingDays ?? ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"],
-    });
+    termEditor.openCreate(nextTermValues(terms[0]));
   };
 
   const loadError = tab === "programs" ? programsQuery.isError : termsQuery.isError;

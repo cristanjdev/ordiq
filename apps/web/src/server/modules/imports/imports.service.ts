@@ -815,6 +815,7 @@ export async function buildWorkbookBuffer(
         "programCode",
         "yearLevel",
         "category",
+        "department",
         "units",
         "contactHours",
         "lectureHours",

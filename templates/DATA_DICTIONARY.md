@@ -45,6 +45,7 @@ Defines curriculum subjects offered by or taken within the College of Engineerin
 | `programCode` | `string` | No | FK → `Programs.code` | Owning program code (`null` for general engineering courses). |
 | `yearLevel` | `integer` | Yes | | Curriculum year level (`1` to `5`). |
 | `category` | `enum` | Yes | | `MAJOR` \| `GENERAL_ENGINEERING` \| `MATHEMATICS` \| `SCIENCE` \| `GENERAL_EDUCATION` \| `PATHFIT`. |
+| `department` | `enum` | No | | College the subject belongs to: `ENGINEERING` \| `EDUCATION` \| `ARTS_AND_SCIENCES` (the names "College of Engineering", "College of Education" and "College of Arts and Sciences" are also accepted). Blank keeps the saved value; a new subject defaults to `ENGINEERING`. |
 | `units` | `integer` | Yes | | Academic credit units. |
 | `contactHours` | `integer` | Yes | | Total required weekly contact hours (`HC-08`). |
 | `lectureHours` | `integer` | Yes | | Weekly lecture contact hours. |

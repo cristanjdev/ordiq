@@ -5,6 +5,8 @@ import {
   MEETING_PATTERN_LABELS,
   ROOM_TYPE_LABELS,
   SUBJECT_CATEGORY_LABELS,
+  SUBJECT_DEPARTMENT_LABELS,
+  SUBJECT_DEPARTMENTS,
   titleCase,
 } from "@/lib/display-labels";
 
@@ -122,6 +124,7 @@ export function subjectFields(programs: FieldOption[]): FormField[] {
     { name: "name", label: "Subject title", kind: "text", required: true, maxLength: 160 },
     { name: "programCode", label: "Program", kind: "select", options: programs, nullable: true, nullLabel: "Shared (all programs)" },
     { name: "category", label: "Category", kind: "select", required: true, options: enumOptions(SUBJECT_CATEGORIES, (v) => SUBJECT_CATEGORY_LABELS[v] ?? titleCase(v)) },
+    { name: "department", label: "Department", kind: "select", required: true, options: enumOptions(SUBJECT_DEPARTMENTS, (v) => SUBJECT_DEPARTMENT_LABELS[v] ?? titleCase(v)) },
     { name: "yearLevel", label: "Year level", kind: "number", required: true, min: 1, max: 5 },
     { name: "units", label: "Units", kind: "number", required: true, min: 1, max: 12 },
     { name: "lectureHours", label: "Lecture hours", kind: "number", required: true, min: 0, max: 12 },

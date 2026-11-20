@@ -44,7 +44,10 @@ import {
   meetingPatternLabel,
   ordinalYear,
   roomTypeLabel,
+  SUBJECT_DEPARTMENTS,
+  type SubjectDepartment,
   subjectCategoryLabel,
+  subjectDepartmentLabel,
 } from "@/lib/display-labels";
 import { ImportWorkbookDialog } from "@/features/data/import-workbook-dialog";
 import { useShell } from "@/features/shell/providers";
@@ -72,6 +75,7 @@ export interface SubjectItem {
   labHours: number;
   curriculumVersion: string;
   isCurrentCurriculum: boolean;
+  department: SubjectDepartment;
 }
 
 export interface SectionItem {
@@ -105,6 +109,7 @@ export function CurriculumWorkspace() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedProgram, setSelectedProgram] = React.useState<string>("ALL");
   const [selectedYear, setSelectedYear] = React.useState<string>("ALL");
+  const [selectedDepartment, setSelectedDepartment] = React.useState<string>("ALL");
   const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
   const [showImportModal, setShowImportModal] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<{
@@ -238,6 +243,7 @@ export function CurriculumWorkspace() {
       subjectEditor.openCreate({
         programCode: null,
         category: "MAJOR",
+        department: "ENGINEERING",
         yearLevel: 1,
         units: 3,
         lectureHours: 3,
@@ -272,6 +278,7 @@ export function CurriculumWorkspace() {
   const filteredSubjects = subjects.filter((subj) => {
     if (selectedProgram !== "ALL" && subj.programCode !== selectedProgram) return false;
     if (selectedYear !== "ALL" && String(subj.yearLevel) !== selectedYear) return false;
+    if (selectedDepartment !== "ALL" && subj.department !== selectedDepartment) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -310,9 +317,9 @@ export function CurriculumWorkspace() {
 
   const handleExportExcel = () => {
     const data = activeTab === "subjects" ? {
-      headers: ["Code", "Name", "Program", "Year", "Category", "Units", "Lecture Hours", "Laboratory Hours", "Curriculum"],
+      headers: ["Code", "Name", "Program", "Year", "Category", "Department", "Units", "Lecture Hours", "Laboratory Hours", "Curriculum"],
       rows: subjects.map((s) => [s.code, s.name, s.programCode ?? "All programs", s.yearLevel,
-        subjectCategoryLabel(s.category), s.units, s.lectureHours, s.labHours, s.curriculumVersion]),
+        subjectCategoryLabel(s.category), subjectDepartmentLabel(s.department), s.units, s.lectureHours, s.labHours, s.curriculumVersion]),
     } : activeTab === "sections" ? {
       headers: ["Code", "Program", "Year", "Students"],
       rows: sections.map((s) => [s.code, s.programCode, s.yearLevel, s.studentCount]),
@@ -518,7 +525,24 @@ export function CurriculumWorkspace() {
               />
             </div>
 
-            {/* Department Filter (for subjects and sections) */}
+            {/* Department Filter (subjects only): the college a subject belongs to */}
+            {activeTab === "subjects" && (
+              <select
+                value={selectedDepartment}
+                onChange={(e) => setSelectedDepartment(e.target.value)}
+                className="h-8 rounded-md border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-2.5 text-xs text-[var(--ordiq-ink)] focus:outline-none focus:ring-1 focus:ring-[var(--ordiq-maroon)]"
+                aria-label="Filter by Department"
+              >
+                <option value="ALL">All Departments</option>
+                {SUBJECT_DEPARTMENTS.map((d) => (
+                  <option key={d} value={d}>
+                    {subjectDepartmentLabel(d)}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Program Filter (for subjects and sections) */}
             {activeTab !== "offerings" && (
               <select
                 value={selectedProgram}
@@ -526,7 +550,7 @@ export function CurriculumWorkspace() {
                 className="h-8 rounded-md border border-[var(--ordiq-border)] bg-[var(--ordiq-surface)] px-2.5 text-xs text-[var(--ordiq-ink)] focus:outline-none focus:ring-1 focus:ring-[var(--ordiq-maroon)]"
                 aria-label="Filter by Program"
               >
-                <option value="ALL">All Departments</option>
+                <option value="ALL">All Programs</option>
                 {programs.map((p) => (
                   <option key={p} value={p}>
                     {p}

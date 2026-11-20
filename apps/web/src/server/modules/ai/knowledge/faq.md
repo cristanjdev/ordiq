@@ -55,14 +55,26 @@ It caps how much the AI Assistant can use each month. When it is used up, the as
 Also asked: paano gumawa ng schedule, generate schedule steps, saan magsisimula, where do I start for a new term, first steps.
 
 1. Make sure the term's data is complete: faculty, subjects, sections, offerings and rooms. The Data Readiness tab on Rules & Preferences shows what is missing.
-2. Open Schedules and press Generate Schedules. ORDIQ creates three candidates: Balanced, Faculty First and Student First.
-3. Review and compare them, fix any conflicts or unscheduled meetings, then accept one.
+2. Open Schedules and press Generate Optimal Schedule. ORDIQ creates one optimal schedule for the term.
+3. Open its Evaluation, fix any unsatisfied constraints (conflicts or unscheduled classes), look over the possible conflicts of interest, then accept it.
 
-## What is the difference between Balanced, Faculty First and Student First?
+## Why is there only one schedule? Where are the candidates?
 
-Also asked: candidate A B C, ano ang pinagkaiba ng candidates, weight profiles.
+Also asked: candidate A B C, Balanced Faculty First Student First, ano ang pinagkaiba ng candidates, weight profiles, compare candidates.
 
-They are three candidate schedules built from the same data with different weights on the soft preferences. Candidate A (Balanced) keeps the weights moderate across faculty and student preferences. Candidate B (Faculty First) weighs faculty preferred days and times (SC-01), load balance (SC-02), preferred rooms (SC-04) and faculty fit (SC-07) more heavily. Candidate C (Student First) weighs fewer gaps (SC-03), an even spread across the week (SC-05), no evening classes for lower years (SC-09), lower-year priority (SC-10), no late laboratories (SC-11) and spreading major subjects (SC-12) more heavily. All three must meet the same hard rules, and in all three the faculty's own preferred days, times and rooms (SC-01, SC-04) count only after the department's preferences, following the college's strict order of priority.
+The college asked for one optimal schedule instead of several candidates, so the Dean can focus on understanding a single schedule. ORDIQ builds the best schedule it can find that satisfies the required rules, using the Dean's priority weights in a strict order: the department's rules and priorities first, then the faculty's own preferred days, times and rooms (SC-01, SC-04). The older Faculty First and Student First candidates are no longer generated. Each new generation replaces the draft; earlier drafts and the college's own imported schedule are kept for the reports and the evaluation.
+
+## What does the schedule evaluation show?
+
+Also asked: unsatisfied constraints, possible conflicts of interest, evaluation tab, ano ang evaluation.
+
+The Evaluation view on the Schedules page has two lists. Unsatisfied Constraints are the required rules the schedule does not meet (unresolved conflicts) and the classes it could not place, each with the reason. Possible Conflicts of Interest are not rule breaks but are worth checking before accepting: faculty assigned more than their regular teaching load, rooms holding more students than seats, rule exceptions the Dean waived, and faculty preferences the schedule could not follow.
+
+## What is the quality score of the optimized schedule?
+
+Also asked: quality score, score ng schedule, ano ang score, schedule score meaning.
+
+The quality score runs from 0 to 100 and shows how well the schedule meets the scheduling priorities (the soft preferences and their weights on Rules & Preferences). Higher is better. The independent validator computes it, and it appears on the schedule line on the Schedules page and in the reports. It does not replace the Evaluation: check there for unresolved conflicts and unscheduled classes as well.
 
 ## Why are some classes unscheduled?
 
@@ -80,19 +92,19 @@ Open the schedule on the Schedules page and move the meeting to another day, tim
 
 Also asked: paano i-accept ang schedule, approve the candidate, gawing official.
 
-On the Schedules page, open the candidate and press Accept Candidate, then confirm. ORDIQ accepts it only when it has zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives any previously accepted schedule for the term. "Accepted" means approved for portal encoding; university approval happens outside ORDIQ.
+On the Schedules page, open the schedule and press Accept Schedule, then confirm. ORDIQ accepts it only when it has zero unwaived hard conflicts and zero unscheduled meetings. Accepting archives any previously accepted schedule for the term. "Accepted" means approved for portal encoding; university approval happens outside ORDIQ.
 
 ## Why can't I accept the schedule?
 
 Also asked: ayaw ma-accept, hindi ma-accept ang candidate, accept failed.
 
-ORDIQ blocks acceptance while the candidate still has unwaived hard conflicts or unscheduled meetings. Fix or waive the conflicts (only HC-04 to HC-15 can be waived) and place the remaining meetings, then accept again.
+ORDIQ blocks acceptance while the schedule still has unwaived hard conflicts or unscheduled meetings; the Evaluation view lists them. Fix or waive the conflicts (only HC-04 to HC-16 can be waived) and place the remaining meetings, then accept again.
 
 ## Can the AI Assistant accept a schedule or apply a change?
 
 Also asked: kaya ba ng chatbot mag-accept, can the AI apply proposals.
 
-No. The assistant can check, explain, generate candidates, add directives and propose a change, but it has no way to apply a proposal, accept a schedule, delete records or edit master data. The Dean does those in the workspace, and proposals are applied or rejected on AI Assistant › Proposals.
+No. The assistant can check, explain, generate the optimal schedule, add directives and propose a change, but it has no way to apply a proposal, accept a schedule, delete records or edit master data. The Dean does those in the workspace, and proposals are applied or rejected on AI Assistant › Proposals.
 
 ## How do I change an accepted schedule?
 
@@ -114,9 +126,9 @@ A waived exception lets a waivable hard rule (HC-04 to HC-15) be broken on purpo
 
 ## What is a Dean directive?
 
-Also asked: ano ang directive, add a rule for the next run.
+Also asked: ano ang directive, add a rule for the next run, section classes only in the morning, keep a section or faculty to certain hours.
 
-A directive is an extra rule the Dean adds for the next generation run. The types are: keep a faculty member off a day, a time window for a faculty member or a section, avoid a room, require a room, pin a meeting, assign a faculty member, and change a preference weight. Each is hard (must hold) or soft (preferred). Directives are on Rules & Preferences › Dean Directives, and the assistant can add one from a chat request. They do not change existing schedules until candidates are generated again.
+A directive is an extra rule the Dean adds for the next generation run. The types are: keep a faculty member off a day, a time window for a faculty member or a section, avoid a room, require a room, pin a meeting, assign a faculty member, and change a preference weight. Each is hard (must hold) or soft (preferred). Directives are on Rules & Preferences › Dean Directives, and the assistant can add one from a chat request. They do not change existing schedules until the schedule is generated again.
 
 ## What are locked fixed blocks?
 
@@ -212,7 +224,7 @@ Only the Dean signs in. Program coordinators and the scheduling officer work fro
 
 Also asked: ano ang ORDIQ, what does the system do, purpose.
 
-ORDIQ ("Order Meets Intelligence") is the class scheduling and resource allocation system of the MSEUF College of Engineering. It builds candidate schedules with a constraint solver, checks every schedule with an independent validator, recommends faculty with machine learning, and offers a chat assistant in English, Filipino and Taglish. The Dean makes every final decision.
+ORDIQ ("Order Meets Intelligence") is the class scheduling and resource allocation system of the MSEUF College of Engineering. It builds the optimal schedule with a constraint solver, checks every schedule with an independent validator, recommends faculty with machine learning, and offers a chat assistant in English, Filipino and Taglish. The Dean makes every final decision.
 
 ## What are the hard constraints?
 
@@ -296,7 +308,7 @@ Classes must fall within the term's allowed hours and avoid official breaks. Wai
 
 Also asked: hard directive.
 
-Directives marked hard must hold in every candidate. Waivable with a reason. Directives are on Rules & Preferences › Dean Directives.
+Directives marked hard must hold in every generated schedule. Waivable with a reason. Directives are on Rules & Preferences › Dean Directives.
 
 ## HC-13: Each class follows its required duration and meeting pattern
 

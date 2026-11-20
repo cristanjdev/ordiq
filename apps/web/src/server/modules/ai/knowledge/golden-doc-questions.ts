@@ -46,7 +46,7 @@ export const GOLDEN_DOC_QUESTIONS: GoldenDocQuestion[] = [
   { q: "paano gumawa ng schedule", expect: /create a schedule/i, answerHas: ["Generate"] },
   { q: "where do I start for a new term", expect: /create a schedule|Step 1|Readiness/i },
   { q: "what's candidate a b c", expect: /Balanced, Faculty First|Schedules page|Step 2/i, answerHas: ["Balanced"] },
-  { q: "ano pinagkaiba ng faculty first at student first", expect: /Balanced, Faculty First/i },
+  { q: "ano pinagkaiba ng faculty first at student first", expect: /only one schedule|candidates/i },
   { q: "why are there unscheduled classes", expect: /unscheduled/i, answerHas: ["reason"] },
   { q: "bakit may hindi nailagay na klase", expect: /unscheduled/i },
   { q: "how to fix conflicts", expect: /fix a conflict/i, answerHas: ["move", "alternative"] },

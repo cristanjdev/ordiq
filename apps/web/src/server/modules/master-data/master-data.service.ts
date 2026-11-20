@@ -1,3 +1,4 @@
+import { DEFAULT_SUBJECT_DEPARTMENT } from "@/lib/display-labels";
 import { withAudit } from "../../platform/audit";
 import { AppError } from "../../platform/errors";
 import {
@@ -345,6 +346,7 @@ export async function upsertSubject(
         programCode: input.programCode ?? null,
         yearLevel: input.yearLevel,
         category: input.category,
+        department: input.department ?? existing?.department ?? DEFAULT_SUBJECT_DEPARTMENT,
         units: input.units,
         contactHours: input.contactHours,
         lectureHours: input.lectureHours,

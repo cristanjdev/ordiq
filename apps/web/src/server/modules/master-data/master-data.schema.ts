@@ -4,6 +4,7 @@ import {
   WEEKDAYS,
 } from "@ordiq/contracts";
 import { z } from "zod";
+import { parseSubjectDepartment, SUBJECT_DEPARTMENTS } from "@/lib/display-labels";
 
 export const weekdaySchema = z.enum(WEEKDAYS);
 export const employmentTypeSchema = z.enum(EMPLOYMENT_TYPES);
@@ -67,6 +68,8 @@ export const subjectInputSchema = z.object({
   programCode: z.string().min(2).max(20).nullable().optional(),
   yearLevel: z.number().int().min(1).max(5),
   category: subjectCategorySchema,
+  // Optional so a re-import without the column keeps the department already saved.
+  department: z.preprocess(parseSubjectDepartment, z.enum(SUBJECT_DEPARTMENTS).optional()),
   units: z.number().int().min(1).max(12),
   contactHours: z.number().int().min(1).max(18),
   lectureHours: z.number().int().min(0).max(12).default(3),
